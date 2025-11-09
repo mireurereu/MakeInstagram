@@ -3,7 +3,7 @@
 import 'dart:io'; // File 사용
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:instagram_clone/screens/edit_post_screen.dart'; // 다음 단계 파일
+import 'package:instagram/screens/edit_post_screen.dart'; // 다음 단계 파일
 
 class CreatePostScreen extends StatefulWidget {
   const CreatePostScreen({super.key});
@@ -26,6 +26,8 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   // 갤러리에서 이미지 선택
   Future<void> _pickImageFromGallery() async {
     final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+
+    if (!mounted) return;
 
     if (pickedFile != null) {
       setState(() {

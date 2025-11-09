@@ -1,8 +1,8 @@
 // lib/screens/feed_screen.dart
 
 import 'package:flutter/material.dart';
-import 'package:Makeinstagram/widgets/post_card_widget.dart';
-import 'package:Makeinstagram/screens/dm_list_screen.dart'; // 곧 생성할 파일
+import 'package:instagram/widgets/post_card_widget.dart';
+import 'package:instagram/screens/dm_list_screen.dart'; // 곧 생성할 파일
 
 class FeedScreen extends StatelessWidget {
   const FeedScreen({super.key});

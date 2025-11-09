@@ -1,7 +1,7 @@
 // lib/screens/dm_list_screen.dart
 
 import 'package:flutter/material.dart';
-import 'package:instagram_clone/screens/chat_room_screen.dart'; // 곧 생성할 파일
+import 'package:instagram/screens/chat_room_screen.dart'; // 곧 생성할 파일
 
 class DmListScreen extends StatelessWidget {
   const DmListScreen({super.key});

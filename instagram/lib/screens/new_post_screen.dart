@@ -1,6 +1,6 @@
 // lib/screens/new_post_screen.dart
 
-import 'dart.io';
+import 'dart:io';
 import 'package:flutter/material.dart';
 
 class NewPostScreen extends StatefulWidget {
@@ -29,9 +29,9 @@ class _NewPostScreenState extends State<NewPostScreen> {
     // 2. Storage에서 URL 반환받기
     // 3. Firestore에 { 'imageUrl': url, 'caption': caption, ... } 데이터 저장
     // (지금은 2초 딜레이로 시뮬레이션)
-    await Future.delayed(Duration(seconds: 2));
+  await Future.delayed(Duration(seconds: 2));
 
-    print('Post Shared! Caption: $caption');
+  debugPrint('Post Shared! Caption: $caption');
     // --- --- --- --- ---
 
     setState(() {
@@ -41,6 +41,7 @@ class _NewPostScreenState extends State<NewPostScreen> {
     // (영상 2:15)
     // 업로드 완료 후, Post 스택(Create, Edit, New)을 모두 닫고
     // 피드 화면(Root)으로 돌아갑니다.
+    if (!mounted) return;
     Navigator.of(context).popUntil((route) => route.isFirst);
 
     // TODO: 피드 화면이 새 게시물을 "자동으로" 리프레시 하도록
@@ -116,7 +117,7 @@ class _NewPostScreenState extends State<NewPostScreen> {
           // 공유 중일 때 로딩 오버레이
           if (_isSharing)
             Container(
-              color: Colors.black.withOpacity(0.5),
+              color: Color.fromRGBO(0, 0, 0, 0.5),
               child: Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,

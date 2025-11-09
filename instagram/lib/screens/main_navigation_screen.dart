@@ -1,9 +1,9 @@
 // lib/screens/main_navigation_screen.dart
 
 import 'package:flutter/material.dart';
-import 'package:Makeinstagram/screens/feed_screen.dart';
-import 'package:Makeinstagram/screens/create_post_screen.dart';
-import 'package:Makeinstagram/screens/profile_screen.dart';
+import 'package:instagram/screens/feed_screen.dart';
+import 'package:instagram/screens/create_post_screen.dart';
+import 'package:instagram/screens/profile_screen.dart';
 
 class MainNavigationScreen extends StatefulWidget {
   const MainNavigationScreen({super.key});
@@ -17,7 +17,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   int _selectedIndex = 0;
 
   // 각 탭에 보여줄 화면 위젯 목록
-  static const List<Widget> _widgetOptions = <Widget>[
+  static final List<Widget> _widgetOptions = <Widget>[
     FeedScreen(), // 0번 탭 (홈)
     Text('Search Screen', style: TextStyle(color: Colors.white)), // 1번 탭 (검색)
     Container(), // 2번 탭 (자리 표시용 - 어차피 탭이동 안함)
@@ -61,7 +61,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             label: 'Search',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.add_box_outline),
+            icon: Icon(Icons.add_box_outlined),
             label: 'Add',
           ),
           BottomNavigationBarItem(

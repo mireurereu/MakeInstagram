@@ -1,8 +1,8 @@
 // lib/screens/edit_post_screen.dart
 
-import 'dart.io';
+import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:instagram_clone/screens/new_post_screen.dart'; // 다음 단계 파일
+import 'package:instagram/screens/new_post_screen.dart'; // 다음 단계 파일
 
 class EditPostScreen extends StatelessWidget {
   final File imageFile; // 이전 화면에서 선택한 이미지

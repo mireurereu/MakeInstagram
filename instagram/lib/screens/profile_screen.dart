@@ -1,8 +1,8 @@
 // lib/screens/profile_screen.dart
 
 import 'package:flutter/material.dart';
-import 'package:instagram_clone/screens/edit_profile_screen.dart';
-import 'package:instagram_clone/screens/following_list_screen.dart'; // 곧 생성할 파일
+import 'package:instagram/screens/edit_profile_screen.dart';
+import 'package:instagram/screens/following_list_screen.dart'; // 곧 생성할 파일
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -92,7 +92,7 @@ class ProfileScreen extends StatelessWidget {
       ),
       actions: [
         IconButton(
-          icon: Icon(Icons.add_box_outline, size: 28.0),
+          icon: Icon(Icons.add_box_outlined, size: 28.0),
           onPressed: () {},
         ),
         IconButton(

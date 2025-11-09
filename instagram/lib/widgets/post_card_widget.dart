@@ -1,6 +1,8 @@
 // lib/widgets/post_card_widget.dart
 
 import 'package:flutter/material.dart';
+import 'package:instagram/widgets/comment_model.dart';
+import 'package:instagram/widgets/comments_modal_content.dart';
 
 class PostCardWidget extends StatefulWidget {
   // 데이터 모델 (단순화를 위해 여전히 하드코딩된 값을 기본값으로 사용)
@@ -35,6 +37,7 @@ class PostCardWidget extends StatefulWidget {
 class _PostCardWidgetState extends State<PostCardWidget> {
   // 캐러셀의 현재 페이지 인덱스
   int _currentCarouselIndex = 0;
+  bool _isLiked = false;
 
   @override
   Widget build(BuildContext context) {
@@ -138,7 +141,7 @@ class _PostCardWidgetState extends State<PostCardWidget> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
                 decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.7),
+                  color: Color.fromRGBO(0, 0, 0, 0.7),
                   borderRadius: BorderRadius.circular(12.0),
                 ),
                 child: Text(
@@ -165,7 +168,7 @@ class _PostCardWidgetState extends State<PostCardWidget> {
                       shape: BoxShape.circle,
                       color: _currentCarouselIndex == index
                           ? Colors.blue // 활성
-                          : Colors.white.withOpacity(0.5), // 비활성
+                            : Color.fromRGBO(255, 255, 255, 0.5), // 비활성
                     ),
                   );
                 }),
@@ -188,12 +191,22 @@ class _PostCardWidgetState extends State<PostCardWidget> {
           Row(
             children: [
               IconButton(
-                icon: Icon(Icons.favorite_border, color: Colors.white, size: 28),
-                onPressed: () {},
+                icon: _isLiked
+                    ? Icon(Icons.favorite, color: Colors.red, size: 28) // 좋아요 눌림
+                    : Icon(Icons.favorite_border, color: Colors.white, size: 28), // 기본
+                onPressed: () {
+                  // setState를 호출하여 _isLiked 상태를 토글(toggle)
+                  setState(() {
+                    _isLiked = !_isLiked;
+                  });
+                  // TODO: 추후 이곳에 백엔드(Firebase) 좋아요/취소 로직 추가
+                },
               ),
               IconButton(
                 icon: Icon(Icons.chat_bubble_outline, color: Colors.white, size: 28),
-                onPressed: () {},
+                onPressed: () {
+                  _showCommentsModal(context);
+                },
               ),
               IconButton(
                 icon: Icon(Icons.send_outlined, color: Colors.white, size: 28),
@@ -224,12 +237,12 @@ class _PostCardWidgetState extends State<PostCardWidget> {
               style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
             ),
             ElevatedButton(
-              child: Text('Install now'), // 영상에서는 'Shop now' 등
               onPressed: () {},
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.blue, // 버튼색
                 foregroundColor: Colors.white, // 글자색
               ),
+                child: Text('Install now'), // 영상에서는 'Shop now' 등
             )
           ],
         ),
@@ -272,6 +285,24 @@ class _PostCardWidgetState extends State<PostCardWidget> {
           const SizedBox(height: 12.0),
         ],
       ),
+    );
+  }
+
+void _showCommentsModal(BuildContext context) {
+    // (영상 2:31)
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true, // 키보드 높이만큼 올라오도록
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        // 이제 복잡한 UI 대신, 별도로 분리한 StatefulWidget을 호출합니다.
+        return CommentsModalContent(
+          // 게시물의 캡션 정보를 모달로 전달합니다.
+          caption: widget.caption,
+          username: widget.username,
+          avatarUrl: widget.userAvatarUrl,
+        );
+      },
     );
   }
 }
