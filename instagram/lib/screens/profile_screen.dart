@@ -1,90 +1,132 @@
-// lib/screens/profile_screen.dart
-
 import 'package:flutter/material.dart';
 import 'package:instagram/screens/edit_profile_screen.dart';
-import 'package:instagram/screens/following_list_screen.dart'; // 곧 생성할 파일
+import 'package:instagram/screens/following_list_screen.dart';
 
-class ProfileScreen extends StatelessWidget {
+// 1. StatelessWidget -> StatefulWidget으로 변경
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
   @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+
+  // 2. Name과 Bio를 '상태(State)'로 관리
+  String _name = 'puang';
+  String _bio = 'I\'m gonna be the God of Flutter!';
+  // (임시) 프로필 아바타 URL
+  String _avatarUrl = 'https://picsum.photos/seed/profile/200/200';
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+    // TODO: 이곳에서 Firebase로부터 _name, _bio, _avatarUrl을 불러와야 합니다.
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  // 3. 'Edit Profile' 버튼을 눌렀을 때 호출되는 함수 (핵심!)
+  void _navigateToEditProfile() async {
+    // EditProfileScreen으로 이동하고, 결과가 올 때까지 'await'(대기)
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EditProfileScreen(
+          // 4. 현재 상태값을 EditProfileScreen으로 전달
+          initialName: _name,
+          initialBio: _bio,
+          initialAvatarUrl: _avatarUrl,
+        ),
+      ),
+    );
+
+    // 5. EditProfileScreen에서 'Done'을 눌러 돌아왔고, result가 있다면
+    if (result != null && result is Map) {
+      // 6. setState를 호출하여 화면을 갱신!
+      setState(() {
+        _name = result['name'];
+        _bio = result['bio'];
+        _avatarUrl = result['avatarUrl'];
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    // 탭바(Grid, Tagged)를 사용하기 위해 DefaultTabController로 감쌉니다.
-    return DefaultTabController(
-      length: 2, // 탭 2개 (그리드, 태그)
-      child: Scaffold(
-        backgroundColor: Colors.black,
-        // (영상 2:23) 상단 앱 바
-        appBar: _buildAppBar(context),
-        
-        // NestedScrollView: 스크롤 영역 안에 스크롤 영역(탭뷰)이 있는 구조
-        body: NestedScrollView(
-          // 1. 상단 앱 바 밑에서 스크롤되는 영역 (프로필 헤더 + 탭바)
-          headerSliverBuilder: (context, innerBoxIsScrolled) {
-            return [
-              // 프로필 정보 (아바타, 통계, 바이오, 버튼)
-              SliverToBoxAdapter(
-                child: _buildProfileHeader(context),
-              ),
-              // 상단에 고정될 탭 바
-              SliverPersistentHeader(
-                delegate: _SliverAppBarDelegate(
-                  const TabBar(
-                    tabs: [
-                      Tab(icon: Icon(Icons.grid_on)),
-                      Tab(icon: Icon(Icons.person_pin_outlined)), // 태그된 포스트
-                    ],
-                    indicatorColor: Colors.white, // 활성 탭 아래 흰색 줄
-                  ),
-                ),
-                pinned: true, // 스크롤해도 상단에 고정!
-              ),
-            ];
-          },
-          // 2. 탭 바에 따라 변경되는 실제 콘텐츠 (포스트 그리드)
-          body: TabBarView(
-            children: [
-              // 첫 번째 탭: 포스트 그리드 (영상 2:24)
-              GridView.builder(
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3, // 한 줄에 3개
-                  crossAxisSpacing: 2,
-                  mainAxisSpacing: 2,
-                ),
-                itemCount: 3, // 영상에서 3개의 포스트가 보임
-                itemBuilder: (context, index) {
-                  // 영상의 3개 포스트 (임시 이미지)
-                  return Image.network(
-                    'https://picsum.photos/seed/post${index + 1}/200/200',
-                    fit: BoxFit.cover,
-                  );
-                },
-              ),
-              // 두 번째 탭: 태그된 포스트 (플레이스홀더)
-              Center(
-                child: Text(
-                  'Tagged Posts',
-                  style: TextStyle(color: Colors.white),
+    // 7. TabController를 위해 DefaultTabController -> Scaffold로 변경
+    return Scaffold(
+      // (라이트 모드) 전역 테마 사용
+      appBar: _buildAppBar(context),
+      body: NestedScrollView(
+        headerSliverBuilder: (context, innerBoxIsScrolled) {
+          return [
+            SliverToBoxAdapter(
+              child: _buildProfileHeader(context), // 8. _name, _bio 상태 사용
+            ),
+            SliverPersistentHeader(
+              delegate: _SliverAppBarDelegate(
+                TabBar(
+                  controller: _tabController, // 7. 컨트롤러 연결
+                  tabs: [
+                    Tab(icon: Icon(Icons.grid_on)),
+                    Tab(icon: Icon(Icons.person_pin_outlined)),
+                  ],
+                  indicatorColor: Colors.black, // (라이트 모드)
+                  labelColor: Colors.black, // (라이트 모드)
                 ),
               ),
-            ],
-          ),
+              pinned: true,
+            ),
+          ];
+        },
+        body: TabBarView(
+          controller: _tabController, // 7. 컨트롤러 연결
+          children: [
+            // 첫 번째 탭: 포스트 그리드
+            GridView.builder(
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3,
+                crossAxisSpacing: 2,
+                mainAxisSpacing: 2,
+              ),
+              itemCount: 3,
+              itemBuilder: (context, index) {
+                return Image.network(
+                  'https://picsum.photos/seed/post${index + 1}/200/200',
+                  fit: BoxFit.cover,
+                );
+              },
+            ),
+            // 두 번째 탭: 태그된 포스트
+            Center(
+              child: Text(
+                'Tagged Posts',
+                style: TextStyle(color: Colors.black),
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  // (영상 2:23) 프로필 화면의 상단 앱 바
   AppBar _buildAppBar(BuildContext context) {
     return AppBar(
-      backgroundColor: Colors.black,
-      elevation: 0,
+      // (라이트 모드) 전역 테마 사용
       title: Row(
         children: [
-          Icon(Icons.lock_outline, size: 20.0), // 비공개 계정 아이콘
+          Icon(Icons.lock_outline, size: 20.0),
           const SizedBox(width: 4.0),
           Text(
-            'ta_junhyuk', // 영상의 유저 이름
+            'ta_junhyuk',
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22.0),
           ),
           Icon(Icons.keyboard_arrow_down),
@@ -103,113 +145,97 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  // (영상 2:23) 프로필 헤더 (아바타, 통계, 바이오)
+  // (수정) _buildProfileHeader가 _name과 _bio 상태를 사용
   Widget _buildProfileHeader(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 아바타 & 통계 (Posts, Followers, Following)
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               CircleAvatar(
                 radius: 44,
-                backgroundImage: NetworkImage('https://picsum.photos/seed/profile/200/200'),
+                backgroundImage: NetworkImage(_avatarUrl), // 8. _avatarUrl 상태 사용
               ),
               _buildStatColumn('3', 'Posts'),
-              _buildStatColumn('3', 'Followers'), // (영상 3:32 기준)
-              _buildStatColumn('9', 'Following'), // (영상 3:32 기준)
+              _buildStatColumn('3', 'Followers'),
               GestureDetector(
                 onTap: () {
-                  // 팔로잉 목록 화면으로 이동
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const FollowingListScreen()),
+                    MaterialPageRoute(
+                        builder: (context) => const FollowingListScreen()),
                   );
                 },
-                child: _buildStatColumn('9', 'Following'), // 영상 4:49 기준
+                child: _buildStatColumn('9', 'Following'),
               ),
             ],
           ),
           const SizedBox(height: 12.0),
-          // 바이오 (Bio)
-          Text('puang', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-          Text('I\'m gonna be the God of Flutter!!!', style: TextStyle(color: Colors.white)),
+          Text(_name, // 8. _name 상태 사용
+              style:
+                  TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+          Text(_bio, style: TextStyle(color: Colors.black)), // 8. _bio 상태 사용
           const SizedBox(height: 16.0),
-          // 'Edit profile' 버튼 (영상 3:33)
           Row(
             children: [
-              // 1. Edit profile (확장)
               Expanded(
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.grey[800],
-                    foregroundColor: Colors.white,
+                    backgroundColor: Colors.grey[200], // (라이트 모드)
+                    foregroundColor: Colors.black, // (라이트 모드)
                   ),
-                  onPressed: () {
-                    // 프로필 수정 화면으로 이동
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => const EditProfileScreen()),
-                    );
-                  },
+                  onPressed: _navigateToEditProfile, // (수정) 3. 함수 호출
                   child: Text('Edit profile'),
                 ),
               ),
               const SizedBox(width: 8.0),
-
-              // 2. Share profile (확장)
               Expanded(
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.grey[800],
-                    foregroundColor: Colors.white,
+                    backgroundColor: Colors.grey[200], // (라이트 모드)
+                    foregroundColor: Colors.black, // (라이트 모드)
                   ),
-                  onPressed: () {
-                    // TODO: 'Share profile' 기능
-                  },
+                  onPressed: () { /* TODO */ },
                   child: Text('Share profile'),
                 ),
               ),
               const SizedBox(width: 8.0),
-
-              // 3. '다른 이모지' (사용자 추가 아이콘 버튼)
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.grey[800],
-                  foregroundColor: Colors.white,
-                  padding: EdgeInsets.symmetric(horizontal: 12.0), // 아이콘 버튼 크기 조절
-                  minimumSize: Size(36, 36), // 정사각형에 가깝게
+                  backgroundColor: Colors.grey[200], // (라이트 모드)
+                  foregroundColor: Colors.black, // (라이트 모드)
+                  padding: EdgeInsets.symmetric(horizontal: 12.0),
+                  minimumSize: Size(36, 36),
                 ),
-                onPressed: () {
-                  // TODO: 'Discover people' 기능
-                },
+                onPressed: () { /* TODO */ },
                 child: Icon(Icons.person_add_outlined),
               ),
             ],
           ),
-          // --- --- -
         ],
       ),
     );
   }
 
-  // 통계 컬럼 (예: '3' Posts)
   Widget _buildStatColumn(String count, String label) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Text(count, style: TextStyle(color: Colors.white, fontSize: 18.0, fontWeight: FontWeight.bold)),
-        Text(label, style: TextStyle(color: Colors.white, fontSize: 14.0)),
+        Text(count,
+            style: TextStyle(
+                color: Colors.black,
+                fontSize: 18.0,
+                fontWeight: FontWeight.bold)),
+        Text(label, style: TextStyle(color: Colors.black, fontSize: 14.0)),
       ],
     );
   }
 }
 
-// NestedScrollView의 'SliverPersistentHeader'에 탭 바를 고정시키기 위한 Helper 클래스
 class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
   _SliverAppBarDelegate(this._tabBar);
   final TabBar _tabBar;
@@ -220,8 +246,9 @@ class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
   double get maxExtent => _tabBar.preferredSize.height;
 
   @override
-  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
-    return Container(color: Colors.black, child: _tabBar);
+  Widget build(
+      BuildContext context, double shrinkOffset, bool overlapsContent) {
+    return Container(color: Colors.white, child: _tabBar); // (라이트 모드)
   }
 
   @override

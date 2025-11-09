@@ -15,7 +15,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Instagram Clone',
       debugShowCheckedModeBanner: false,
-      // 앱 전체 테마를 어둡게 설정 (영상 참고)
+      // 앱 전체 테마를 밝게 설정
       theme: ThemeData.light().copyWith(
         scaffoldBackgroundColor: Colors.white, // 기본 배경색
         primaryColor: Colors.white,
@@ -30,6 +30,7 @@ class MyApp extends StatelessWidget {
           ),
         ),
       ),
+      home: const MainNavigationScreen(), // 앱 시작 화면
     );
   }
 }
