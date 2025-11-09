@@ -4,16 +4,16 @@ import 'package:flutter/material.dart';
 import 'package:instagram/widgets/comment_model.dart';
 
 class CommentsModalContent extends StatefulWidget {
-  // PostCard에서 전달받은 캡션(첫 번째 댓글) 정보
-  final String caption;
-  final String username;
-  final String avatarUrl;
+  // --- (신규) 부모로부터 받을 데이터와 함수들 ---
+  final List<Comment> comments; // 1. 댓글 목록 (이제 부모가 소유)
+  final Function(String) onCommentPosted; // 2. 댓글 게시 콜백
+  final Function(Comment) onCommentLiked; // 3. 댓글 좋아요 콜백
 
   const CommentsModalContent({
     super.key,
-    required this.caption,
-    required this.username,
-    required this.avatarUrl,
+    required this.comments,
+    required this.onCommentPosted,
+    required this.onCommentLiked,
   });
 
   @override
@@ -24,63 +24,23 @@ class _CommentsModalContentState extends State<CommentsModalContent> {
   // 댓글 입력창을 제어할 컨트롤러
   final TextEditingController _commentController = TextEditingController();
 
-  // 댓글 목록을 저장하고 관리할 리스트 (State)
-  late List<Comment> _comments;
-
-  @override
-  void initState() {
-    super.initState();
-    // 댓글 목록을 초기화합니다.
-    _comments = [
-      // 1. 첫 번째 아이템은 항상 게시물의 '캡션'입니다.
-      Comment(
-        username: widget.username,
-        avatarUrl: widget.avatarUrl,
-        text: widget.caption,
-      ),
-      // 2. 영상의 더미 데이터
-      Comment(
-        username: 'haetbaaan',
-        avatarUrl: 'https://picsum.photos/seed/haetbaaan/100/100',
-        text: 'so cute!! 🥹🥹',
-        isLiked: true, // (좋아요가 눌린 상태로 시작)
-      ),
-      Comment(
-        username: 'junehxuk',
-        avatarUrl: 'https://picsum.photos/seed/junehxuk/100/100',
-        text: 'I love puang',
-      ),
-    ];
-  }
 
   // --- (신규) 댓글 게시 기능 ---
   void _postComment() {
     final String text = _commentController.text;
-    if (text.isEmpty) return; // 빈 댓글은 게시하지 않음
+    if (text.isEmpty) return;
 
-    // setState를 호출하여 UI를 즉시 업데이트합니다.
-    setState(() {
-      // 새 댓글 객체 생성 (사용자 정보는 임시로 'my_profile' 사용)
-      _comments.add(Comment(
-        username: 'ta_junhyuk', // 내 유저 이름 (하드코딩)
-        avatarUrl: 'https://picsum.photos/seed/my_profile/100/100',
-        text: text,
-      ));
-      _commentController.clear(); // 입력창 비우기
-      FocusManager.instance.primaryFocus?.unfocus(); // 키보드 내리기
-    });
-    // TODO: 이곳에서 Firebase 등 백엔드에 댓글 데이터 전송
+    // (수정) 로컬 state를 변경하는 대신, 부모에게 받은 콜백 함수를 호출합니다.
+    widget.onCommentPosted(text);
+
+    _commentController.clear();
+    FocusManager.instance.primaryFocus?.unfocus();
   }
 
   // --- (신규) 댓글 '좋아요' 토글 기능 ---
   void _toggleCommentLike(Comment comment) {
-    // 캡션(첫 번째 댓글)은 '좋아요' 대상에서 제외
-    if (_comments.indexOf(comment) == 0) return; 
-
-    setState(() {
-      comment.isLiked = !comment.isLiked;
-    });
-    // TODO: 이곳에서 Firebase 등 백엔드에 '좋아요' 상태 전송
+    // (수정) 로컬 state를 변경하는 대신, 부모에게 받은 콜백 함수를 호출합니다.
+    widget.onCommentLiked(comment);
   }
 
   @override
@@ -115,10 +75,12 @@ class _CommentsModalContentState extends State<CommentsModalContent> {
           // 댓글 스크롤 영역
           Expanded(
             child: ListView.builder(
-              itemCount: _comments.length,
+              // (수정) 로컬 _comments 대신 widget.comments 사용
+              itemCount: widget.comments.length,
               itemBuilder: (context, index) {
-                final comment = _comments[index];
-                final isCaption = (index == 0); // 첫 번째 아이템은 캡션
+                final comment = widget.comments[index];
+                final isCaption = (index == 0);
+                // _buildCommentTile 호출 (이제 _toggleCommentLike를 전달)
                 return _buildCommentTile(comment, isCaption);
               },
             ),

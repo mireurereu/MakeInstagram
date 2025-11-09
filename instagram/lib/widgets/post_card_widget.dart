@@ -15,6 +15,7 @@ class PostCardWidget extends StatefulWidget {
   final String timestamp;
   final bool isSponsored; // 스폰서 게시물 여부
   final bool isCarousel; // 캐러셀 여부 (이미지 리스트 개수로 자동 감지)
+  final bool isVideo;
 
   PostCardWidget({
     super.key,
@@ -26,6 +27,7 @@ class PostCardWidget extends StatefulWidget {
     this.commentCount = "2,000",
     this.timestamp = "5 days ago",
     this.isSponsored = false, // 기본값은 스폰서 아님
+    this.isVideo = false,
   })  : postImageUrls = postImageUrls ??
             ["https://picsum.photos/seed/karina/600/600"], // 기본값은 단일 이미지
         isCarousel = (postImageUrls != null && postImageUrls.length > 1);
@@ -38,6 +40,58 @@ class _PostCardWidgetState extends State<PostCardWidget> {
   // 캐러셀의 현재 페이지 인덱스
   int _currentCarouselIndex = 0;
   bool _isLiked = false;
+
+  // --- (신규) 댓글 목록 상태를 부모(여기)로 끌어올림 ---
+  late List<Comment> _comments;
+  // --- (신규) 중앙 하트 애니메이션을 위한 상태 ---
+  bool _showHeartAnimation = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // 포스트 카드가 생성될 때 댓글 목록을 여기서 초기화합니다.
+    _comments = [
+      Comment(
+        username: widget.username,
+        avatarUrl: widget.userAvatarUrl,
+        text: widget.caption,
+      ),
+      Comment(
+        username: 'haetbaaan',
+        avatarUrl: 'https://picsum.photos/seed/haetbaaan/100/100',
+        text: 'so cute!! 🥹🥹',
+        isLiked: true,
+      ),
+      Comment(
+        username: 'junehxuk',
+        avatarUrl: 'https://picsum.photos/seed/junehxuk/100/100',
+        text: 'I love puang',
+      ),
+    ];
+  }
+
+  // --- (신규) 자식(모달)에서 호출할 댓글 추가 함수 ---
+  void _handlePostComment(String text) {
+    setState(() {
+      _comments.add(Comment(
+        username: 'ta_junhyuk', // (임시) 내 유저 이름
+        avatarUrl: 'https://picsum.photos/seed/my_profile/100/100',
+        text: text,
+      ));
+    });
+    // TODO: 백엔드에 이 변경사항 전송
+  }
+
+  // --- (신규) 자식(모달)에서 호출할 댓글 좋아요 토글 함수 ---
+  void _handleToggleCommentLike(Comment comment) {
+    // 캡션(첫 번째 댓글)은 '좋아요' 대상에서 제외
+    if (_comments.indexOf(comment) == 0) return;
+
+    setState(() {
+      comment.isLiked = !comment.isLiked;
+    });
+    // TODO: 백엔드에 이 변경사항 전송
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -104,15 +158,21 @@ class _PostCardWidgetState extends State<PostCardWidget> {
   }
 
   // 2. 본문 위젯 (수정 - 캐러셀 구현)
-  Widget _buildContent(BuildContext context) {
-    // PageView를 사용하여 좌우 스와이프 구현
-    return AspectRatio(
-      aspectRatio: 1.0, // 1:1 정사각형 비율
+  // lib/widgets/post_card_widget.dart (내부)
+
+// 2. 본문 위젯 (수정됨 - GestureDetector, AnimatedOpacity 추가)
+Widget _buildContent(BuildContext context) {
+  return GestureDetector( // (신규) 더블 탭 감지를 위해 추가
+    onDoubleTap: _handleDoubleTap, // 더블 탭 시 _handleDoubleTap 함수 호출
+    child: AspectRatio(
+      aspectRatio: 1.0,
       child: Stack(
+        alignment: Alignment.center, // (신규) 하트 아이콘을 중앙에 배치하기 위해 추가
         children: [
+          
+          // 2-1. 기존 PageView (사진/영상 콘텐츠)
           PageView.builder(
             itemCount: widget.postImageUrls.length,
-            // 페이지가 변경될 때마다 _currentCarouselIndex 업데이트
             onPageChanged: (index) {
               setState(() {
                 _currentCarouselIndex = index;
@@ -133,7 +193,7 @@ class _PostCardWidgetState extends State<PostCardWidget> {
             },
           ),
 
-          // 캐러셀 인디케이터 (이미지가 여러 장일 때만 표시)
+          // 2-2. 기존 캐러셀 인디케이터 (우측 상단 숫자)
           if (widget.isCarousel)
             Positioned(
               top: 10,
@@ -141,7 +201,7 @@ class _PostCardWidgetState extends State<PostCardWidget> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
                 decoration: BoxDecoration(
-                  color: Color.fromRGBO(0, 0, 0, 0.7),
+                  color: Color.fromRGBO(0, 0, 0, 0.7), // replaced withOpacity
                   borderRadius: BorderRadius.circular(12.0),
                 ),
                 child: Text(
@@ -151,7 +211,7 @@ class _PostCardWidgetState extends State<PostCardWidget> {
               ),
             ),
           
-          // 캐러셀 하단 인디케이터 (점)
+          // 2-3. 기존 캐러셀 인디케이터 (하단 점)
           if (widget.isCarousel)
             Positioned(
               bottom: 10,
@@ -166,18 +226,30 @@ class _PostCardWidgetState extends State<PostCardWidget> {
                     margin: const EdgeInsets.symmetric(horizontal: 3.0),
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: _currentCarouselIndex == index
-                          ? Colors.blue // 활성
-                            : Color.fromRGBO(255, 255, 255, 0.5), // 비활성
+            color: _currentCarouselIndex == index
+              ? Colors.blue
+              : Color.fromRGBO(255, 255, 255, 0.5), // replaced withOpacity
                     ),
                   );
                 }),
               ),
             ),
+
+          // 2-4. (신규) 중앙 하트 애니메이션
+          AnimatedOpacity(
+            duration: const Duration(milliseconds: 200), // 0.2초
+            opacity: _showHeartAnimation ? 1.0 : 0.0, // _showHeartAnimation 상태에 따라 투명도 조절
+            child: Icon(
+              Icons.favorite,
+              color: Colors.white,
+              size: 100.0, // 큰 하트
+            ),
+          ),
         ],
       ),
-    );
-  }
+    ),
+  );
+}
 
   // 3. 액션 버튼 위젯 (변경 없음 - 이전과 동일)
   Widget _buildActionButtons() {
@@ -193,14 +265,8 @@ class _PostCardWidgetState extends State<PostCardWidget> {
               IconButton(
                 icon: _isLiked
                     ? Icon(Icons.favorite, color: Colors.red, size: 28) // 좋아요 눌림
-                    : Icon(Icons.favorite_border, color: Colors.white, size: 28), // 기본
-                onPressed: () {
-                  // setState를 호출하여 _isLiked 상태를 토글(toggle)
-                  setState(() {
-                    _isLiked = !_isLiked;
-                  });
-                  // TODO: 추후 이곳에 백엔드(Firebase) 좋아요/취소 로직 추가
-                },
+                    : Icon(Icons.favorite_border, color: Colors.white, size: 28),
+                onPressed: _handleIconTap, // 기본
               ),
               IconButton(
                 icon: Icon(Icons.chat_bubble_outline, color: Colors.white, size: 28),
@@ -297,12 +363,40 @@ void _showCommentsModal(BuildContext context) {
       builder: (context) {
         // 이제 복잡한 UI 대신, 별도로 분리한 StatefulWidget을 호출합니다.
         return CommentsModalContent(
-          // 게시물의 캡션 정보를 모달로 전달합니다.
-          caption: widget.caption,
-          username: widget.username,
-          avatarUrl: widget.userAvatarUrl,
+          // 댓글 목록과 콜백을 전달하도록 수정
+          comments: _comments,
+          onCommentPosted: _handlePostComment,
+          onCommentLiked: _handleToggleCommentLike,
         );
       },
     );
   }
-}
+void _handleDoubleTap() {
+    // 1. '좋아요' 상태를 true로 변경 (더블 탭은 '좋아요' 취소 기능 없음)
+    if (!_isLiked) {
+      setState(() {
+        _isLiked = true;
+      });
+      // TODO: 백엔드에 '좋아요' 전송
+    }
+
+    // 2. 영상이 아닐(사진일) 경우에만 애니메이션 표시
+    if (!widget.isVideo) {
+      setState(() {
+        _showHeartAnimation = true; // 하트 보이기
+      });
+      // 0.8초 후에 하트 숨기기
+      Future.delayed(const Duration(milliseconds: 800), () {
+        setState(() {
+          _showHeartAnimation = false;
+        });
+      });
+    }
+  }
+  void _handleIconTap() {
+    setState(() {
+      _isLiked = !_isLiked; // 아이콘 탭은 '토글'
+    });
+    // TODO: 백엔드에 '좋아요'/'좋아요 취소' 전송
+  }
+} 

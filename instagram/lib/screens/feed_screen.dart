@@ -65,6 +65,7 @@ class FeedScreen extends StatelessWidget {
               caption: 'more',
               likeCount: '1,367,685',
               timestamp: '5 days ago',
+              isVideo: false,
             );
           }
 
@@ -97,14 +98,23 @@ class FeedScreen extends StatelessWidget {
             );
           }
 
-          // 4. 일반 게시물 (영상 0:11초의 'aespa_official')
+          // 4. 일반 게시물 (영상이라고 가정)
+          if (index == 4) { // 'aespa_official' 게시물을 4번 인덱스로 가정
+            return PostCardWidget(
+              username: 'aespa_official',
+              userAvatarUrl: 'https://picsum.photos/seed/aespa/100/100',
+              postImageUrls: ['https://picsum.photos/seed/aespa_post/600/600'],
+              caption: 'Bee~ Gese Stay Alive 🐝',
+              likeCount: '918,471',
+              timestamp: '5 days ago',
+              isVideo: true, // (신규) 이것은 영상입니다!
+            );
+          }
+
+          // 나머지 일반 사진 게시물
           return PostCardWidget(
-            username: 'aespa_official',
-            userAvatarUrl: 'https://picsum.photos/seed/aespa/100/100',
-            postImageUrls: ['https://picsum.photos/seed/aespa_post/600/600'],
-            caption: 'Bee~ Gese Stay Alive 🐝',
-            likeCount: '918,471',
-            timestamp: '5 days ago',
+            // ... (기본값 사용) ...
+            // isVideo의 기본값은 false이므로 사진으로 처리됩니다.
           );
         },
       ),
