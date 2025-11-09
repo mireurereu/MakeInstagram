@@ -16,11 +16,20 @@ class MyApp extends StatelessWidget {
       title: 'Instagram Clone',
       debugShowCheckedModeBanner: false,
       // 앱 전체 테마를 어둡게 설정 (영상 참고)
-      theme: ThemeData.dark().copyWith(
-        scaffoldBackgroundColor: Colors.black, // 기본 배경색
-        primaryColor: Colors.black,
+      theme: ThemeData.light().copyWith(
+        scaffoldBackgroundColor: Colors.white, // 기본 배경색
+        primaryColor: Colors.white,
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Colors.white, // 앱바 배경 흰색
+          elevation: 0, // 그림자 없음
+          iconTheme: IconThemeData(color: Colors.black), // 뒤로가기 등 아이콘 검은색
+          titleTextStyle: TextStyle( // 앱바 제목 스타일
+            color: Colors.black,
+            fontSize: 22.0,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
       ),
-      home: const MainNavigationScreen(), // 앱이 시작될 때 보여줄 화면
     );
   }
 }

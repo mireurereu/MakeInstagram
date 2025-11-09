@@ -139,21 +139,58 @@ class ProfileScreen extends StatelessWidget {
           Text('I\'m gonna be the God of Flutter!!!', style: TextStyle(color: Colors.white)),
           const SizedBox(height: 16.0),
           // 'Edit profile' 버튼 (영상 3:33)
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.grey[800], // 어두운 버튼
-              foregroundColor: Colors.white, // 흰색 글씨
-              minimumSize: Size(double.infinity, 36), // 가로 꽉 채우기
-            ),
-            onPressed: () {
-              // 프로필 수정 화면으로 이동
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const EditProfileScreen()),
-              );
-            },
-            child: Text('Edit profile'),
+          Row(
+            children: [
+              // 1. Edit profile (확장)
+              Expanded(
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.grey[800],
+                    foregroundColor: Colors.white,
+                  ),
+                  onPressed: () {
+                    // 프로필 수정 화면으로 이동
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const EditProfileScreen()),
+                    );
+                  },
+                  child: Text('Edit profile'),
+                ),
+              ),
+              const SizedBox(width: 8.0),
+
+              // 2. Share profile (확장)
+              Expanded(
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.grey[800],
+                    foregroundColor: Colors.white,
+                  ),
+                  onPressed: () {
+                    // TODO: 'Share profile' 기능
+                  },
+                  child: Text('Share profile'),
+                ),
+              ),
+              const SizedBox(width: 8.0),
+
+              // 3. '다른 이모지' (사용자 추가 아이콘 버튼)
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.grey[800],
+                  foregroundColor: Colors.white,
+                  padding: EdgeInsets.symmetric(horizontal: 12.0), // 아이콘 버튼 크기 조절
+                  minimumSize: Size(36, 36), // 정사각형에 가깝게
+                ),
+                onPressed: () {
+                  // TODO: 'Discover people' 기능
+                },
+                child: Icon(Icons.person_add_outlined),
+              ),
+            ],
           ),
+          // --- --- -
         ],
       ),
     );

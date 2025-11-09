@@ -21,21 +21,9 @@ class CommentsModalContent extends StatefulWidget {
 }
 
 class _CommentsModalContentState extends State<CommentsModalContent> {
-  // 댓글 입력창을 제어할 컨트롤러
-  final TextEditingController _commentController = TextEditingController();
 
 
-  // --- (신규) 댓글 게시 기능 ---
-  void _postComment() {
-    final String text = _commentController.text;
-    if (text.isEmpty) return;
-
-    // (수정) 로컬 state를 변경하는 대신, 부모에게 받은 콜백 함수를 호출합니다.
-    widget.onCommentPosted(text);
-
-    _commentController.clear();
-    FocusManager.instance.primaryFocus?.unfocus();
-  }
+  // (댓글 입력 컨트롤러는 각 입력창 내부에서 로컬로 생성합니다.)
 
   // --- (신규) 댓글 '좋아요' 토글 기능 ---
   void _toggleCommentLike(Comment comment) {
@@ -95,6 +83,16 @@ class _CommentsModalContentState extends State<CommentsModalContent> {
 
   // 댓글 입력창 위젯
   Widget _buildCommentInputArea() {
+    final TextEditingController commentController = TextEditingController();
+
+    void postComment() {
+      final String text = commentController.text;
+      if (text.isEmpty) return;
+      widget.onCommentPosted(text);
+      commentController.clear();
+      FocusManager.instance.primaryFocus?.unfocus();
+    }
+
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
       decoration: BoxDecoration(
@@ -109,7 +107,7 @@ class _CommentsModalContentState extends State<CommentsModalContent> {
           const SizedBox(width: 10.0),
           Expanded(
             child: TextField(
-              controller: _commentController, // 컨트롤러 연결
+              controller: commentController, // 컨트롤러 연결
               style: TextStyle(color: Colors.white),
               decoration: InputDecoration(
                 hintText: 'Add a comment...',
@@ -119,7 +117,7 @@ class _CommentsModalContentState extends State<CommentsModalContent> {
             ),
           ),
           TextButton(
-            onPressed: _postComment, // 'Post' 버튼에 기능 연결
+            onPressed: postComment, // 'Post' 버튼에 기능 연결
             child: Text('Post', style: TextStyle(color: Colors.blue)),
           ),
         ],
@@ -159,6 +157,12 @@ class _CommentsModalContentState extends State<CommentsModalContent> {
                       Text('Reply', style: TextStyle(color: Colors.grey, fontSize: 12.0)),
                       const SizedBox(width: 16.0),
                       Text('See translation', style: TextStyle(color: Colors.grey, fontSize: 12.0)),
+                      const SizedBox(width: 16.0),
+                      if (comment.likeCount > 0)
+                        Text(
+                          '${comment.likeCount} ${comment.likeCount > 1 ? 'likes' : 'like'}',
+                          style: TextStyle(color: Colors.grey, fontSize: 12.0),
+                        ),
                     ],
                   ),
               ],

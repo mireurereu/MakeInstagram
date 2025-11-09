@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:instagram/widgets/comment_model.dart';
 import 'package:instagram/widgets/comments_modal_content.dart';
+import 'package:intl/intl.dart';
 
 class PostCardWidget extends StatefulWidget {
   // 데이터 모델 (단순화를 위해 여전히 하드코딩된 값을 기본값으로 사용)
@@ -41,31 +42,34 @@ class _PostCardWidgetState extends State<PostCardWidget> {
   int _currentCarouselIndex = 0;
   bool _isLiked = false;
 
-  // --- (신규) 댓글 목록 상태를 부모(여기)로 끌어올림 ---
   late List<Comment> _comments;
-  // --- (신규) 중앙 하트 애니메이션을 위한 상태 ---
   bool _showHeartAnimation = false;
+  late int _currentLikeCount;
 
   @override
   void initState() {
     super.initState();
     // 포스트 카드가 생성될 때 댓글 목록을 여기서 초기화합니다.
+    _currentLikeCount = int.tryParse(widget.likeCount.replaceAll(',', '')) ?? 0;
     _comments = [
       Comment(
         username: widget.username,
         avatarUrl: widget.userAvatarUrl,
         text: widget.caption,
+        likeCount: 0,
       ),
       Comment(
         username: 'haetbaaan',
         avatarUrl: 'https://picsum.photos/seed/haetbaaan/100/100',
         text: 'so cute!! 🥹🥹',
         isLiked: true,
+        likeCount: 1,
       ),
       Comment(
         username: 'junehxuk',
         avatarUrl: 'https://picsum.photos/seed/junehxuk/100/100',
         text: 'I love puang',
+        likeCount: 0,
       ),
     ];
   }
@@ -77,6 +81,7 @@ class _PostCardWidgetState extends State<PostCardWidget> {
         username: 'ta_junhyuk', // (임시) 내 유저 이름
         avatarUrl: 'https://picsum.photos/seed/my_profile/100/100',
         text: text,
+        likeCount: 0,
       ));
     });
     // TODO: 백엔드에 이 변경사항 전송
@@ -89,8 +94,13 @@ class _PostCardWidgetState extends State<PostCardWidget> {
 
     setState(() {
       comment.isLiked = !comment.isLiked;
+      if (comment.isLiked) {
+        comment.likeCount++;
+      } else {
+        comment.likeCount--;
+      }
     });
-    // TODO: 백엔드에 이 변경사항 전송
+    // TODO: 백엔드 전송
   }
 
   @override
@@ -321,11 +331,16 @@ Widget _buildContent(BuildContext context) {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // (수정) widget.likeCount 대신 _currentLikeCount를 포맷하여 표시
           Text(
-            '${widget.likeCount} likes',
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            '${NumberFormat.decimalPattern('en_US').format(_currentLikeCount)} likes',
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 4.0),
+          // ... (캡션, 댓글 수, 타임스탬프는 동일) ...
           RichText(
             text: TextSpan(
               style: TextStyle(color: Colors.white),
@@ -376,6 +391,7 @@ void _handleDoubleTap() {
     if (!_isLiked) {
       setState(() {
         _isLiked = true;
+        _currentLikeCount++;
       });
       // TODO: 백엔드에 '좋아요' 전송
     }
@@ -395,8 +411,13 @@ void _handleDoubleTap() {
   }
   void _handleIconTap() {
     setState(() {
-      _isLiked = !_isLiked; // 아이콘 탭은 '토글'
+      _isLiked = !_isLiked;
+      if (_isLiked) {
+        _currentLikeCount++;
+      } else {
+        _currentLikeCount--;
+      }
     });
-    // TODO: 백엔드에 '좋아요'/'좋아요 취소' 전송
+    // TODO: 백엔드 전송
   }
 } 
