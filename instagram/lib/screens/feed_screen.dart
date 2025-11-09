@@ -10,34 +10,32 @@ class FeedScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
       // 상단 앱 바
       appBar: AppBar(
-        backgroundColor: Colors.black,
-        // 인스타그램 로고 (일단 텍스트로 대체)
-        title: Text(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        title: const Text(
           'Instagram',
           style: TextStyle(
-            color: Colors.white,
+            color: Colors.black,
             fontFamily: 'Billabong', // 인스타그램 로고 폰트 (추후 설정 필요)
             fontSize: 32.0,
           ),
         ),
-        elevation: 0,
         actions: [
           // '좋아요' 아이콘 버튼
           IconButton(
-            icon: Icon(Icons.favorite_border, color: Colors.white),
+            icon: const Icon(Icons.favorite_border, color: Colors.black),
             onPressed: () {
-              // '좋아요' 알림 화면으로 이동
+              // 좋아요 관련 동작 추가
             },
           ),
           // 'DM' 아이콘 버튼
           IconButton(
-            icon: Icon(Icons.send_outlined, color: Colors.white),
+            icon: const Icon(Icons.send_outlined, color: Colors.black),
             onPressed: () {
               // 'DM' 화면으로 이동
-            Navigator.push(
+              Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => const DmListScreen()),
               );
@@ -49,8 +47,7 @@ class FeedScreen extends StatelessWidget {
       body: ListView.builder(
         itemCount: 10, // 10개의 게시물
         itemBuilder: (context, index) {
-          // index를 사용하여 다양한 유형의 게시물 생성
-
+    // index를 사용하여 다양한 유형의 게시물 생성
           // 1. 캐러셀 게시물 (영상 0:16초의 'karinabluu')
           if (index == 1) {
             return PostCardWidget(

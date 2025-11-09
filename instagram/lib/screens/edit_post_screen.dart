@@ -21,9 +21,7 @@ class EditPostScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
       appBar: AppBar(
-        backgroundColor: Colors.black,
         title: Text('Edit'),
         actions: [
           // 'Next' 버튼
