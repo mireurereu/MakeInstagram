@@ -45,7 +45,7 @@ class _NameEditScreenState extends State<NameEditScreen> {
           ),
           // (스크린샷) 제목
           title: Text(
-            "Are you sure you want to change your name to $newName!!",
+            "Are you sure you want to change your name to $newName?",
             style: TextStyle(
                 color: Colors.black,
                 fontSize: 16.0,

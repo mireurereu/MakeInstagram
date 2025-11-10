@@ -30,7 +30,22 @@ class MyApp extends StatelessWidget {
           ),
         ),
       ),
-      home: const MainNavigationScreen(), // 앱 시작 화면
+      home: DefaultTextStyle(
+        style: const TextStyle(
+          // Provide common emoji-capable fonts as fallbacks. Order matters —
+          // system-specific names first, then common cross-platform fonts.
+          // On Windows: 'Segoe UI Emoji' or 'Segoe UI Symbol'
+          // On macOS/iOS: 'Apple Color Emoji' (system) — usually doesn't need to be listed
+          // On Android/Linux: 'Noto Color Emoji' / system fallbacks
+          fontFamilyFallback: [
+            'Segoe UI Emoji',
+            'Segoe UI Symbol',
+            'Noto Color Emoji',
+            'Apple Color Emoji',
+          ],
+        ),
+        child: const MainNavigationScreen(), // 앱 시작 화면
+      ),
     );
   }
 }

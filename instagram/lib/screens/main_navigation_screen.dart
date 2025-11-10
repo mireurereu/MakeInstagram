@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:instagram/screens/feed_screen.dart';
 import 'package:instagram/screens/create_post_screen.dart';
 import 'package:instagram/screens/profile_screen.dart';
+import 'package:instagram/screens/emoji_test_screen.dart';
 
 class MainNavigationScreen extends StatefulWidget {
   const MainNavigationScreen({super.key});
@@ -17,9 +18,9 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   int _selectedIndex = 0;
 
   // 각 탭에 보여줄 화면 위젯 목록
-  static final List<Widget> _widgetOptions = <Widget>[
+    static final List<Widget> _widgetOptions = <Widget>[
     FeedScreen(), // 0번 탭 (홈)
-    Text('Search Screen', style: TextStyle(color: Colors.white)), // 1번 탭 (검색)
+    const EmojiTestScreen(), // 1번 탭 (검색) -> 임시: 이모지 테스트 화면
     Container(), // 2번 탭 (자리 표시용 - 어차피 탭이동 안함)
     Text('Reels Screen', style: TextStyle(color: Colors.white)), // 3번 탭 (릴스)
     ProfileScreen(), // 4번 탭 (프로필)

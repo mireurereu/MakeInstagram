@@ -218,12 +218,12 @@ class DmListScreen extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 ElevatedButton(
-                  child: Text('Connect'),
                   onPressed: () {},
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blue,
                     foregroundColor: Colors.white,
                   ),
+                  child: Text('Connect'),
                 ),
                 Icon(Icons.close, color: Colors.grey),
               ],
@@ -246,12 +246,12 @@ class DmListScreen extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 ElevatedButton(
-                  child: Text('Search'),
                   onPressed: () {},
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blue,
                     foregroundColor: Colors.white,
                   ),
+                  child: Text('Search'),
                 ),
                 Icon(Icons.close, color: Colors.grey),
               ],
