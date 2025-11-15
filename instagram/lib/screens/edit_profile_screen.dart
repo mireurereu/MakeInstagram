@@ -29,6 +29,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   late String _bio;
   late String _avatarUrl;
   String? _newAvatarFile; // 새로 선택한 로컬 파일 경로
+  String _gender = 'Prefer not to say';
 
   @override
   void initState() {
@@ -128,6 +129,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       'name': _name,
       'bio': _bio,
       'avatarUrl': returnAvatarUrl,
+      'gender': _gender,
     });
   }
 
@@ -281,108 +283,195 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     }
   }
 
+  void _navigateToGenderEdit() async {
+    // TODO: 'GenderEditScreen'을 새로 만드신 후, 아래 주석을 해제하세요.
+    // Name/Bio와 동일한 패턴으로 값을 받아오면 됩니다.
+    
+    // final newGender = await Navigator.push(
+    //   context,
+    //   MaterialPageRoute(
+    //     builder: (context) => GenderEditScreen(initialGender: _gender),
+    //   ),
+    // );
+    // if (newGender != null && newGender != _gender) {
+    //   setState(() {
+    //     _gender = newGender;
+    //   });
+    // }
+    
+    // (임시) 탭 기능만 확인
+    print('Navigate to Gender Edit Screen');
+  }
+
   // 9. (핵심) 실제 UI를 그리는 build 메서드
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white, // 라이트 모드 배경
+      
+      // 1. (수정) AppBar (화살표 아이콘)
       appBar: AppBar(
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
+        elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.close),
-          onPressed: () => Navigator.pop(context), // 데이터 반환 없이 닫기
+          icon: Icon(Icons.arrow_back), // 'X' -> '←'
+          onPressed: _onDonePressed,
         ),
-        title: Text('Edit profile'),
-        actions: [
-          TextButton(
-            onPressed: _onDonePressed, // 'Done' 누르면 데이터 반환
-            child: Text('Done',
-                style: TextStyle(color: Colors.blue, fontSize: 16.0)),
-          ),
-        ],
+        title: Text('Edit profile', style: TextStyle(fontWeight: FontWeight.bold)),
+        actions: [],
       ),
+      
+      // 2. (수정) Body (Padding 구조 및 필드 UI)
       body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          child: Column(
-            children: [
-              const SizedBox(height: 16.0),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 아바타, 텍스트 필드 등을 별도 Padding으로 묶기
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  GestureDetector(
-                    onTap: () => _showPictureModal(context),
-                    child: CircleAvatar(
-                      radius: 44,
-                      backgroundImage: _newAvatarFile != null
-                          ? FileImage(File(_newAvatarFile!))
-                          : NetworkImage(_avatarUrl) as ImageProvider,
+                  const SizedBox(height: 16.0),
+                  // (상단 아바타 섹션)
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      GestureDetector(
+                        onTap: () => _showPictureModal(context),
+                        child: CircleAvatar(
+                          radius: 44,
+                          backgroundImage: _newAvatarFile != null
+                              ? FileImage(File(_newAvatarFile!))
+                              : NetworkImage(_avatarUrl) as ImageProvider,
+                        ),
+                      ),
+                      const SizedBox(width: 16.0),
+                      GestureDetector(
+                        onTap: () { /* TODO: 아바타 설정 */ },
+                        child: CircleAvatar(
+                          radius: 44,
+                          backgroundColor: Colors.grey[200],
+                          child: Icon(Icons.shield_outlined,
+                              color: Colors.black, size: 40.0),
+                        ),
+                      ),
+                    ],
+                  ),
+                  Center(
+                    child: TextButton(
+                      onPressed: () => _showPictureModal(context),
+                      child: Text('Change profile picture',
+                          style: TextStyle(color: Colors.blue, fontSize: 14.0)),
                     ),
                   ),
-                  const SizedBox(width: 16.0),
-                  GestureDetector(
-                    onTap: () { /* TODO: 아바타 설정 화면 */ },
-                    child: CircleAvatar(
-                      radius: 44,
-                      backgroundColor: Colors.grey[200], // 라이트 모드
-                      child: Icon(Icons.shield_outlined,
-                          color: Colors.black, size: 40.0), // 라이트 모드
-                    ),
+                  const SizedBox(height: 16.0),
+
+                  // (수정된 필드 호출)
+                  _buildTextRow('Name', _name, onTap: _navigateToNameEdit),
+                  _buildTextRow('Username', 'ta_junhyuk'),
+                  _buildTextRow('Pronouns', ''),
+                  _buildTextRow('Bio', _bio, onTap: _navigateToBioEdit),
+                  
+                  _buildSimpleRow('Add link', showDivider: false),
+                  _buildSimpleRow('Add banners', showDivider: false),
+
+                  _buildTextRow(
+                    'Gender',
+                    _gender,
+                    onTap: _navigateToGenderEdit,
+                    showArrow: true, // 화살표 표시
+                    // showDivider: true (기본값)
                   ),
+                  
+                  _buildNavigationRow('Music', 'Add music to your profile'),
+
+                  const SizedBox(height: 16.0),
                 ],
               ),
-              TextButton(
-                onPressed: () => _showPictureModal(context),
-                child: Text('Change profile picture',
-                    style: TextStyle(color: Colors.blue)),
-              ),
-              const SizedBox(height: 16.0),
-
-              // Name, Bio 등이 탭 가능하도록 설정
-              GestureDetector(
-                onTap: _navigateToNameEdit,
-                child: _buildTextRow('Name', _name),
-              ),
-              _buildTextRow('Username', 'ta_junhyuk'),
-              _buildTextRow('Pronouns', ''),
-              GestureDetector(
-                onTap: _navigateToBioEdit,
-                child: _buildTextRow('Bio', _bio),
-              ),
-              _buildNavigationRow('Add link'),
-              _buildNavigationRow('Add banners'),
-              _buildNavigationRow('Gender', 'Prefer not to say'),
-          _buildNavigationRow('Music', 'Add music to your profile', true),
-              const SizedBox(height: 16.0),
-              _buildLinkButton('Switch to professional account'),
-              _buildLinkButton('Personal information settings'),
-            ],
-          ),
+            ),
+            
+            // (수정) LinkButton들을 Padding 밖으로 이동 (구분선이 꽉 차도록)
+            _buildLinkButton('Switch to professional account'),
+            _buildLinkButton('Personal information settings'),
+            
+            const SizedBox(height: 32.0),
+          ],
         ),
       ),
     );
   }
 
   // 10. (헬퍼 함수들 - 라이트 모드 적용)
-  Widget _buildTextRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(label, style: TextStyle(color: Colors.grey, fontSize: 12.0)),
-          const SizedBox(height: 4.0),
-          Text(
-            value.isEmpty ? '' : value,
-            style: TextStyle(color: Colors.black, fontSize: 16.0),
-          ),
-          const SizedBox(height: 8.0),
-          Divider(color: Colors.grey[300], height: 1),
-        ],
+  Widget _buildTextRow(
+    String label,
+    String value, {
+    VoidCallback? onTap,
+    bool showDivider = true, // 1. 구분선 표시 여부
+    bool showArrow = false,  // 2. 화살표 표시 여부 (Gender용)
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        color: Colors.transparent,
+        padding: const EdgeInsets.symmetric(vertical: 8.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Row로 텍스트와 화살표를 묶음
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                // Column으로 레이블과 값을 묶음
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(label, style: TextStyle(color: Colors.grey[600], fontSize: 12.0)),
+                      const SizedBox(height: 4.0),
+                      Text(
+                        value.isEmpty ? ' ' : value,
+                        style: TextStyle(color: Colors.black, fontSize: 16.0),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+                // (신규) 화살표가 true일 때만 아이콘 표시
+                if (showArrow)
+                  Padding(
+                    padding: const EdgeInsets.only(left: 8.0),
+                    child: Icon(Icons.chevron_right, color: Colors.grey[600], size: 20.0),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 8.0),
+            // (신규) 구분선이 true일 때만 표시
+            if (showDivider)
+              Divider(color: Colors.grey[300], height: 1),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildNavigationRow(String title,
-      [String trailing = '', bool showTrailingText = false]) {
+  Widget _buildSimpleRow(String title, {bool showDivider = true}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          title: Text(title, style: TextStyle(color: Colors.black, fontSize: 16.0)),
+          onTap: () { /* TODO */ },
+        ),
+        if (showDivider) // (수정)
+          Divider(color: Colors.grey[300], height: 1),
+      ],
+    );
+  }
+
+  Widget _buildNavigationRow(String title, String trailingText, {bool showDivider = true}) {
     return Column(
       children: [
         ListTile(
@@ -392,35 +481,36 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (showTrailingText)
-                Text(trailing,
-                    style: TextStyle(color: Colors.grey, fontSize: 16.0)),
-              if (!showTrailingText && trailing.isNotEmpty)
-                Text(trailing,
-                    style: TextStyle(color: Colors.black, fontSize: 16.0)),
+              Text(trailingText,
+                  style: TextStyle(color: Colors.grey[600], fontSize: 16.0)), // (수정) 항상 회색
               const SizedBox(width: 8.0),
-              Icon(Icons.chevron_right, color: Colors.black),
+              Icon(Icons.chevron_right, color: Colors.grey[600], size: 20.0), // (수정)
             ],
           ),
           onTap: () { /* TODO */ },
         ),
-        Divider(color: Colors.grey[300], height: 1),
+        if (showDivider)
+          Divider(color: Colors.grey[300], height: 1),
       ],
     );
   }
 
   Widget _buildLinkButton(String title) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        Divider(color: Colors.grey[300], height: 1),
         ListTile(
-          contentPadding: EdgeInsets.zero,
+          contentPadding: EdgeInsets.symmetric(horizontal: 16.0), // 좌우 패딩 추가
           title: Text(
             title,
             style: TextStyle(color: Colors.blue, fontSize: 16.0),
           ),
           onTap: () { /* TODO */ },
         ),
-        Divider(color: Colors.grey[300], height: 1),
+        // (수정) 마지막 버튼 뒤에만 구분선 추가
+        if (title == 'Personal information settings')
+           Divider(color: Colors.grey[300], height: 1),
       ],
     );
   }
