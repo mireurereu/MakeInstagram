@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:instagram/screens/edit_profile_screen.dart';
 import 'package:instagram/screens/following_list_screen.dart';
-import 'package:instagram/screens/create_post_screen.dart';
 
 // --- 1. (수정) username 파라미터 추가 ---
 class ProfileScreen extends StatefulWidget {

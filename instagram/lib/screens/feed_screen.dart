@@ -11,14 +11,15 @@ class FeedScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       // 상단 앱 바
+      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
-        elevation: 0,
+        elevation: 0.5, // 2. 스크린샷처럼 그림자 추가
         title: const Text(
           'Instagram',
           style: TextStyle(
-            color: Colors.black,
-            fontFamily: 'Billabong', // 인스타그램 로고 폰트 (추후 설정 필요)
+            color: Colors.black, // 3. 텍스트 색상 검은색
+            fontFamily: 'Billabong', 
             fontSize: 32.0,
           ),
         ),

@@ -18,14 +18,13 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   int _selectedIndex = 0;
 
   // 각 탭에 보여줄 화면 위젯 목록
-    static final List<Widget> _widgetOptions = <Widget>[
-    FeedScreen(), // 0번 탭 (홈)
-    const EmojiTestScreen(), // 1번 탭 (검색) -> 임시: 이모지 테스트 화면
-    Container(), // 2번 탭 (자리 표시용 - 어차피 탭이동 안함)
-    Text('Reels Screen', style: TextStyle(color: Colors.white)), // 3번 탭 (릴스)
-    ProfileScreen(), // 4번 탭 (프로필)
+  static final List<Widget> _widgetOptions = <Widget>[
+    FeedScreen(),
+    Text('Search Screen', style: TextStyle(color: Colors.black)), // 1. 텍스트 검은색
+    Container(),
+    Text('Reels Screen', style: TextStyle(color: Colors.black)), // 2. 텍스트 검은색
+    ProfileScreen(),
   ];
-
   // 탭이 선택되었을 때 호출될 함수
   void _onItemTapped(int index) {
     if (index == 2) {
@@ -47,6 +46,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       // 현재 선택된 탭에 해당하는 화면을 보여줌
+      backgroundColor: Colors.white,
       body: Center(
         child: _widgetOptions.elementAt(_selectedIndex),
       ),
@@ -78,10 +78,11 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         selectedItemColor: Colors.white, // 선택된 아이콘 색상
         unselectedItemColor: Colors.grey, // 비선택 아이콘 색상
         onTap: _onItemTapped, // 탭 선택 시 호출
-        backgroundColor: Colors.black, // 배경색
+        backgroundColor: Colors.white, // 배경색
         type: BottomNavigationBarType.fixed, // 탭이 고정되도록 설정
         showSelectedLabels: false, // 선택된 라벨 숨기기
         showUnselectedLabels: false, // 비선택 라벨 숨기기
+        elevation: 0.5,
       ),
     );
   }
