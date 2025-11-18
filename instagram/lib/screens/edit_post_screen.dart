@@ -1,19 +1,19 @@
 // lib/screens/edit_post_screen.dart
 
-import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import 'package:instagram/screens/new_post_screen.dart'; // 다음 단계 파일
+import 'package:instagram/screens/new_post_screen.dart';
 
 class EditPostScreen extends StatelessWidget {
-  final File imageFile; // 이전 화면에서 선택한 이미지
+  final Uint8List imageBytes;
 
-  const EditPostScreen({super.key, required this.imageFile});
+  const EditPostScreen({super.key, required this.imageBytes});
 
   void _goToNewPostScreen(BuildContext context) {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => NewPostScreen(imageFile: imageFile),
+        builder: (context) => NewPostScreen(imageBytes: imageBytes),
       ),
     );
   }
@@ -37,8 +37,8 @@ class EditPostScreen extends StatelessWidget {
       body: Column(
         children: [
           // 1. 선택된 이미지
-          Image.file(
-            imageFile,
+          Image.memory(
+            imageBytes,
             fit: BoxFit.cover,
             width: double.infinity,
             height: MediaQuery.of(context).size.width, // 1:1 비율
