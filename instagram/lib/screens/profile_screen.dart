@@ -174,10 +174,7 @@ class _ProfileScreenState extends State<ProfileScreen>
 
                 // (수정) 그 외에는 _posts 리스트의 이미지를 렌더링
                 final postUrl = _posts[index];
-                return Image.network(
-                  postUrl,
-                  fit: BoxFit.cover,
-                );
+                return ZoomableGridImage(imageUrl: postUrl);
               },
             ),
             // 두 번째 탭: 태그된 포스트
@@ -631,5 +628,142 @@ class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
   @override
   bool shouldRebuild(_SliverAppBarDelegate oldDelegate) {
     return false;
+  }
+}
+class ZoomableGridImage extends StatefulWidget {
+  final String imageUrl;
+
+  const ZoomableGridImage({super.key, required this.imageUrl});
+
+  @override
+  State<ZoomableGridImage> createState() => _ZoomableGridImageState();
+}
+
+class _ZoomableGridImageState extends State<ZoomableGridImage> {
+  OverlayEntry? _overlayEntry;
+  bool _isLiked = false; // 좋아요 상태 (임시)
+
+  // 1. 오버레이 생성 함수
+  void _showOverlay(BuildContext context) {
+    final overlay = Overlay.of(context);
+    _overlayEntry = OverlayEntry(
+      builder: (context) => Stack(
+        children: [
+          // A. 배경 (반투명 검정)
+          Positioned.fill(
+            child: Container(
+              color: Colors.black.withOpacity(0.6),
+            ),
+          ),
+
+          // B. 중앙 확대 이미지
+          Center(
+            child: Material(
+              color: Colors.transparent,
+              child: Container(
+                // 가로 너비를 화면의 95% 정도로 설정
+                width: MediaQuery.of(context).size.width * 0.95,
+                // 이미지의 높이를 콘텐츠에 맞춤 (Column 사용)
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12.0), // 둥근 모서리
+                  boxShadow: [
+                    BoxShadow(
+                        color: Colors.black26, blurRadius: 10, spreadRadius: 2)
+                  ],
+                ),
+                // [Image] + [Bottom Bar]를 세로로 배치
+                child: Column(
+                  mainAxisSize: MainAxisSize.min, // 내용물만큼만 높이 차지
+                  children: [
+                    // 1. 이미지
+                    ClipRRect(
+                      borderRadius:
+                          BorderRadius.vertical(top: Radius.circular(12.0)),
+                      child: Image.network(
+                        widget.imageUrl,
+                        fit: BoxFit.cover,
+                        width: double.infinity,
+                        height: MediaQuery.of(context).size.width * 0.95, // 정사각형 비율
+                      ),
+                    ),
+
+                    // 2. 하단 인터랙션 바 (스크린샷 UI)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12.0, vertical: 10.0),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius:
+                            BorderRadius.vertical(bottom: Radius.circular(12.0)),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          // 좌측 아이콘들 (좋아요, 댓글, 공유)
+                          Row(
+                            children: [
+                              // 좋아요 아이콘 (상태에 따라 변경)
+                              Icon(
+                                _isLiked ? Icons.favorite : Icons.favorite_border,
+                                color: _isLiked ? Colors.red : Colors.black,
+                                size: 26,
+                              ),
+                              const SizedBox(width: 16),
+                              Icon(Icons.chat_bubble_outline,
+                                  color: Colors.black, size: 26),
+                              const SizedBox(width: 16),
+                              Icon(Icons.send_outlined,
+                                  color: Colors.black, size: 26),
+                            ],
+                          ),
+                          // 우측 아이콘 (더보기)
+                          Icon(Icons.more_vert, color: Colors.black, size: 26),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    // 오버레이 삽입
+    overlay.insert(_overlayEntry!);
+  }
+
+  // 2. 오버레이 제거 함수
+  void _removeOverlay() {
+    _overlayEntry?.remove();
+    _overlayEntry = null;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      // 길게 누르기 시작 -> 오버레이 표시
+      onLongPressStart: (details) {
+        _showOverlay(context);
+      },
+      // 손을 뗌 -> 오버레이 제거
+      onLongPressEnd: (details) {
+        _removeOverlay();
+      },
+      // 제스처 취소 시 제거
+      onLongPressCancel: () {
+        _removeOverlay();
+      },
+      // 탭 시 (나중에 상세 화면 이동 등)
+      onTap: () {
+        // Navigator.push(...)
+      },
+      child: Image.network(
+        widget.imageUrl,
+        fit: BoxFit.cover,
+      ),
+    );
   }
 }

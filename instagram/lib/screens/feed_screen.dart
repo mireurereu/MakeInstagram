@@ -2,7 +2,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:instagram/widgets/post_card_widget.dart';
-import 'package:instagram/screens/dm_list_screen.dart'; // 곧 생성할 파일
+import 'package:instagram/screens/dm_list_screen.dart'; 
+import 'package:instagram/screens/notifications_screen.dart';// 곧 생성할 파일
 
 class FeedScreen extends StatelessWidget {
   const FeedScreen({super.key});
@@ -28,7 +29,12 @@ class FeedScreen extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.favorite_border, color: Colors.black),
             onPressed: () {
-              // 좋아요 관련 동작 추가
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const NotificationsScreen(),
+                ),
+              );
             },
           ),
           // 'DM' 아이콘 버튼

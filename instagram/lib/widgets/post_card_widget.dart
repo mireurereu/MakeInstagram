@@ -1,36 +1,33 @@
-// lib/widgets/post_card_widget.dart
-
 import 'package:flutter/material.dart';
 import 'package:instagram/widgets/comment_model.dart';
 import 'package:instagram/widgets/comments_modal_content.dart';
 import 'package:intl/intl.dart';
 
 class PostCardWidget extends StatefulWidget {
-  // 데이터 모델 (단순화를 위해 여전히 하드코딩된 값을 기본값으로 사용)
   final String username;
   final String userAvatarUrl;
-  final List<String> postImageUrls; // 단일 이미지가 아닌 리스트로 변경
+  final List<String> postImageUrls;
   final String caption;
   final String likeCount;
   final String commentCount;
   final String timestamp;
-  final bool isSponsored; // 스폰서 게시물 여부
-  final bool isCarousel; // 캐러셀 여부 (이미지 리스트 개수로 자동 감지)
+  final bool isSponsored;
+  final bool isCarousel;
   final bool isVideo;
 
   PostCardWidget({
     super.key,
     this.username = "aespa_official",
     this.userAvatarUrl = "https://picsum.photos/seed/aespa/100/100",
-    List<String>? postImageUrls, // 외부에서 주입받을 수 있도록 변경
+    List<String>? postImageUrls,
     this.caption = "Bee~ Gese Stay Alive 🐝",
     this.likeCount = "918,471",
     this.commentCount = "2,000",
     this.timestamp = "5 days ago",
-    this.isSponsored = false, // 기본값은 스폰서 아님
+    this.isSponsored = false,
     this.isVideo = false,
   })  : postImageUrls = postImageUrls ??
-            ["https://picsum.photos/seed/karina/600/600"], // 기본값은 단일 이미지
+            ["https://picsum.photos/seed/karina/600/600"],
         isCarousel = (postImageUrls != null && postImageUrls.length > 1);
 
   @override
@@ -38,10 +35,8 @@ class PostCardWidget extends StatefulWidget {
 }
 
 class _PostCardWidgetState extends State<PostCardWidget> {
-  // 캐러셀의 현재 페이지 인덱스
   int _currentCarouselIndex = 0;
   bool _isLiked = false;
-
   late List<Comment> _comments;
   bool _showHeartAnimation = false;
   late int _currentLikeCount;
@@ -49,7 +44,6 @@ class _PostCardWidgetState extends State<PostCardWidget> {
   @override
   void initState() {
     super.initState();
-    // 포스트 카드가 생성될 때 댓글 목록을 여기서 초기화합니다.
     _currentLikeCount = int.tryParse(widget.likeCount.replaceAll(',', '')) ?? 0;
     _comments = [
       Comment(
@@ -74,24 +68,19 @@ class _PostCardWidgetState extends State<PostCardWidget> {
     ];
   }
 
-  // --- (신규) 자식(모달)에서 호출할 댓글 추가 함수 ---
   void _handlePostComment(String text) {
     setState(() {
       _comments.add(Comment(
-        username: 'ta_junhyuk', // (임시) 내 유저 이름
+        username: 'ta_junhyuk',
         avatarUrl: 'https://picsum.photos/seed/my_profile/100/100',
         text: text,
         likeCount: 0,
       ));
     });
-    // TODO: 백엔드에 이 변경사항 전송
   }
 
-  // --- (신규) 자식(모달)에서 호출할 댓글 좋아요 토글 함수 ---
   void _handleToggleCommentLike(Comment comment) {
-    // 캡션(첫 번째 댓글)은 '좋아요' 대상에서 제외
     if (_comments.indexOf(comment) == 0) return;
-
     setState(() {
       comment.isLiked = !comment.isLiked;
       if (comment.isLiked) {
@@ -100,34 +89,26 @@ class _PostCardWidgetState extends State<PostCardWidget> {
         comment.likeCount--;
       }
     });
-    // TODO: 백엔드 전송
   }
 
   @override
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8.0),
-      color: Colors.black,
+      color: Colors.white, // [수정] 배경색 흰색
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 1. 헤더 (스폰서 여부에 따라 UI 분기)
           _buildHeader(),
-
-          // 2. 본문 (캐러셀 또는 단일 이미지)
           _buildContent(context),
-
-          // 3. 액션 버튼 (좋아요, 댓글, 공유, 북마크)
           _buildActionButtons(),
-
-          // 4. 푸터 (스폰서 여부에 따라 'Shop now' 버튼 추가)
           _buildFooter(context),
         ],
       ),
     );
   }
 
-  // 1. 헤더 위젯 (수정)
+  // 1. 헤더 (검정 텍스트)
   Widget _buildHeader() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
@@ -145,21 +126,20 @@ class _PostCardWidgetState extends State<PostCardWidget> {
                 Text(
                   widget.username,
                   style: TextStyle(
-                    color: Colors.white,
+                    color: Colors.black, // [수정] 검정색
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                // 스폰서 게시물일 경우 "Sponsored" 텍스트 표시
                 if (widget.isSponsored)
                   Text(
                     'Sponsored',
-                    style: TextStyle(color: Colors.white54, fontSize: 12.0),
+                    style: TextStyle(color: Colors.black54, fontSize: 12.0), // [수정] 진한 회색
                   ),
               ],
             ),
           ),
           IconButton(
-            icon: Icon(Icons.more_horiz, color: Colors.white),
+            icon: Icon(Icons.more_horiz, color: Colors.black), // [수정] 검정색 아이콘
             onPressed: () {},
           ),
         ],
@@ -167,104 +147,94 @@ class _PostCardWidgetState extends State<PostCardWidget> {
     );
   }
 
-  // 2. 본문 위젯 (수정 - 캐러셀 구현)
-  // lib/widgets/post_card_widget.dart (내부)
-
-// 2. 본문 위젯 (수정됨 - GestureDetector, AnimatedOpacity 추가)
-Widget _buildContent(BuildContext context) {
-  return GestureDetector( // (신규) 더블 탭 감지를 위해 추가
-    onDoubleTap: _handleDoubleTap, // 더블 탭 시 _handleDoubleTap 함수 호출
-    child: AspectRatio(
-      aspectRatio: 1.0,
-      child: Stack(
-        alignment: Alignment.center, // (신규) 하트 아이콘을 중앙에 배치하기 위해 추가
-        children: [
-          
-          // 2-1. 기존 PageView (사진/영상 콘텐츠)
-          PageView.builder(
-            itemCount: widget.postImageUrls.length,
-            onPageChanged: (index) {
-              setState(() {
-                _currentCarouselIndex = index;
-              });
-            },
-            itemBuilder: (context, index) {
-              return Image.network(
-                widget.postImageUrls[index],
-                fit: BoxFit.cover,
-                loadingBuilder: (context, child, loadingProgress) {
-                  if (loadingProgress == null) return child;
-                  return Container(
-                    color: Colors.grey[900],
-                    child: Center(child: CircularProgressIndicator(strokeWidth: 2.0)),
-                  );
-                },
-              );
-            },
-          ),
-
-          // 2-2. 기존 캐러셀 인디케이터 (우측 상단 숫자)
-          if (widget.isCarousel)
-            Positioned(
-              top: 10,
-              right: 10,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-                decoration: BoxDecoration(
-                  color: Color.fromRGBO(0, 0, 0, 0.7), // replaced withOpacity
-                  borderRadius: BorderRadius.circular(12.0),
-                ),
-                child: Text(
-                  '${_currentCarouselIndex + 1} / ${widget.postImageUrls.length}',
-                  style: TextStyle(color: Colors.white, fontSize: 12.0),
+  // 2. 본문 (이미지 및 애니메이션)
+  Widget _buildContent(BuildContext context) {
+    return GestureDetector(
+      onDoubleTap: _handleDoubleTap,
+      child: AspectRatio(
+        aspectRatio: 1.0,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            PageView.builder(
+              itemCount: widget.postImageUrls.length,
+              onPageChanged: (index) {
+                setState(() {
+                  _currentCarouselIndex = index;
+                });
+              },
+              itemBuilder: (context, index) {
+                return Image.network(
+                  widget.postImageUrls[index],
+                  fit: BoxFit.cover,
+                  loadingBuilder: (context, child, loadingProgress) {
+                    if (loadingProgress == null) return child;
+                    return Container(
+                      color: Colors.grey[200], // [수정] 로딩 배경 밝은 회색
+                      child: Center(
+                          child: CircularProgressIndicator(strokeWidth: 2.0)),
+                    );
+                  },
+                );
+              },
+            ),
+            if (widget.isCarousel)
+              Positioned(
+                top: 10,
+                right: 10,
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+                  decoration: BoxDecoration(
+                    color: Color.fromRGBO(0, 0, 0, 0.7),
+                    borderRadius: BorderRadius.circular(12.0),
+                  ),
+                  child: Text(
+                    '${_currentCarouselIndex + 1} / ${widget.postImageUrls.length}',
+                    style: TextStyle(color: Colors.white, fontSize: 12.0),
+                  ),
                 ),
               ),
-            ),
-          
-          // 2-3. 기존 캐러셀 인디케이터 (하단 점)
-          if (widget.isCarousel)
-            Positioned(
-              bottom: 10,
-              left: 0,
-              right: 0,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(widget.postImageUrls.length, (index) {
-                  return Container(
-                    width: 6.0,
-                    height: 6.0,
-                    margin: const EdgeInsets.symmetric(horizontal: 3.0),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-            color: _currentCarouselIndex == index
-              ? Colors.blue
-              : Color.fromRGBO(255, 255, 255, 0.5), // replaced withOpacity
-                    ),
-                  );
-                }),
+            if (widget.isCarousel)
+              Positioned(
+                bottom: 10,
+                left: 0,
+                right: 0,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(widget.postImageUrls.length, (index) {
+                    return Container(
+                      width: 6.0,
+                      height: 6.0,
+                      margin: const EdgeInsets.symmetric(horizontal: 3.0),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        // [수정] 인디케이터 색상 (파랑 / 밝은 회색)
+                        color: _currentCarouselIndex == index
+                            ? Colors.blue
+                            : Colors.white.withOpacity(0.8),
+                      ),
+                    );
+                  }),
+                ),
+              ),
+            AnimatedOpacity(
+              duration: const Duration(milliseconds: 200),
+              opacity: _showHeartAnimation ? 1.0 : 0.0,
+              child: Icon(
+                Icons.favorite,
+                color: Colors.white,
+                size: 100.0,
               ),
             ),
-
-          // 2-4. (신규) 중앙 하트 애니메이션
-          AnimatedOpacity(
-            duration: const Duration(milliseconds: 200), // 0.2초
-            opacity: _showHeartAnimation ? 1.0 : 0.0, // _showHeartAnimation 상태에 따라 투명도 조절
-            child: Icon(
-              Icons.favorite,
-              color: Colors.white,
-              size: 100.0, // 큰 하트
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
 
-  // 3. 액션 버튼 위젯 (변경 없음 - 이전과 동일)
+  // 3. 액션 버튼 (검정 아이콘)
   Widget _buildActionButtons() {
-    // ... (이전 단계의 코드와 동일) ...
-    // (IconButton 4개 포함된 Row)
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4.0),
       child: Row(
@@ -274,24 +244,28 @@ Widget _buildContent(BuildContext context) {
             children: [
               IconButton(
                 icon: _isLiked
-                    ? Icon(Icons.favorite, color: Colors.red, size: 28) // 좋아요 눌림
-                    : Icon(Icons.favorite_border, color: Colors.white, size: 28),
-                onPressed: _handleIconTap, // 기본
+                    ? Icon(Icons.favorite, color: Colors.red, size: 28)
+                    : Icon(Icons.favorite_border,
+                        color: Colors.black, size: 28), // [수정] 검정색
+                onPressed: _handleIconTap,
               ),
               IconButton(
-                icon: Icon(Icons.chat_bubble_outline, color: Colors.white, size: 28),
+                icon: Icon(Icons.chat_bubble_outline,
+                    color: Colors.black, size: 28), // [수정] 검정색
                 onPressed: () {
                   _showCommentsModal(context);
                 },
               ),
               IconButton(
-                icon: Icon(Icons.send_outlined, color: Colors.white, size: 28),
+                icon: Icon(Icons.send_outlined,
+                    color: Colors.black, size: 28), // [수정] 검정색
                 onPressed: () {},
               ),
             ],
           ),
           IconButton(
-            icon: Icon(Icons.bookmark_border, color: Colors.white, size: 28),
+            icon: Icon(Icons.bookmark_border,
+                color: Colors.black, size: 28), // [수정] 검정색
             onPressed: () {},
           ),
         ],
@@ -299,9 +273,8 @@ Widget _buildContent(BuildContext context) {
     );
   }
 
-  // 4. 푸터 위젯 (수정 - 스폰서 버튼 추가)
+  // 4. 푸터 (검정 텍스트)
   Widget _buildFooter(BuildContext context) {
-    // 스폰서 게시물일 경우, UI가 완전히 달라짐 (영상 0:14초 참고)
     if (widget.isSponsored) {
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
@@ -309,41 +282,41 @@ Widget _buildContent(BuildContext context) {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              widget.caption, // 스폰서는 캡션을 바로 보여줌
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              widget.caption,
+              style: TextStyle(
+                  color: Colors.black, fontWeight: FontWeight.bold), // [수정] 검정색
             ),
             ElevatedButton(
               onPressed: () {},
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue, // 버튼색
-                foregroundColor: Colors.white, // 글자색
+                backgroundColor: Colors.blue,
+                foregroundColor: Colors.white,
               ),
-                child: Text('Install now'), // 영상에서는 'Shop now' 등
+              child: Text('Install now'),
             )
           ],
         ),
       );
     }
 
-    // 일반 게시물 푸터 (이전과 동일)
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // (수정) widget.likeCount 대신 _currentLikeCount를 포맷하여 표시
+          // 좋아요 수
           Text(
             '${NumberFormat.decimalPattern('en_US').format(_currentLikeCount)} likes',
             style: TextStyle(
-              color: Colors.white,
+              color: Colors.black, // [수정] 검정색
               fontWeight: FontWeight.bold,
             ),
           ),
           const SizedBox(height: 4.0),
-          // ... (캡션, 댓글 수, 타임스탬프는 동일) ...
+          // 캡션 (유저네임 + 내용)
           RichText(
             text: TextSpan(
-              style: TextStyle(color: Colors.white),
+              style: TextStyle(color: Colors.black), // [수정] 기본 검정색
               children: [
                 TextSpan(
                   text: '${widget.username} ',
@@ -354,14 +327,16 @@ Widget _buildContent(BuildContext context) {
             ),
           ),
           const SizedBox(height: 4.0),
+          // 댓글 수
           Text(
             'View all ${widget.commentCount} comments',
-            style: TextStyle(color: Colors.white54),
+            style: TextStyle(color: Colors.black54), // [수정] 진한 회색 (또는 Colors.grey)
           ),
           const SizedBox(height: 4.0),
+          // 날짜
           Text(
             widget.timestamp,
-            style: TextStyle(color: Colors.white54, fontSize: 12.0),
+            style: TextStyle(color: Colors.black54, fontSize: 12.0), // [수정] 진한 회색
           ),
           const SizedBox(height: 12.0),
         ],
@@ -369,16 +344,13 @@ Widget _buildContent(BuildContext context) {
     );
   }
 
-void _showCommentsModal(BuildContext context) {
-    // (영상 2:31)
+  void _showCommentsModal(BuildContext context) {
     showModalBottomSheet(
       context: context,
-      isScrollControlled: true, // 키보드 높이만큼 올라오도록
+      isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) {
-        // 이제 복잡한 UI 대신, 별도로 분리한 StatefulWidget을 호출합니다.
         return CommentsModalContent(
-          // 댓글 목록과 콜백을 전달하도록 수정
           comments: _comments,
           onCommentPosted: _handlePostComment,
           onCommentLiked: _handleToggleCommentLike,
@@ -386,22 +358,18 @@ void _showCommentsModal(BuildContext context) {
       },
     );
   }
-void _handleDoubleTap() {
-    // 1. '좋아요' 상태를 true로 변경 (더블 탭은 '좋아요' 취소 기능 없음)
+
+  void _handleDoubleTap() {
     if (!_isLiked) {
       setState(() {
         _isLiked = true;
         _currentLikeCount++;
       });
-      // TODO: 백엔드에 '좋아요' 전송
     }
-
-    // 2. 영상이 아닐(사진일) 경우에만 애니메이션 표시
     if (!widget.isVideo) {
       setState(() {
-        _showHeartAnimation = true; // 하트 보이기
+        _showHeartAnimation = true;
       });
-      // 0.8초 후에 하트 숨기기
       Future.delayed(const Duration(milliseconds: 800), () {
         setState(() {
           _showHeartAnimation = false;
@@ -409,6 +377,7 @@ void _handleDoubleTap() {
       });
     }
   }
+
   void _handleIconTap() {
     setState(() {
       _isLiked = !_isLiked;
@@ -418,6 +387,5 @@ void _handleDoubleTap() {
         _currentLikeCount--;
       }
     });
-    // TODO: 백엔드 전송
   }
-} 
+}

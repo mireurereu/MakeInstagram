@@ -22,13 +22,14 @@ class CommentsModalContent extends StatefulWidget {
 
 class _CommentsModalContentState extends State<CommentsModalContent> {
 
-
+  final ScrollController _scrollController = ScrollController();
   // (댓글 입력 컨트롤러는 각 입력창 내부에서 로컬로 생성합니다.)
 
   // --- (신규) 댓글 '좋아요' 토글 기능 ---
   void _toggleCommentLike(Comment comment) {
-    // (수정) 로컬 state를 변경하는 대신, 부모에게 받은 콜백 함수를 호출합니다.
-    widget.onCommentLiked(comment);
+    setState(() {
+      widget.onCommentLiked(comment); // 부모의 데이터 업데이트 호출
+    });
   }
 
   @override
@@ -88,9 +89,25 @@ class _CommentsModalContentState extends State<CommentsModalContent> {
     void postComment() {
       final String text = commentController.text;
       if (text.isEmpty) return;
-      widget.onCommentPosted(text);
+
+      // (중요) setState로 화면을 갱신하여 새 댓글을 바로 보여줍니다.
+      setState(() {
+        widget.onCommentPosted(text);
+      });
+
       commentController.clear();
-      FocusManager.instance.primaryFocus?.unfocus();
+      FocusManager.instance.primaryFocus?.unfocus(); // 키보드 닫기
+
+      // (신규) 스크롤을 맨 아래로 이동
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_scrollController.hasClients) {
+          _scrollController.animateTo(
+            _scrollController.position.maxScrollExtent,
+            duration: Duration(milliseconds: 300),
+            curve: Curves.easeOut,
+          );
+        }
+      });
     }
 
     return Container(
@@ -114,6 +131,7 @@ class _CommentsModalContentState extends State<CommentsModalContent> {
                 hintStyle: TextStyle(color: Colors.grey),
                 border: InputBorder.none,
               ),
+              onSubmitted: (_) => postComment(),
             ),
           ),
           TextButton(
@@ -170,15 +188,17 @@ class _CommentsModalContentState extends State<CommentsModalContent> {
           ),
           // --- '좋아요' 기능 수정 ---
           if (!isCaption)
-            IconButton(
-              // 상태에 따라 아이콘 변경
-              icon: comment.isLiked
-                  ? Icon(Icons.favorite, size: 16.0, color: Colors.red)
-                  : Icon(Icons.favorite_border, size: 16.0, color: Colors.grey),
-              onPressed: () {
-                // '좋아요' 토글 함수 호출
-                _toggleCommentLike(comment);
-              },
+            GestureDetector(
+              onTap: () => _toggleCommentLike(comment),
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Icon(
+                  comment.isLiked ? Icons.favorite : Icons.favorite_border,
+                  size: 16.0,
+                  // (중요) 좋아요 상태면 빨간색, 아니면 회색
+                  color: comment.isLiked ? Colors.red : Colors.grey,
+                ),
+              ),
             ),
         ],
       ),

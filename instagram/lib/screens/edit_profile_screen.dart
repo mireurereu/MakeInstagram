@@ -63,8 +63,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 // (임시) 스크린샷의 아바타 그룹 이미지
                 ClipRRect(
                   borderRadius: BorderRadius.circular(8.0),
-                  child: Image.network(
-                    'https://placehold.co/250x120/EFEFEF/000000?text=Avatars',
+                  child: Image.asset(
+                    'assets/images/avatar.png',
                     height: 120,
                     fit: BoxFit.cover,
                   ),
