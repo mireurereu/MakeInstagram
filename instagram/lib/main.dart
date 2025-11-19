@@ -44,7 +44,7 @@ class MyApp extends StatelessWidget {
             'Apple Color Emoji',
           ],
         ),
-          child: MainNavigationScreen(), // 앱 시작 화면
+          child: MainNavigationScreen(key: mainNavKey), // 앱 시작 화면
       ),
     );
   }
