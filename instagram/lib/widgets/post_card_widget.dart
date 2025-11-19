@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:carousel_slider/carousel_slider.dart';
 import 'package:instagram/widgets/comment_model.dart';
 import 'package:instagram/widgets/comments_modal_content.dart';
 import 'package:intl/intl.dart';
@@ -7,28 +8,23 @@ class PostCardWidget extends StatefulWidget {
   final String username;
   final String userAvatarUrl;
   final List<String> postImageUrls;
-  final String caption;
   final String likeCount;
-  final String commentCount;
+  final String caption;
   final String timestamp;
-  final bool isSponsored;
-  final bool isCarousel;
   final bool isVideo;
+  final bool isSponsored;
 
-  PostCardWidget({
+  const PostCardWidget({
     super.key,
-    this.username = "aespa_official",
-    this.userAvatarUrl = "https://picsum.photos/seed/aespa/100/100",
-    List<String>? postImageUrls,
-    this.caption = "Bee~ Gese Stay Alive 🐝",
-    this.likeCount = "918,471",
-    this.commentCount = "2,000",
-    this.timestamp = "5 days ago",
-    this.isSponsored = false,
+    required this.username,
+    required this.userAvatarUrl,
+    required this.postImageUrls,
+    required this.likeCount,
+    required this.caption,
+    required this.timestamp,
     this.isVideo = false,
-  })  : postImageUrls = postImageUrls ??
-            ["https://picsum.photos/seed/karina/600/600"],
-        isCarousel = (postImageUrls != null && postImageUrls.length > 1);
+    this.isSponsored = false,
+  });
 
   @override
   State<PostCardWidget> createState() => _PostCardWidgetState();
@@ -37,348 +33,91 @@ class PostCardWidget extends StatefulWidget {
 class _PostCardWidgetState extends State<PostCardWidget> {
   int _currentCarouselIndex = 0;
   bool _isLiked = false;
-  late List<Comment> _comments;
-  bool _showHeartAnimation = false;
+  bool _showHeartAnimation = false; // 더블 탭 하트 애니메이션 상태
+
   late int _currentLikeCount;
 
-  @override
+  // 인스타 블루
+  final Color _instaBlue = const Color(0xFF3797EF);
+
+  // 댓글 데이터 (로컬 상태 관리)
+  final List<Comment> _comments = [
+    Comment(
+      username: 'haetbaaan',
+      avatarUrl: 'instagram/assets/images/profile2.jpg',
+      text: 'so cute!! 🥹🥹',
+      isLiked: true,
+      likeCount: 1,
+    ),
+    Comment(
+      username: 'junehxuk',
+      avatarUrl: 'https://picsum.photos/seed/junehxuk/100/100',
+      text: 'I love puang',
+      likeCount: 0,
+    ),
+  ];
+
   void initState() {
     super.initState();
     _currentLikeCount = int.tryParse(widget.likeCount.replaceAll(',', '')) ?? 0;
-    _comments = [
-      Comment(
-        username: widget.username,
-        avatarUrl: widget.userAvatarUrl,
-        text: widget.caption,
-        likeCount: 0,
-      ),
-      Comment(
-        username: 'haetbaaan',
-        avatarUrl: 'https://picsum.photos/seed/haetbaaan/100/100',
-        text: 'so cute!! 🥹🥹',
-        isLiked: true,
-        likeCount: 1,
-      ),
-      Comment(
-        username: 'junehxuk',
-        avatarUrl: 'https://picsum.photos/seed/junehxuk/100/100',
-        text: 'I love puang',
-        likeCount: 0,
-      ),
-    ];
   }
 
-  void _handlePostComment(String text) {
-    setState(() {
-      _comments.add(Comment(
-        username: 'ta_junhyuk',
-        avatarUrl: 'https://picsum.photos/seed/my_profile/100/100',
-        text: text,
-        likeCount: 0,
-      ));
-    });
-  }
 
-  void _handleToggleCommentLike(Comment comment) {
-    if (_comments.indexOf(comment) == 0) return;
-    setState(() {
-      comment.isLiked = !comment.isLiked;
-      if (comment.isLiked) {
-        comment.likeCount++;
-      } else {
-        comment.likeCount--;
-      }
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8.0),
-      color: Colors.white, // [수정] 배경색 흰색
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildHeader(),
-          _buildContent(context),
-          _buildActionButtons(),
-          _buildFooter(context),
-        ],
-      ),
-    );
-  }
-
-  // 1. 헤더 (검정 텍스트)
-  Widget _buildHeader() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
-      child: Row(
-        children: [
-          CircleAvatar(
-            radius: 16,
-            backgroundImage: NetworkImage(widget.userAvatarUrl),
-          ),
-          const SizedBox(width: 8.0),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  widget.username,
-                  style: TextStyle(
-                    color: Colors.black, // [수정] 검정색
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                if (widget.isSponsored)
-                  Text(
-                    'Sponsored',
-                    style: TextStyle(color: Colors.black54, fontSize: 12.0), // [수정] 진한 회색
-                  ),
-              ],
-            ),
-          ),
-          IconButton(
-            icon: Icon(Icons.more_horiz, color: Colors.black), // [수정] 검정색 아이콘
-            onPressed: () {},
-          ),
-        ],
-      ),
-    );
-  }
-
-  // 2. 본문 (이미지 및 애니메이션)
-  Widget _buildContent(BuildContext context) {
-    return GestureDetector(
-      onDoubleTap: _handleDoubleTap,
-      child: AspectRatio(
-        aspectRatio: 1.0,
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            PageView.builder(
-              itemCount: widget.postImageUrls.length,
-              onPageChanged: (index) {
-                setState(() {
-                  _currentCarouselIndex = index;
-                });
-              },
-              itemBuilder: (context, index) {
-                return Image.network(
-                  widget.postImageUrls[index],
-                  fit: BoxFit.cover,
-                  loadingBuilder: (context, child, loadingProgress) {
-                    if (loadingProgress == null) return child;
-                    return Container(
-                      color: Colors.grey[200], // [수정] 로딩 배경 밝은 회색
-                      child: Center(
-                          child: CircularProgressIndicator(strokeWidth: 2.0)),
-                    );
-                  },
-                );
-              },
-            ),
-            if (widget.isCarousel)
-              Positioned(
-                top: 10,
-                right: 10,
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-                  decoration: BoxDecoration(
-                    color: Color.fromRGBO(0, 0, 0, 0.7),
-                    borderRadius: BorderRadius.circular(12.0),
-                  ),
-                  child: Text(
-                    '${_currentCarouselIndex + 1} / ${widget.postImageUrls.length}',
-                    style: TextStyle(color: Colors.white, fontSize: 12.0),
-                  ),
-                ),
-              ),
-            if (widget.isCarousel)
-              Positioned(
-                bottom: 10,
-                left: 0,
-                right: 0,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: List.generate(widget.postImageUrls.length, (index) {
-                    return Container(
-                      width: 6.0,
-                      height: 6.0,
-                      margin: const EdgeInsets.symmetric(horizontal: 3.0),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        // [수정] 인디케이터 색상 (파랑 / 밝은 회색)
-                        color: _currentCarouselIndex == index
-                            ? Colors.blue
-                            : Colors.white.withOpacity(0.8),
-                      ),
-                    );
-                  }),
-                ),
-              ),
-            AnimatedOpacity(
-              duration: const Duration(milliseconds: 200),
-              opacity: _showHeartAnimation ? 1.0 : 0.0,
-              child: Icon(
-                Icons.favorite,
-                color: Colors.white,
-                size: 100.0,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // 3. 액션 버튼 (검정 아이콘)
-  Widget _buildActionButtons() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            children: [
-              IconButton(
-                icon: _isLiked
-                    ? Icon(Icons.favorite, color: Colors.red, size: 28)
-                    : Icon(Icons.favorite_border,
-                        color: Colors.black, size: 28), // [수정] 검정색
-                onPressed: _handleIconTap,
-              ),
-              IconButton(
-                icon: Icon(Icons.chat_bubble_outline,
-                    color: Colors.black, size: 28), // [수정] 검정색
-                onPressed: () {
-                  _showCommentsModal(context);
-                },
-              ),
-              IconButton(
-                icon: Icon(Icons.send_outlined,
-                    color: Colors.black, size: 28), // [수정] 검정색
-                onPressed: () {},
-              ),
-            ],
-          ),
-          IconButton(
-            icon: Icon(Icons.bookmark_border,
-                color: Colors.black, size: 28), // [수정] 검정색
-            onPressed: () {},
-          ),
-        ],
-      ),
-    );
-  }
-
-  // 4. 푸터 (검정 텍스트)
-  Widget _buildFooter(BuildContext context) {
-    if (widget.isSponsored) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              widget.caption,
-              style: TextStyle(
-                  color: Colors.black, fontWeight: FontWeight.bold), // [수정] 검정색
-            ),
-            ElevatedButton(
-              onPressed: () {},
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue,
-                foregroundColor: Colors.white,
-              ),
-              child: Text('Install now'),
-            )
-          ],
-        ),
-      );
-    }
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // 좋아요 수
-          Text(
-            '${NumberFormat.decimalPattern('en_US').format(_currentLikeCount)} likes',
-            style: TextStyle(
-              color: Colors.black, // [수정] 검정색
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 4.0),
-          // 캡션 (유저네임 + 내용)
-          RichText(
-            text: TextSpan(
-              style: TextStyle(color: Colors.black), // [수정] 기본 검정색
-              children: [
-                TextSpan(
-                  text: '${widget.username} ',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-                TextSpan(text: widget.caption),
-              ],
-            ),
-          ),
-          const SizedBox(height: 4.0),
-          // 댓글 수
-          Text(
-            'View all ${widget.commentCount} comments',
-            style: TextStyle(color: Colors.black54), // [수정] 진한 회색 (또는 Colors.grey)
-          ),
-          const SizedBox(height: 4.0),
-          // 날짜
-          Text(
-            widget.timestamp,
-            style: TextStyle(color: Colors.black54, fontSize: 12.0), // [수정] 진한 회색
-          ),
-          const SizedBox(height: 12.0),
-        ],
-      ),
-    );
-  }
-
-  void _showCommentsModal(BuildContext context) {
+  // 댓글창 띄우기
+  void _showCommentsModal() {
     showModalBottomSheet(
       context: context,
-      isScrollControlled: true,
+      isScrollControlled: true, // 전체 화면 높이 사용 가능하게
       backgroundColor: Colors.transparent,
       builder: (context) {
         return CommentsModalContent(
           comments: _comments,
-          onCommentPosted: _handlePostComment,
-          onCommentLiked: _handleToggleCommentLike,
+          postOwnerName: widget.username,
+          onCommentPosted: (text) {
+            setState(() {
+              _comments.add(Comment(
+                username: 'ta_junhyuk', // 내 아이디
+                avatarUrl: 'instagram/assets/images/profile3.jpg',
+                text: text,
+              ));
+            });
+          },
+          onCommentLiked: (comment) {
+            setState(() {
+              comment.isLiked = !comment.isLiked;
+              if (comment.isLiked) {
+                comment.likeCount++;
+              } else {
+                comment.likeCount--;
+              }
+            });
+          },
         );
       },
     );
   }
 
+  // 더블 탭 좋아요 로직
   void _handleDoubleTap() {
     if (!_isLiked) {
       setState(() {
         _isLiked = true;
-        _currentLikeCount++;
+        _currentLikeCount++; // 숫자 증가
+        _showHeartAnimation = true;
       });
-    }
-    if (!widget.isVideo) {
+    } else {
+      // 이미 좋아요 상태라도 하트 애니메이션은 보여줌 (인스타 방식)
       setState(() {
         _showHeartAnimation = true;
       });
-      Future.delayed(const Duration(milliseconds: 800), () {
-        setState(() {
-          _showHeartAnimation = false;
-        });
-      });
     }
+
+    Future.delayed(const Duration(milliseconds: 800), () {
+      if (mounted) setState(() => _showHeartAnimation = false);
+    });
   }
 
-  void _handleIconTap() {
+  void _toggleLike() {
     setState(() {
       _isLiked = !_isLiked;
       if (_isLiked) {
@@ -387,5 +126,222 @@ class _PostCardWidgetState extends State<PostCardWidget> {
         _currentLikeCount--;
       }
     });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final formattedLikes = NumberFormat.decimalPattern('en_US').format(_currentLikeCount);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // 1. 헤더 (프로필)
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 8.0),
+          child: Row(
+            children: [
+              CircleAvatar(
+                radius: 16,
+                backgroundImage: NetworkImage(widget.userAvatarUrl),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      widget.username,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                        color: Colors.black,
+                      ),
+                    ),
+                    if (widget.isSponsored)
+                      const Text(
+                        'Sponsored',
+                        style: TextStyle(fontSize: 11, color: Colors.black),
+                      ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.more_horiz, color: Colors.black),
+            ],
+          ),
+        ),
+
+        // 2. 이미지 슬라이더 (더블 탭 애니메이션 포함)
+        GestureDetector(
+          onDoubleTap: _handleDoubleTap,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              CarouselSlider(
+                items: widget.postImageUrls.map((url) {
+                  return Image.network(
+                    url,
+                    fit: BoxFit.cover,
+                    width: double.infinity,
+                    // 로딩 처리
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) return child;
+                      return Container(
+                        color: Colors.grey[200],
+                        child: const Center(child: Icon(Icons.image, color: Colors.grey)),
+                      );
+                    },
+                    // 에러 처리
+                    errorBuilder: (context, error, stackTrace) =>
+                        Container(color: Colors.grey[300]),
+                  );
+                }).toList(),
+                options: CarouselOptions(
+                  height: 400, // 정사각형 비율에 가깝게
+                  viewportFraction: 1.0, // 화면 꽉 채움
+                  enableInfiniteScroll: false,
+                  onPageChanged: (index, reason) {
+                    setState(() {
+                      _currentCarouselIndex = index;
+                    });
+                  },
+                ),
+              ),
+              
+              // 비디오 아이콘 (영상인 경우)
+              if (widget.isVideo)
+                const Icon(Icons.play_circle_fill, color: Colors.white, size: 60),
+
+              // 더블 탭 하트 애니메이션
+              if (_showHeartAnimation)
+                const Icon(Icons.favorite, color: Colors.white, size: 100),
+
+              // 인덱스 표시 (여러 장일 때 우측 상단 1/3)
+              if (widget.postImageUrls.length > 1)
+                Positioned(
+                  top: 12,
+                  right: 12,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.7),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      '${_currentCarouselIndex + 1}/${widget.postImageUrls.length}',
+                      style: const TextStyle(color: Colors.white, fontSize: 12),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+
+        // 3. 액션 버튼
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 10.0),
+          child: Stack(
+            alignment: Alignment.center, // 스택의 자식들을 중앙 정렬
+            children: [
+              // Layer 1: 좌우 아이콘 (Row)
+              Row(
+                children: [
+                  // 왼쪽 아이콘 그룹
+                  GestureDetector(
+                    onTap: _toggleLike,
+                    child: Icon(
+                      _isLiked ? Icons.favorite : Icons.favorite_border,
+                      color: _isLiked ? Colors.red : Colors.black,
+                      size: 28,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  GestureDetector(
+                    onTap: _showCommentsModal,
+                    child: const Icon(Icons.chat_bubble_outline, color: Colors.black, size: 28),
+                  ),
+                  const SizedBox(width: 16),
+                  const Icon(Icons.send_outlined, color: Colors.black, size: 28),
+                  
+                  const Spacer(), // 남은 공간을 모두 밀어내어 북마크를 끝으로 보냄
+                  
+                  // 오른쪽 아이콘
+                  const Icon(Icons.bookmark_border, color: Colors.black, size: 28),
+                ],
+              ),
+
+              // Layer 2: 페이지 인디케이터 (중앙 고정)
+              if (widget.postImageUrls.length > 1)
+                Positioned(
+                  // 터치 이벤트를 가리지 않도록 설정 (IgnorePointer는 선택사항이나 안전함)
+                  child: IgnorePointer(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: widget.postImageUrls.asMap().entries.map((entry) {
+                        return Container(
+                          width: 6.0,
+                          height: 6.0,
+                          margin: const EdgeInsets.symmetric(horizontal: 3.0),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            // 선택된 점 파랑, 나머지 회색
+                            color: _currentCarouselIndex == entry.key
+                                ? _instaBlue
+                                : Colors.grey[300],
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+
+
+        // 4. 정보 및 캡션
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // 좋아요 수 (포맷 적용)
+              Text(
+                '$formattedLikes likes',
+                style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
+              ),
+              const SizedBox(height: 6),
+              // 캡션 (아이디 + 내용)
+              RichText(
+                text: TextSpan(
+                  style: const TextStyle(color: Colors.black),
+                  children: [
+                    TextSpan(
+                      text: '${widget.username} ',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    TextSpan(text: widget.caption),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 6),
+              // 댓글 보기 링크
+              GestureDetector(
+                onTap: _showCommentsModal,
+                child: const Text(
+                  'View all comments',
+                  style: TextStyle(color: Colors.grey, fontSize: 14),
+                ),
+              ),
+              const SizedBox(height: 4),
+              // 시간
+              Text(
+                widget.timestamp,
+                style: const TextStyle(color: Colors.grey, fontSize: 12),
+              ),
+              const SizedBox(height: 20),
+            ],
+          ),
+        ),
+      ],
+    );
   }
 }

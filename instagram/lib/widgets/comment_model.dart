@@ -1,5 +1,3 @@
-// lib/widgets/comment_model.dart
-
 // 댓글 하나를 정의하는 데이터 클래스
 class Comment {
   final String username;

@@ -1,17 +1,16 @@
-// lib/widgets/comments_modal_content.dart
-
 import 'package:flutter/material.dart';
-import 'package:instagram/widgets/comment_model.dart';
+import 'package:instagram/widgets/comment_model.dart'; // 모델 경로 확인 필요 (lib/models/comment.dart)
 
 class CommentsModalContent extends StatefulWidget {
-  // --- (신규) 부모로부터 받을 데이터와 함수들 ---
-  final List<Comment> comments; // 1. 댓글 목록 (이제 부모가 소유)
-  final Function(String) onCommentPosted; // 2. 댓글 게시 콜백
-  final Function(Comment) onCommentLiked; // 3. 댓글 좋아요 콜백
+  final List<Comment> comments;
+  final String postOwnerName;
+  final Function(String) onCommentPosted;
+  final Function(Comment) onCommentLiked;
 
   const CommentsModalContent({
     super.key,
     required this.comments,
+    required this.postOwnerName,
     required this.onCommentPosted,
     required this.onCommentLiked,
   });
@@ -21,185 +20,289 @@ class CommentsModalContent extends StatefulWidget {
 }
 
 class _CommentsModalContentState extends State<CommentsModalContent> {
-
   final ScrollController _scrollController = ScrollController();
-  // (댓글 입력 컨트롤러는 각 입력창 내부에서 로컬로 생성합니다.)
+  final TextEditingController _commentController = TextEditingController();
+  
+  // 인스타 블루
+  final Color _instaBlue = const Color(0xFF3797EF);
 
-  // --- (신규) 댓글 '좋아요' 토글 기능 ---
+  bool _showLikeHint = false;
+  // 툴팁을 띄울 대상 댓글 (방금 내가 쓴 댓글)
+  Comment? _hintTargetComment;
+
   void _toggleCommentLike(Comment comment) {
     setState(() {
-      widget.onCommentLiked(comment); // 부모의 데이터 업데이트 호출
+      widget.onCommentLiked(comment);
+
+      // [로직] 댓글이 1개뿐이고, 내가 좋아요를 눌렀을 때 힌트 표시
+      if (widget.comments.length == 1 && comment.isLiked) {
+        _showLikeHint = true;
+        _hintTargetComment = comment;
+        
+        // 3초 뒤에 툴팁 사라짐
+        Future.delayed(const Duration(seconds: 3), () {
+          if (mounted) {
+            setState(() {
+              _showLikeHint = false;
+              _hintTargetComment = null;
+            });
+          }
+        });
+      }
+    });
+  }
+
+  void _postComment() {
+    final String text = _commentController.text;
+    if (text.isEmpty) return;
+
+    setState(() {
+      widget.onCommentPosted(text);
+    });
+
+    _commentController.clear();
+    FocusManager.instance.primaryFocus?.unfocus();
+
+    // 스크롤을 맨 아래로 이동
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      // (이 코드는 PostCardWidget에서 가져옴)
       height: MediaQuery.of(context).size.height * 0.75,
-      decoration: BoxDecoration(
-        color: Colors.grey[900],
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(16.0),
-          topRight: Radius.circular(16.0),
-        ),
+      decoration: const BoxDecoration(
+        color: Colors.white, // [수정] 배경 흰색
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16.0)),
       ),
       child: Column(
         children: [
+          // 상단 핸들바
+          const SizedBox(height: 12),
+          Container(
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: Colors.grey[300], // [수정] 핸들바 색상 (연한 회색)
+              borderRadius: BorderRadius.circular(2.0),
+            ),
+          ),
+          
+          // 타이틀
           Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Center(
-              child: Text(
-                'Comments',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16.0,
-                ),
+            padding: const EdgeInsets.symmetric(vertical: 12.0),
+            child: const Text(
+              'Comments',
+              style: TextStyle(
+                color: Colors.black, // [수정] 검은색 텍스트
+                fontWeight: FontWeight.bold,
+                fontSize: 16.0,
               ),
             ),
           ),
-          Divider(color: Colors.grey[700], height: 1),
+          const Divider(height: 1, color: Color(0xFFDBDBDB)),
 
-          // 댓글 스크롤 영역
+          // 댓글 리스트
           Expanded(
-            child: ListView.builder(
-              // (수정) 로컬 _comments 대신 widget.comments 사용
-              itemCount: widget.comments.length,
-              itemBuilder: (context, index) {
-                final comment = widget.comments[index];
-                final isCaption = (index == 0);
-                // _buildCommentTile 호출 (이제 _toggleCommentLike를 전달)
-                return _buildCommentTile(comment, isCaption);
-              },
-            ),
+            child: widget.comments.isEmpty
+                ? _buildNoCommentsView() // 댓글 없을 때 화면
+                : ListView.builder(
+                    controller: _scrollController,
+                    itemCount: widget.comments.length,
+                    itemBuilder: (context, index) {
+                      final comment = widget.comments[index];
+                      return _buildCommentRow(comment);
+                    },
+                  ),
           ),
 
-          // 댓글 입력창
+          // 하단 입력창
           _buildCommentInputArea(),
         ],
       ),
     );
   }
-
-  // 댓글 입력창 위젯
-  Widget _buildCommentInputArea() {
-    final TextEditingController commentController = TextEditingController();
-
-    void postComment() {
-      final String text = commentController.text;
-      if (text.isEmpty) return;
-
-      // (중요) setState로 화면을 갱신하여 새 댓글을 바로 보여줍니다.
-      setState(() {
-        widget.onCommentPosted(text);
-      });
-
-      commentController.clear();
-      FocusManager.instance.primaryFocus?.unfocus(); // 키보드 닫기
-
-      // (신규) 스크롤을 맨 아래로 이동
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (_scrollController.hasClients) {
-          _scrollController.animateTo(
-            _scrollController.position.maxScrollExtent,
-            duration: Duration(milliseconds: 300),
-            curve: Curves.easeOut,
-          );
-        }
-      });
-    }
-
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
-      decoration: BoxDecoration(
-        border: Border(top: BorderSide(color: Colors.grey[800]!)),
-      ),
-      child: Row(
+  Widget _buildNoCommentsView() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          CircleAvatar(
-            radius: 18,
-            backgroundImage: NetworkImage('https://picsum.photos/seed/my_profile/100/100'),
+          const Text(
+            'No comments yet',
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black),
           ),
-          const SizedBox(width: 10.0),
-          Expanded(
-            child: TextField(
-              controller: commentController, // 컨트롤러 연결
-              style: TextStyle(color: Colors.white),
-              decoration: InputDecoration(
-                hintText: 'Add a comment...',
-                hintStyle: TextStyle(color: Colors.grey),
-                border: InputBorder.none,
-              ),
-              onSubmitted: (_) => postComment(),
-            ),
-          ),
-          TextButton(
-            onPressed: postComment, // 'Post' 버튼에 기능 연결
-            child: Text('Post', style: TextStyle(color: Colors.blue)),
+          const SizedBox(height: 12),
+          const Text(
+            'Start the conversation.',
+            style: TextStyle(fontSize: 14, color: Colors.grey),
           ),
         ],
       ),
     );
   }
 
-  // 댓글 타일 위젯 (수정됨 - Comment 모델 사용)
-  Widget _buildCommentTile(Comment comment, bool isCaption) {
+  Widget _buildCommentRow(Comment comment) {
+    bool isAuthor = comment.username == widget.postOwnerName; // 작성자 확인
+
     return Padding(
-      padding: const EdgeInsets.all(12.0),
+      padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          CircleAvatar(radius: 18, backgroundImage: NetworkImage(comment.avatarUrl)),
+          // 1. 아바타
+          CircleAvatar(
+            radius: 18,
+            backgroundImage: NetworkImage(comment.avatarUrl),
+          ),
           const SizedBox(width: 12.0),
+          
+          // 2. 내용 (유저네임 + 뱃지 + 내용 + 답글버튼)
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                RichText(
-                  text: TextSpan(
-                    style: TextStyle(color: Colors.white, fontSize: 14.0),
-                    children: [
-                      TextSpan(
-                        text: '${comment.username} ',
-                        style: TextStyle(fontWeight: FontWeight.bold),
+                // 첫 번째 줄: 유저네임 + 시간 + (Author)
+                Row(
+                  children: [
+                    Text(
+                      comment.username,
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.black),
+                    ),
+                    const SizedBox(width: 6),
+                    const Text(
+                      '1s', // 시간은 임시 고정 (모델에 timestamp 추가 시 연동 가능)
+                      style: TextStyle(color: Colors.grey, fontSize: 12),
+                    ),
+                    if (isAuthor) ...[
+                      const SizedBox(width: 6),
+                      const Text(
+                        '• Author',
+                        style: TextStyle(color: Colors.grey, fontSize: 12),
                       ),
-                      TextSpan(text: comment.text),
                     ],
-                  ),
+                  ],
                 ),
-                const SizedBox(height: 4.0),
-                if (!isCaption)
-                  Row(
-                    children: [
-                      Text('Reply', style: TextStyle(color: Colors.grey, fontSize: 12.0)),
-                      const SizedBox(width: 16.0),
-                      Text('See translation', style: TextStyle(color: Colors.grey, fontSize: 12.0)),
-                      const SizedBox(width: 16.0),
-                      if (comment.likeCount > 0)
-                        Text(
-                          '${comment.likeCount} ${comment.likeCount > 1 ? 'likes' : 'like'}',
-                          style: TextStyle(color: Colors.grey, fontSize: 12.0),
-                        ),
-                    ],
-                  ),
+                const SizedBox(height: 4),
+                
+                // 두 번째 줄: 댓글 내용
+                Text(
+                  comment.text,
+                  style: const TextStyle(color: Colors.black, fontSize: 14),
+                ),
+                
+                const SizedBox(height: 8),
+                
+                // 세 번째 줄: Reply 버튼
+                const Text(
+                  'Reply',
+                  style: TextStyle(color: Colors.grey, fontSize: 12, fontWeight: FontWeight.w600),
+                ),
               ],
             ),
           ),
-          // --- '좋아요' 기능 수정 ---
-          if (!isCaption)
-            GestureDetector(
-              onTap: () => _toggleCommentLike(comment),
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Icon(
-                  comment.isLiked ? Icons.favorite : Icons.favorite_border,
-                  size: 16.0,
-                  // (중요) 좋아요 상태면 빨간색, 아니면 회색
-                  color: comment.isLiked ? Colors.red : Colors.grey,
+
+          // 3. 좋아요 하트 + 숫자 (수직 배치)
+          Stack(
+            alignment: Alignment.center, // 툴팁 위치 잡기 위함
+            clipBehavior: Clip.none,
+            children: [
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  GestureDetector(
+                    onTap: () => _toggleCommentLike(comment),
+                    child: Icon(
+                      comment.isLiked ? Icons.favorite : Icons.favorite_border,
+                      size: 18.0, // 아이콘 크기 조정
+                      color: comment.isLiked ? Colors.red : Colors.grey,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  // [수정] 좋아요 숫자: 하트 밑에 표시 (0이면 숨김)
+                  if (comment.likeCount > 0)
+                    Text(
+                      '${comment.likeCount}',
+                      style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
+                ],
+              ),
+              
+              // [신규] 툴팁 표시 (조건부 렌더링)
+              if (_showLikeHint && _hintTargetComment == comment)
+                Positioned(
+                  right: 24, // 하트 왼쪽으로 배치
+                  top: -10,
+                  child: _buildLikeTooltip(),
                 ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+  Widget _buildLikeTooltip() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.black.withOpacity(0.9), // 툴팁 색상
+        borderRadius: BorderRadius.circular(8),
+      ),
+      width: 200, // 너비 고정
+      child: const Text(
+        'Now you can double tap a comment to like it.',
+        style: TextStyle(color: Colors.white, fontSize: 12),
+        textAlign: TextAlign.center,
+      ),
+    );
+  }
+
+  Widget _buildCommentInputArea() {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 32), // 하단 여백 (아이폰 홈바 고려)
+      decoration: const BoxDecoration(
+        border: Border(top: BorderSide(color: Color(0xFFDBDBDB), width: 0.5)),
+        color: Colors.white,
+      ),
+      child: Row(
+        children: [
+          const CircleAvatar(
+            radius: 18,
+            // 내 프로필 이미지 (하드코딩 or Provider)
+            backgroundImage: NetworkImage('https://picsum.photos/seed/junhyuk/100/100'),
+          ),
+          const SizedBox(width: 12.0),
+          Expanded(
+            child: TextField(
+              controller: _commentController,
+              style: const TextStyle(color: Colors.black), // [수정] 입력 텍스트 검은색
+              decoration: const InputDecoration(
+                hintText: 'Add a comment...',
+                hintStyle: TextStyle(color: Colors.grey),
+                border: InputBorder.none,
+                isDense: true,
+              ),
+              onSubmitted: (_) => _postComment(),
+            ),
+          ),
+          TextButton(
+            onPressed: _postComment,
+            child: Text(
+              'Post',
+              style: TextStyle(
+                color: _instaBlue, // [수정] 파란색
+                fontWeight: FontWeight.bold,
+                fontSize: 15.0,
               ),
             ),
+          ),
         ],
       ),
     );

@@ -12,6 +12,9 @@ class BioEditScreen extends StatefulWidget {
 class _BioEditScreenState extends State<BioEditScreen> {
   late TextEditingController _controller;
 
+  // 인스타그램 공식 블루 색상 상수 정의
+  final Color _instaBlue = const Color(0xFF3797EF);
+
   @override
   void initState() {
     super.initState();
@@ -25,64 +28,85 @@ class _BioEditScreenState extends State<BioEditScreen> {
   }
 
   void _onDone() {
-    // 요청하신 대로, 확인 팝업 없이 바로 값을 반환하고 닫습니다.
+    // 변경된 값을 가지고 이전 화면으로 돌아감
     Navigator.pop(context, _controller.text);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white, // 배경 완전 흰색
       appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0, // 그림자 제거
         leading: IconButton(
-          icon: Icon(Icons.close),
-          onPressed: () => Navigator.pop(context), // 값 반환 없이 닫기
+          icon: const Icon(Icons.close, color: Colors.black), // 닫기 버튼 검은색
+          onPressed: () => Navigator.pop(context),
         ),
-        title: Text('Bio'),
-        centerTitle: false,
+        title: const Text(
+          'Bio',
+          style: TextStyle(
+            color: Colors.black,
+            fontWeight: FontWeight.bold,
+            fontSize: 18.0, // 영상 비율에 맞춘 폰트 사이즈
+          ),
+        ),
+        centerTitle: false, // 안드로이드에서도 왼쪽 정렬 방지 (인스타는 중앙 or 왼쪽 상황에 따라 다름, 여기선 왼쪽)
         actions: [
           IconButton(
-            icon: Icon(Icons.check, color: Colors.blue),
-            onPressed: _onDone, // 완료 함수 호출
+            // [수정 1] 인스타그램 고유 블루 색상 적용
+            icon: Icon(Icons.check, color: _instaBlue, size: 28.0), 
+            onPressed: _onDone,
           ),
         ],
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 텍스트 필드 (스크린샷 참고)
             TextField(
               controller: _controller,
               autofocus: true,
-              style: TextStyle(color: Colors.black, fontSize: 16.0),
-              // (신규) 여러 줄 입력이 가능하도록 설정
+              // [수정 2] 커서 색상 변경
+              cursorColor: _instaBlue, 
+              style: const TextStyle(
+                color: Colors.black, 
+                fontSize: 16.0,
+                height: 1.2, // 줄 간격 조정
+              ),
               maxLines: null,
               keyboardType: TextInputType.multiline,
               decoration: InputDecoration(
-                labelText: 'Bio', // 'Bio' 레이블
-                labelStyle: TextStyle(color: Colors.grey),
-                focusedBorder: UnderlineInputBorder(
+                labelText: 'Bio',
+                // 라벨이 떠오를 때 색상 (회색)
+                floatingLabelStyle: const TextStyle(color: Colors.grey),
+                labelStyle: const TextStyle(color: Colors.grey),
+                // 포커스 잡혔을 때 밑줄 색상 (검은색)
+                focusedBorder: const UnderlineInputBorder(
                   borderSide: BorderSide(color: Colors.black),
                 ),
+                // 평소 밑줄 색상 (연한 회색)
                 enabledBorder: UnderlineInputBorder(
                   borderSide: BorderSide(color: Colors.grey[300]!),
                 ),
+                contentPadding: const EdgeInsets.only(bottom: 8.0),
               ),
             ),
-            const SizedBox(height: 12.0),
+            const SizedBox(height: 16.0),
 
-            // 하단 도움말 텍스트 (스크린샷 참고)
+            // 하단 안내 문구
             RichText(
               text: TextSpan(
-                style: TextStyle(color: Colors.grey[600], fontSize: 12.0),
+                style: TextStyle(color: Colors.grey[600], fontSize: 13.0),
                 children: [
-                  TextSpan(
-                      text:
-                          'Your bio is visible to everyone on and off Instagram. '),
+                  const TextSpan(
+                    text: 'Your bio is visible to everyone on and off Instagram. '
+                  ),
                   TextSpan(
                     text: 'Learn more',
-                    style: TextStyle(color: Colors.blue),
+                    // [수정 3] 링크 텍스트 색상 변경
+                    style: TextStyle(color: _instaBlue),
                   ),
                 ],
               ),

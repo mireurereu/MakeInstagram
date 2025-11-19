@@ -3,77 +3,71 @@ import 'package:instagram/screens/edit_profile_screen.dart';
 import 'package:instagram/screens/following_list_screen.dart';
 import 'package:instagram/screens/create_post_screen.dart';
 
-// --- 1. (수정) username 파라미터 추가 ---
 class ProfileScreen extends StatefulWidget {
-  final String? username; // 'ta_junhyuk' 또는 'imwinter' 등
+  final String? username;
 
-  const ProfileScreen({
-    super.key,
-    this.username, // null이면 '내 프로필'로 간주
-  });
+  const ProfileScreen({super.key, this.username});
+
+  // [핵심] 전역에서 접근 가능한 내 게시물 목록 (상태 감지기)
+  // 앱을 껐다 켜면 초기화되지만, 실행 중에는 유지됩니다.
+  static final ValueNotifier<List<String>> myPostsNotifier = ValueNotifier<List<String>>([
+    'https://picsum.photos/seed/post1/300/300',
+    'https://picsum.photos/seed/post2/300/300',
+    'https://picsum.photos/seed/post3/300/300',
+  ]);
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen>
-    with SingleTickerProviderStateMixin {
+class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
-
-  // --- 2. (수정) 상태 변수 및 로직 변경 ---
   bool _isCurrentUser = false;
   String _currentUsername = '';
 
-  // 프로필 정보 (상태 변수)
+  // 프로필 정보
   String _name = '';
   String _bio = '';
   String _avatarUrl = 'https://picsum.photos/seed/default/200/200';
-  int _postCount = 0;
   String _followerCount = '0';
   String _followingCount = '0';
   List<String> _mutualFollowers = [];
+  
+  // 타인 게시물 (고정 리스트)
+  List<String> _otherUserPosts = [];
 
-  List<String> _posts = [
-    'https://picsum.photos/seed/lenovo_box/300/300', // 왼쪽 (인덱스 0)
-    'https://picsum.photos/seed/flutter_code/300/300', // 오른쪽 (인덱스 1)
-  ];
+  final Color _instaBlue = const Color(0xFF3797EF);
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
 
-    // (임시) 현재 로그인한 유저 이름 (원래는 Provider 등에서 가져옴)
     const String loggedInUser = 'ta_junhyuk';
 
     if (widget.username == null || widget.username == loggedInUser) {
-      // '내 프로필'일 경우
       _isCurrentUser = true;
       _currentUsername = loggedInUser;
-      _loadMyData(); // 이전에 저장된 내 데이터 로드
+      _loadMyData();
     } else {
-      // '다른 유저 프로필'일 경우
       _isCurrentUser = false;
       _currentUsername = widget.username!;
-      _loadOtherUserData(_currentUsername); // 3. (신규) 다른 유저 데이터 로드
+      _loadOtherUserData(_currentUsername);
     }
   }
 
-  // (기존) '내 프로필' 데이터 로드
   void _loadMyData() {
     setState(() {
       _name = 'puang';
-      _bio = 'I\'m gonna be the God of Flutter!';
-      _avatarUrl = 'https://picsum.photos/seed/profile/200/200';
-      _postCount = 3;
+      _bio = "I'm gonna be the God of Flutter!!";
+      _avatarUrl = 'https://picsum.photos/seed/junhyuk/200/200';
+      // _postCount는 ValueNotifier의 길이를 사용하므로 여기서 설정 안 함
       _followerCount = '3';
       _followingCount = '9';
     });
   }
 
-  // --- 3. (신규) '다른 유저' 데이터 로드 ---
   void _loadOtherUserData(String username) {
-    // (임시) Firebase/서버에서 데이터를 가져오는 대신 Mock 데이터 사용
     if (username == 'imwinter') {
       setState(() {
         _name = 'WINTER';
@@ -82,17 +76,9 @@ class _ProfileScreenState extends State<ProfileScreen>
         _followerCount = '13M';
         _followingCount = '4';
         _mutualFollowers = ['junehxuk', 'katarinabluu', 'aespa_official'];
-        _posts = [
-          'https://picsum.photos/seed/winter1/300/300',
-          'https://picsum.photos/seed/winter2/300/300',
-          'https://picsum.photos/seed/winter3/300/300',
-          'https://picsum.photos/seed/winter4/300/300',
-          'https://picsum.photos/seed/winter5/300/300',
-          'https://picsum.photos/seed/winter6/300/300',
-        ];
+        _otherUserPosts = List.generate(12, (i) => 'https://picsum.photos/seed/winter$i/300/300');
       });
     }
-    // TODO: 'karina', 'aespa_official' 등 다른 유저 데이터도 추가
   }
 
   @override
@@ -101,7 +87,6 @@ class _ProfileScreenState extends State<ProfileScreen>
     super.dispose();
   }
 
-  // (기존) 'Edit Profile' 이동 로직 (변경 없음)
   void _navigateToEditProfile() async {
     final result = await Navigator.push(
       context,
@@ -118,652 +103,251 @@ class _ProfileScreenState extends State<ProfileScreen>
       setState(() {
         _name = result['name'];
         _bio = result['bio'];
-        _avatarUrl = result['avatarUrl'];
       });
     }
   }
 
-  // --- 4. (수정) Build 메서드에서 AppBar 분기 ---
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white, // (라이트 모드)
-      appBar: _isCurrentUser
-          ? _buildMyAppBar(context) // '내 프로필' 앱 바
-          : _buildOtherUserAppBar(context), // '다른 유저' 앱 바
+      backgroundColor: Colors.white,
+      appBar: _isCurrentUser ? _buildMyAppBar() : _buildOtherUserAppBar(),
       body: NestedScrollView(
         headerSliverBuilder: (context, innerBoxIsScrolled) {
           return [
             SliverToBoxAdapter(
-              child: _buildProfileHeader(context),
+              // [수정] ValueListenableBuilder로 감싸서 게시물 수가 변하면 헤더도 갱신
+              child: _isCurrentUser 
+                  ? ValueListenableBuilder<List<String>>(
+                      valueListenable: ProfileScreen.myPostsNotifier,
+                      builder: (context, posts, _) => _buildProfileHeader(posts.length),
+                    )
+                  : _buildProfileHeader(_otherUserPosts.length),
             ),
             SliverPersistentHeader(
               delegate: _SliverAppBarDelegate(
                 TabBar(
                   controller: _tabController,
-                  tabs: [
+                  indicatorColor: Colors.black,
+                  labelColor: Colors.black,
+                  unselectedLabelColor: Colors.grey,
+                  indicatorWeight: 1.0,
+                  tabs: const [
                     Tab(icon: Icon(Icons.grid_on)),
                     Tab(icon: Icon(Icons.person_pin_outlined)),
                   ],
-                  indicatorColor: Colors.black,
-                  labelColor: Colors.black,
                 ),
               ),
               pinned: true,
             ),
           ];
         },
-        // (TabBarView, GridView 등 나머지 코드는 동일...)
         body: TabBarView(
           controller: _tabController,
           children: [
-            // 첫 번째 탭: 포스트 그리드
-            GridView.builder(
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3,
-                crossAxisSpacing: 2,
-                mainAxisSpacing: 2,
-              ),
-              itemCount: _isCurrentUser ? _posts.length + 1 : _posts.length, // (수정) _postCount 상태 사용
-              itemBuilder: (context, index) {
-                // (수정) '내 프로필'이고, 마지막 인덱스일 경우
-                if (_isCurrentUser && index == _posts.length) {
-                  // 4. '+' 버튼을 렌더링
-                  return _buildAddPostButton();
-                }
-
-                // (수정) 그 외에는 _posts 리스트의 이미지를 렌더링
-                final postUrl = _posts[index];
-                return ZoomableGridImage(imageUrl: postUrl);
-              },
-            ),
-            // 두 번째 탭: 태그된 포스트
-            Center(
-              child: Text(
-                'Tagged Posts',
-                style: TextStyle(color: Colors.black),
-              ),
-            ),
+            // [핵심 수정] 게시물 그리드 (실시간 반영)
+            _isCurrentUser ? _buildMyPostGrid() : _buildOtherPostGrid(),
+            const Center(child: Text('Tagged Posts', style: TextStyle(color: Colors.grey))),
           ],
         ),
       ),
     );
   }
-  Widget _buildAddPostButton() {
-    return GestureDetector(
-      onTap: () => _showCreateModal(context), // 5. 탭하면 함수 호출
-      child: Container(
-        color: Colors.white,
-        child: Icon(
-          Icons.add,
-          color: Colors.grey[800],
-          size: 40.0,
-        ),
-      ),
-    );
-  }
 
-  void _navigateAndAddPost() async {
-    // 참고: 
-    // 현재 `new_post_screen`은 'Share' 버튼을 누르면 `popUntil`을 사용해
-    // 'FeedScreen'으로 돌아가도록 설계되어 있습니다.
-    //
-    // 'ProfileScreen'에서 즉시 갱신을 보려면 `new_post_screen`이
-    // `popUntil` 대신 `pop(newPostUrl)`을 반환하도록 수정해야 합니다.
-    //
-    // 여기서는 "게시물 추가"를 시뮬레이션하여
-    // "가장 왼쪽에 추가되는" UI를 즉시 보여드립니다.
+  // --- Widgets ---
 
-    // 1. (시뮬레이션) 1초간 '업로드' 대기
-    print('Posting new photo...');
-    await Future.delayed(Duration(seconds: 1));
-    
-    // 2. (시뮬레이션) 새 게시물 URL 생성
-    final String newPostUrl =
-        'https://picsum.photos/seed/new_post_${DateTime.now().millisecondsSinceEpoch}/300/300';
-
-    // 3. (핵심) setState 호출
-    setState(() {
-      // "가장 왼쪽에 업로드" -> 리스트의 맨 앞(index 0)에 추가
-      _posts.insert(0, newPostUrl);
-    });
-    print('New post added to the left!');
-
-
-    /* --- (참고) 실제 앱을 위한 주석 ---
-    
-    // 1. `new_post_screen` 등이 URL을 반환하도록 수정했다면,
-    //    아래 코드를 사용하여 실제 업로드 로직을 실행할 수 있습니다.
-    
-    final newPostUrl = await Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const CreatePostScreen()),
-    );
-
-    // 2. URL을 성공적으로 반환받았다면, state 갱신
-    if (newPostUrl != null && newPostUrl is String) {
-      setState(() {
-        _posts.insert(0, newPostUrl);
-      });
-    }
-    
-    */
-  }
-
-  // --- 5. (수정) '내 프로필' 앱 바 ---
-  // (기존 _buildAppBar에서 이름 변경)
-  AppBar _buildMyAppBar(BuildContext context) {
+  AppBar _buildMyAppBar() {
     return AppBar(
       backgroundColor: Colors.white,
-      foregroundColor: Colors.black,
       elevation: 0,
+      foregroundColor: Colors.black,
       title: Row(
         children: [
-          Icon(Icons.lock_outline, size: 20.0),
-          const SizedBox(width: 4.0),
-          Text(
-            _currentUsername,
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22.0),
-          ),
-          Icon(Icons.keyboard_arrow_down),
+          const Icon(Icons.lock_outline, size: 18),
+          const SizedBox(width: 6),
+          Text(_currentUsername, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 22)),
+          const Icon(Icons.keyboard_arrow_down),
         ],
       ),
       actions: [
-        IconButton(
-          icon: Icon(Icons.add_box_outlined, size: 28.0),
-          onPressed: () {},
-        ),
-        IconButton(
-          icon: Icon(Icons.menu, size: 28.0),
-          onPressed: () {},
-        ),
+        IconButton(icon: const Icon(Icons.add_box_outlined, size: 28), onPressed: _showCreateModal),
+        IconButton(icon: const Icon(Icons.menu, size: 28), onPressed: () {}),
       ],
     );
   }
 
-  // --- 6. (신규) '다른 유저 프로필' 앱 바 ---
-  AppBar _buildOtherUserAppBar(BuildContext context) {
+  AppBar _buildOtherUserAppBar() {
     return AppBar(
       backgroundColor: Colors.white,
-      foregroundColor: Colors.black,
       elevation: 0,
+      foregroundColor: Colors.black,
       title: Row(
         children: [
-          Text(
-            _currentUsername,
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22.0),
-          ),
-          if (_currentUsername == 'imwinter') // (임시) 인증 배지
-            Padding(
-              padding: const EdgeInsets.only(left: 4.0),
-              child: Icon(Icons.verified, color: Colors.blue, size: 20.0),
-            ),
+          Text(_currentUsername, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 22)),
+          if (_currentUsername == 'imwinter')
+             Padding(padding: const EdgeInsets.only(left: 4), child: Icon(Icons.verified, color: _instaBlue, size: 18)),
         ],
       ),
       actions: [
-        IconButton(
-          icon: Icon(Icons.notifications_none_outlined, size: 28.0),
-          onPressed: () {},
-        ),
-        IconButton(
-          icon: Icon(Icons.more_horiz, size: 28.0),
-          onPressed: () {},
-        ),
+        IconButton(icon: const Icon(Icons.notifications_none), onPressed: () {}),
+        IconButton(icon: const Icon(Icons.more_horiz), onPressed: () {}),
       ],
     );
   }
 
-  // --- 7. (수정) 프로필 헤더 (버튼 분기) ---
-  Widget _buildProfileHeader(BuildContext context) {
+  // 헤더 (게시물 수 동적 표시)
+  Widget _buildProfileHeader(int postCount) {
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              CircleAvatar(
-                radius: 44,
-                backgroundImage: NetworkImage(_avatarUrl), // (상태 사용)
-              ),
-              _buildStatColumn('$_postCount', 'Posts'), // (상태 사용)
-              _buildStatColumn(_followerCount, 'Followers'), // (상태 사용)
-                  GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        // 1단계에서 만든 새 팔로잉 화면으로 연결
-                        builder: (context) => const FollowingListScreen()),
-                  );
-                },
-                child: _buildStatColumn(_followingCount, 'Following'), // (상태 사용)
+              CircleAvatar(radius: 44, backgroundImage: NetworkImage(_avatarUrl)),
+              Expanded(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    _buildStatItem('$postCount', 'Posts'), // 동적 게시물 수
+                    _buildStatItem(_followerCount, 'Followers'),
+                    GestureDetector(
+                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const FollowingListScreen())),
+                      child: _buildStatItem(_followingCount, 'Following'),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 12.0),
-          Text(_name, // (상태 사용)
-              style:
-                  TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
-          Text(_bio, style: TextStyle(color: Colors.black)), // (상태 사용)
+          const SizedBox(height: 12),
+          Text(_name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+          Text(_bio, style: const TextStyle(fontSize: 14)),
           
-          // (스크린샷) 'Followed by...' (다른 유저 프로필일 때만)
           if (!_isCurrentUser && _mutualFollowers.isNotEmpty)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 8.0),
-              // 하드코딩된 Text.rich 대신 헬퍼 함수 호출
-              child: _buildFollowedByText(),
+              child: Text('Followed by ${_mutualFollowers[0]} and others', style: const TextStyle(fontSize: 13)),
             ),
-            
-          const SizedBox(height: 16.0),
+          
+          // [수정] 스토리 하이라이트 제거됨 (영상 반영)
 
-          // --- 8. (핵심) 현재 유저 여부에 따라 버튼 분기 ---
-          _isCurrentUser
-              ? _buildEditProfileButtons() // '내 프로필' 버튼
-              : _buildFollowMessageButtons(), // '다른 유저' 버튼
+          const SizedBox(height: 16),
+          _isCurrentUser ? _buildMyButtons() : _buildOtherButtons(),
         ],
       ),
     );
   }
 
-  // (기존) 스탯 컬럼 (변경 없음)
-  Widget _buildStatColumn(String count, String label) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Text(count,
-            style: TextStyle(
-                color: Colors.black,
-                fontSize: 18.0,
-                fontWeight: FontWeight.bold)),
-        Text(label, style: TextStyle(color: Colors.black, fontSize: 14.0)),
-      ],
-    );
-  }
-
-  Widget _buildFollowedByText() {
-    // 1. TextSpan 리스트를 만듭니다.
-    List<TextSpan> textSpans = [
-      TextSpan(text: 'Followed by '),
-    ];
-
-    // 스크린샷은 3명까지 이름을 보여줍니다.
-    // TODO: 1명, 2명, 4명 이상일 때의 로직을 추가해야 함
-    // (임시) 스크린샷과 동일한 3명 케이스만 우선 처리
-    if (_mutualFollowers.length == 3) {
-      // 1. 첫 번째 이름 (junehxuk)
-      textSpans.add(TextSpan(
-        text: _mutualFollowers[0],
-        style: TextStyle(fontWeight: FontWeight.bold),
-        // TODO: 탭하면 junehxuk 프로필로 이동하는 recognizer 추가
-      ));
-      
-      // 2. 콤마
-      textSpans.add(TextSpan(text: ', '));
-      
-      // 3. 두 번째 이름 (katarinabluu)
-      textSpans.add(TextSpan(
-        text: _mutualFollowers[1],
-        style: TextStyle(fontWeight: FontWeight.bold),
-        // TODO: 탭하면 katarinabluu 프로필로 이동
-      ));
-      
-      // 4. 'and'
-      textSpans.add(TextSpan(text: ' and '));
-      
-      // 5. 세 번째 이름 (aespa_official)
-      textSpans.add(TextSpan(
-        text: _mutualFollowers[2],
-        style: TextStyle(fontWeight: FontWeight.bold),
-        // TODO: 탭하면 aespa_official 프로필로 이동
-      ));
-    } 
-    // 3명 외의 경우 (1명, 2명, 4명 이상...)
-    else if (_mutualFollowers.isNotEmpty) {
-      // 우선 첫 번째 사람 이름만 표시
-      textSpans.add(TextSpan(
-          text: _mutualFollowers[0],
-          style: TextStyle(fontWeight: FontWeight.bold)));
-      if (_mutualFollowers.length > 1) {
-        textSpans.add(TextSpan(text: ' and others'));
-      }
-    }
-
-    // 2. 완성된 TextSpan 리스트로 Text.rich 위젯을 반환
-    return Text.rich(
-      TextSpan(
-        style: TextStyle(color: Colors.black, fontSize: 13.0),
-        children: textSpans,
-      ),
-    );
-  }
-
-  // --- 9. (수정) 'Edit Profile' 버튼 로직 ---
-  // (기존 _buildProfileHeader에서 분리)
-  Widget _buildEditProfileButtons() {
-    return Row(
-      children: [
-        Expanded(
-          child: ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.grey[200],
-              foregroundColor: Colors.black,
-            ),
-            onPressed: _navigateToEditProfile,
-            child: Text('Edit profile'),
+  // [핵심] 내 게시물 그리드 (ValueListenableBuilder 사용)
+  Widget _buildMyPostGrid() {
+    return ValueListenableBuilder<List<String>>(
+      valueListenable: ProfileScreen.myPostsNotifier,
+      builder: (context, posts, _) {
+        return GridView.builder(
+          padding: EdgeInsets.zero,
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 3, crossAxisSpacing: 1, mainAxisSpacing: 1,
           ),
-        ),
-        const SizedBox(width: 8.0),
-        Expanded(
-          child: ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.grey[200],
-              foregroundColor: Colors.black,
-            ),
-            onPressed: () { /* TODO */ },
-            child: Text('Share profile'),
-          ),
-        ),
-      ],
-    );
-  }
-
-  // --- 10. (신규) 'Follow/Message' 버튼 로직 ---
-  Widget _buildFollowMessageButtons() {
-    return Row(
-      children: [
-        Expanded(
-          child: ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.grey[200], // (라이트 모드)
-              foregroundColor: Colors.black, // (라이트 모드)
-            ),
-            onPressed: () { /* TODO: Unfollow 로직 */ },
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text('Following'),
-                Icon(Icons.keyboard_arrow_down, size: 20.0),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(width: 8.0),
-        Expanded(
-          child: ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.grey[200],
-              foregroundColor: Colors.black,
-            ),
-            onPressed: () { /* TODO: Message (ChatRoomScreen) */ },
-            child: Text('Message'),
-          ),
-        ),
-        const SizedBox(width: 8.0),
-        ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.grey[200],
-            foregroundColor: Colors.black,
-            padding: EdgeInsets.symmetric(horizontal: 12.0),
-            minimumSize: Size(36, 36),
-          ),
-          onPressed: () { /* TODO */ },
-          child: Icon(Icons.person_add_outlined),
-        ),
-      ],
-    );
-  }
-
-  // --- (신규) 'Create' 바텀 시트를 띄우는 함수 ---
-  void _showCreateModal(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.white, // (라이트 모드)
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(16.0),
-          topRight: Radius.circular(16.0),
-        ),
-      ),
-      builder: (BuildContext context) {
-        return Container(
-          padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              // 모달 상단 핸들
-              Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.grey[400],
-                  borderRadius: BorderRadius.circular(2.0),
-                ),
-              ),
-              const SizedBox(height: 16.0),
-              
-              // 'Create' 타이틀
-              Text(
-                'Create',
-                style: TextStyle(
-                  color: Colors.black,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18.0,
-                ),
-              ),
-              Divider(color: Colors.grey[300], height: 24),
-              
-              // 1. Reel
-              ListTile(
-                leading: Icon(Icons.movie_filter_outlined, color: Colors.black),
-                title: Text('Reel', style: TextStyle(color: Colors.black)),
-                onTap: () {
-                  Navigator.pop(context); // 모달 닫기
-                  // TODO: 릴스 만들기 화면으로 이동
-                  print('Navigate to Create Reel');
-                },
-              ),
-              
-              // 2. Post
-              ListTile(
-                leading: Icon(Icons.grid_on_outlined, color: Colors.black),
-                title: Text('Post', style: TextStyle(color: Colors.black)),
-                onTap: () {
-                  Navigator.pop(context); // 모달 닫기
-                  
-                  // (수정) 시뮬레이션 함수 대신 'CreatePostScreen'으로 이동
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const CreatePostScreen()
-                    ),
-                  );
-                },
-              ),
-              
-              // 3. Share only to profile
-              ListTile(
-                leading: Icon(Icons.person_pin_outlined, color: Colors.black),
-                title: Text('Share only to profile',
-                    style: TextStyle(color: Colors.black)),
-                trailing: Chip( // 'New' 칩
-                  label: Text('New', style: TextStyle(color: Colors.white, fontSize: 10)),
-                  backgroundColor: Colors.blue,
-                  padding: EdgeInsets.zero,
-                  labelPadding: EdgeInsets.symmetric(horizontal: 4.0),
-                ),
-                onTap: () {
-                  Navigator.pop(context); // 모달 닫기
-                  // TODO: 'Share only' 기능 구현
-                  print('Navigate to Share only to profile');
-                },
-              ),
-              const SizedBox(height: 16.0), // 하단 여백
-            ],
-          ),
+          // 게시물 + 1 (추가 버튼)
+          itemCount: posts.length + 1,
+          itemBuilder: (context, index) {
+            // 마지막 아이템은 '+' 버튼
+            if (index == posts.length) {
+               return GestureDetector(
+                 onTap: _showCreateModal,
+                 child: Container(color: Colors.white, child: Icon(Icons.add, color: Colors.grey[400], size: 40)),
+               );
+            }
+            return ZoomableGridImage(imageUrl: posts[index]);
+          },
         );
       },
     );
   }
-}
 
-// (기존) Sliver 탭 바 델리게이트 (변경 없음)
-class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
-  _SliverAppBarDelegate(this._tabBar);
-  final TabBar _tabBar;
-
-  @override
-  double get minExtent => _tabBar.preferredSize.height;
-  @override
-  double get maxExtent => _tabBar.preferredSize.height;
-
-  @override
-  Widget build(
-      BuildContext context, double shrinkOffset, bool overlapsContent) {
-    return Container(color: Colors.white, child: _tabBar);
+  // 타인 게시물 그리드
+  Widget _buildOtherPostGrid() {
+    return GridView.builder(
+      padding: EdgeInsets.zero,
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 3, crossAxisSpacing: 1, mainAxisSpacing: 1,
+      ),
+      itemCount: _otherUserPosts.length,
+      itemBuilder: (context, index) => ZoomableGridImage(imageUrl: _otherUserPosts[index]),
+    );
   }
 
-  @override
-  bool shouldRebuild(_SliverAppBarDelegate oldDelegate) {
-    return false;
+  Widget _buildStatItem(String count, String label) {
+    return Column(children: [Text(count, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)), Text(label, style: const TextStyle(fontSize: 14))]);
   }
-}
-class ZoomableGridImage extends StatefulWidget {
-  final String imageUrl;
 
-  const ZoomableGridImage({super.key, required this.imageUrl});
+  Widget _buildMyButtons() {
+    return Row(children: [
+      Expanded(child: _grayBtn('Edit profile', _navigateToEditProfile)), const SizedBox(width: 6),
+      Expanded(child: _grayBtn('Share profile', () {})), const SizedBox(width: 6),
+      _iconBtn(),
+    ]);
+  }
 
-  @override
-  State<ZoomableGridImage> createState() => _ZoomableGridImageState();
-}
+  Widget _buildOtherButtons() {
+    return Row(children: [
+      Expanded(child: ElevatedButton(style: ElevatedButton.styleFrom(backgroundColor: _instaBlue, elevation: 0, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))), onPressed: () {}, child: const Text('Follow', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)))), 
+      const SizedBox(width: 6),
+      Expanded(child: _grayBtn('Message', () {})), const SizedBox(width: 6),
+      _iconBtn(),
+    ]);
+  }
 
-class _ZoomableGridImageState extends State<ZoomableGridImage> {
-  OverlayEntry? _overlayEntry;
-  bool _isLiked = false; // 좋아요 상태 (임시)
+  Widget _grayBtn(String text, VoidCallback onPressed) {
+    return ElevatedButton(style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFEFEFEF), foregroundColor: Colors.black, elevation: 0, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))), onPressed: onPressed, child: Text(text, style: const TextStyle(fontWeight: FontWeight.w600)));
+  }
+  
+  Widget _iconBtn() => Container(width: 36, height: 36, decoration: BoxDecoration(color: const Color(0xFFEFEFEF), borderRadius: BorderRadius.circular(8)), child: const Icon(Icons.person_add_outlined, size: 20));
 
-  // 1. 오버레이 생성 함수
-  void _showOverlay(BuildContext context) {
-    final overlay = Overlay.of(context);
-    _overlayEntry = OverlayEntry(
-      builder: (context) => Stack(
-        children: [
-          // A. 배경 (반투명 검정)
-          Positioned.fill(
-            child: Container(
-              color: Colors.black.withOpacity(0.6),
-            ),
-          ),
-
-          // B. 중앙 확대 이미지
-          Center(
-            child: Material(
-              color: Colors.transparent,
-              child: Container(
-                // 가로 너비를 화면의 95% 정도로 설정
-                width: MediaQuery.of(context).size.width * 0.95,
-                // 이미지의 높이를 콘텐츠에 맞춤 (Column 사용)
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12.0), // 둥근 모서리
-                  boxShadow: [
-                    BoxShadow(
-                        color: Colors.black26, blurRadius: 10, spreadRadius: 2)
-                  ],
-                ),
-                // [Image] + [Bottom Bar]를 세로로 배치
-                child: Column(
-                  mainAxisSize: MainAxisSize.min, // 내용물만큼만 높이 차지
-                  children: [
-                    // 1. 이미지
-                    ClipRRect(
-                      borderRadius:
-                          BorderRadius.vertical(top: Radius.circular(12.0)),
-                      child: Image.network(
-                        widget.imageUrl,
-                        fit: BoxFit.cover,
-                        width: double.infinity,
-                        height: MediaQuery.of(context).size.width * 0.95, // 정사각형 비율
-                      ),
-                    ),
-
-                    // 2. 하단 인터랙션 바 (스크린샷 UI)
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12.0, vertical: 10.0),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius:
-                            BorderRadius.vertical(bottom: Radius.circular(12.0)),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          // 좌측 아이콘들 (좋아요, 댓글, 공유)
-                          Row(
-                            children: [
-                              // 좋아요 아이콘 (상태에 따라 변경)
-                              Icon(
-                                _isLiked ? Icons.favorite : Icons.favorite_border,
-                                color: _isLiked ? Colors.red : Colors.black,
-                                size: 26,
-                              ),
-                              const SizedBox(width: 16),
-                              Icon(Icons.chat_bubble_outline,
-                                  color: Colors.black, size: 26),
-                              const SizedBox(width: 16),
-                              Icon(Icons.send_outlined,
-                                  color: Colors.black, size: 26),
-                            ],
-                          ),
-                          // 우측 아이콘 (더보기)
-                          Icon(Icons.more_vert, color: Colors.black, size: 26),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
+  void _showCreateModal() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(16),
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+           Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2))),
+           const SizedBox(height: 16), const Text('Create', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)), const Divider(),
+           ListTile(leading: const Icon(Icons.grid_on), title: const Text('Post'), onTap: () { Navigator.pop(context); Navigator.push(context, MaterialPageRoute(builder: (_) => const CreatePostScreen())); }),
+           ListTile(leading: const Icon(Icons.movie_outlined), title: const Text('Reel'), onTap: (){}),
+           ListTile(leading: const Icon(Icons.history), title: const Text('Story'), onTap: (){}),
+        ]),
       ),
     );
+  }
+}
 
-    // 오버레이 삽입
+class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
+  final TabBar _tabBar; _SliverAppBarDelegate(this._tabBar);
+  @override double get minExtent => _tabBar.preferredSize.height; @override double get maxExtent => _tabBar.preferredSize.height;
+  @override Widget build(context, offset, overlaps) => Container(color: Colors.white, child: _tabBar);
+  @override bool shouldRebuild(old) => false;
+}
+
+class ZoomableGridImage extends StatefulWidget {
+  final String imageUrl;
+  const ZoomableGridImage({super.key, required this.imageUrl});
+  @override State<ZoomableGridImage> createState() => _ZoomableGridImageState();
+}
+class _ZoomableGridImageState extends State<ZoomableGridImage> {
+  OverlayEntry? _overlayEntry;
+  void _showOverlay(BuildContext context) {
+    final overlay = Overlay.of(context);
+    _overlayEntry = OverlayEntry(builder: (context) => Stack(children: [Container(color: Colors.black54), Center(child: Material(color: Colors.transparent, child: ClipRRect(borderRadius: BorderRadius.circular(12), child: Image.network(widget.imageUrl, width: MediaQuery.of(context).size.width * 0.9, fit: BoxFit.cover))))]));
     overlay.insert(_overlayEntry!);
   }
-
-  // 2. 오버레이 제거 함수
-  void _removeOverlay() {
-    _overlayEntry?.remove();
-    _overlayEntry = null;
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  void _removeOverlay() { _overlayEntry?.remove(); _overlayEntry = null; }
+  @override Widget build(BuildContext context) {
     return GestureDetector(
-      // 길게 누르기 시작 -> 오버레이 표시
-      onLongPressStart: (details) {
-        _showOverlay(context);
-      },
-      // 손을 뗌 -> 오버레이 제거
-      onLongPressEnd: (details) {
-        _removeOverlay();
-      },
-      // 제스처 취소 시 제거
-      onLongPressCancel: () {
-        _removeOverlay();
-      },
-      // 탭 시 (나중에 상세 화면 이동 등)
-      onTap: () {
-        // Navigator.push(...)
-      },
-      child: Image.network(
-        widget.imageUrl,
-        fit: BoxFit.cover,
-      ),
+      onLongPressStart: (_) => _showOverlay(context), onLongPressEnd: (_) => _removeOverlay(), onLongPressCancel: () => _removeOverlay(),
+      child: Image.network(widget.imageUrl, fit: BoxFit.cover, loadingBuilder: (c, child, l) => l==null?child:Container(color: Colors.grey[200])),
     );
   }
 }
