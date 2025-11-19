@@ -6,8 +6,11 @@ import 'package:instagram/screens/profile_screen.dart';
 import 'package:instagram/screens/search_screen.dart'; 
 import 'package:instagram/screens/reels_screen.dart';
 
+// Global key so other screens can programmatically change tabs (e.g. after posting)
+final GlobalKey<_MainNavigationScreenState> mainNavKey = GlobalKey<_MainNavigationScreenState>();
+
 class MainNavigationScreen extends StatefulWidget {
-  const MainNavigationScreen({super.key});
+  const MainNavigationScreen({Key? key}) : super(key: key);
 
   @override
   State<MainNavigationScreen> createState() => _MainNavigationScreenState();
@@ -41,6 +44,13 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         _selectedIndex = index;
       });
     }
+  }
+
+  // Allow external callers to change the active tab programmatically.
+  void changeTab(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
   }
 
   @override

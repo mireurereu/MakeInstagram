@@ -3,16 +3,54 @@ import 'package:instagram/screens/dm_list_screen.dart';
 import 'package:instagram/screens/notifications_screen.dart';
 import 'package:instagram/widgets/post_card_widget.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
+  // [핵심 수정] 외부에서 접근 가능한 데이터 저장소 (static)
+  static final ValueNotifier<List<Map<String, dynamic>>> feedNotifier = 
+      ValueNotifier<List<Map<String, dynamic>>>([
+    {
+      'username': 'karinabluu',
+      'userAvatarUrl': 'https://picsum.photos/seed/karina/100/100',
+      'postImageUrls': ['assets/images/post_1.jpg', 'assets/images/post_2.jpg'],
+      'likeCount': '1,367,685',
+      'caption': 'more',
+      'timestamp': '5 days ago',
+      'isVideo': false,
+    },
+    {
+      'username': 'aespa_official',
+      'userAvatarUrl': 'https://picsum.photos/seed/aespa/100/100',
+      'postImageUrls': ['assets/images/video_thumb.jpg'],
+      'likeCount': '918,471',
+      'caption': 'Bee~ Gese Stay Alive 🐝',
+      'timestamp': '5 days ago',
+      'isVideo': true,
+    },
+    {
+      'username': 'imwinter',
+      'userAvatarUrl': 'https://picsum.photos/seed/winter/100/100',
+      'postImageUrls': ['assets/images/post_3.jpg', 'assets/images/post_4.jpg'],
+      'likeCount': '886,981',
+      'caption': '사랑스러운 🗿🤍',
+      'timestamp': '3 days ago',
+      'isVideo': false,
+    },
+  ]);
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         centerTitle: false,
-        title: Image.network(
-          'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/Instagram_logo.svg/1200px-Instagram_logo.svg.png',
+        title: Image.asset(
+          'assets/images/insta_logo.png',
           height: 32,
           errorBuilder: (c, e, s) => const Text('Instagram', style: TextStyle(fontFamily: 'Billabong', fontSize: 30)),
         ),
@@ -27,26 +65,34 @@ class HomeScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: ListView(
-        children: [
-          _buildStoryBar(),
-          const Divider(height: 1, color: Color(0xFFDBDBDB)),
-          const PostCardWidget(
-            username: 'karinabluu', userAvatarUrl: 'https://picsum.photos/seed/karina/100/100',
-            postImageUrls: ['https://picsum.photos/seed/post1/600/600', 'https://picsum.photos/seed/post2/600/600'],
-            likeCount: '1,367,685', caption: 'more', timestamp: '5 days ago',
-          ),
-          const PostCardWidget(
-             username: 'aespa_official', userAvatarUrl: 'https://picsum.photos/seed/aespa/100/100',
-             postImageUrls: ['https://picsum.photos/seed/video_thumb/600/600'],
-             likeCount: '918,471', caption: 'Bee~ Gese Stay Alive 🐝', timestamp: '5 days ago', isVideo: true,
-          ),
-          const PostCardWidget(
-            username: 'imwinter', userAvatarUrl: 'https://picsum.photos/seed/winter/100/100',
-            postImageUrls: ['https://picsum.photos/seed/winter1/600/600', 'https://picsum.photos/seed/winter2/600/600'],
-            likeCount: '886,981', caption: '사랑스러운 🗿🤍', timestamp: '3 days ago',
-          ),
-        ],
+      // [핵심 수정] ValueListenableBuilder 사용
+      body: ValueListenableBuilder<List<Map<String, dynamic>>>(
+        valueListenable: HomeScreen.feedNotifier,
+        builder: (context, feedData, child) {
+          return ListView.builder(
+            itemCount: feedData.length + 1,
+            itemBuilder: (context, index) {
+              if (index == 0) {
+                return Column(
+                  children: [
+                    _buildStoryBar(),
+                    const Divider(height: 1, color: Color(0xFFDBDBDB)),
+                  ],
+                );
+              }
+              final post = feedData[index - 1];
+              return PostCardWidget(
+                username: post['username'],
+                userAvatarUrl: post['userAvatarUrl'],
+                postImageUrls: post['postImageUrls'],
+                likeCount: post['likeCount'],
+                caption: post['caption'],
+                timestamp: post['timestamp'],
+                isVideo: post['isVideo'],
+              );
+            },
+          );
+        },
       ),
     );
   }
@@ -60,7 +106,7 @@ class HomeScreen extends StatelessWidget {
       {'name': 'winter', 'img': 'https://picsum.photos/seed/winter/100/100', 'isMe': false},
     ];
     return SizedBox(
-      height: 100,
+      height: 115,
       child: ListView.builder(
         scrollDirection: Axis.horizontal, padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
         itemCount: stories.length,
