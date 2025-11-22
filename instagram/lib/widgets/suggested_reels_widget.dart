@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
+import 'package:flutter/foundation.dart';
 import 'package:visibility_detector/visibility_detector.dart';
 
 class SuggestedReelsWidget extends StatelessWidget {
@@ -74,7 +75,7 @@ class _ReelItem extends StatefulWidget {
 }
 
 class _ReelItemState extends State<_ReelItem> {
-  late VideoPlayerController _controller;
+  VideoPlayerController? _controller;
   bool _isInitialized = false;
   bool _hasInitError = false;
 
@@ -83,12 +84,12 @@ class _ReelItemState extends State<_ReelItem> {
     super.initState();
     try {
       _controller = VideoPlayerController.networkUrl(Uri.parse(widget.url));
-      _controller.initialize().then((_) {
+      _controller!.initialize().then((_) {
         if (mounted) {
           setState(() {
             _isInitialized = true;
-            _controller.setLooping(true); // 무한 반복
-            _controller.setVolume(0);     // 소리 끄기 (자동 재생 정책)
+            _controller!.setLooping(true); // 무한 반복
+            _controller!.setVolume(0);     // 소리 끄기 (자동 재생 정책)
           });
         }
       }).catchError((e) {
@@ -99,13 +100,15 @@ class _ReelItemState extends State<_ReelItem> {
     } catch (e) {
       // ignore: avoid_print
       print('Video controller creation error for ${widget.url}: $e');
-      _hasInitError = true;
+      if (mounted) setState(() => _hasInitError = true);
     }
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    if (_controller != null) {
+      _controller!.dispose();
+    }
     super.dispose();
   }
 
@@ -115,13 +118,13 @@ class _ReelItemState extends State<_ReelItem> {
     return VisibilityDetector(
       key: widget.key!,
       onVisibilityChanged: (VisibilityInfo info) {
-        if (!_isInitialized) return;
+        if (!_isInitialized || _controller == null) return;
 
         // 화면에 50% 이상 보이면 재생, 아니면 멈춤
         if (info.visibleFraction > 0.5) {
-          if (!_controller.value.isPlaying) _controller.play();
+          if (!_controller!.value.isPlaying) _controller!.play();
         } else {
-          if (_controller.value.isPlaying) _controller.pause();
+          if (_controller!.value.isPlaying) _controller!.pause();
         }
       },
       child: Container(
@@ -137,11 +140,17 @@ class _ReelItemState extends State<_ReelItem> {
           children: [
             // 비디오 영역
             if (_hasInitError)
-              const Center(child: Icon(Icons.broken_image, color: Colors.white70))
-            else if (_isInitialized)
+              // fallback: show placeholder with play icon
+              Container(
+                color: Colors.black54,
+                child: const Center(
+                  child: Icon(Icons.play_circle_fill, size: 48, color: Colors.white70),
+                ),
+              )
+            else if (_isInitialized && _controller != null)
               AspectRatio(
-                aspectRatio: _controller.value.aspectRatio,
-                child: VideoPlayer(_controller),
+                aspectRatio: _controller!.value.aspectRatio,
+                child: VideoPlayer(_controller!),
               )
             else
               const Center(

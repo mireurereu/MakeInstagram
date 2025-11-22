@@ -28,56 +28,110 @@ class _NewPostScreenState extends State<NewPostScreen> {
       context: context,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
       builder: (c) => Padding(
         padding: EdgeInsets.only(bottom: MediaQuery.of(c).viewInsets.bottom),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
           child: Column(
             mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  margin: const EdgeInsets.only(bottom: 12),
-                  decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(4)),
+              Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 12),
+                decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(4)),
+              ),
+              const SizedBox(height: 4),
+              const Text('Always share posts to Facebook?', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 12),
+
+              // three descriptive rows
+              Row(crossAxisAlignment: CrossAxisAlignment.start, children: const [Icon(Icons.facebook, size: 22), SizedBox(width: 12), Expanded(child: Text('Let your friends see your posts, no matter which app they\'re on.'))]),
+              const SizedBox(height: 10),
+              Row(crossAxisAlignment: CrossAxisAlignment.start, children: const [Icon(Icons.lock_outline, size: 22), SizedBox(width: 12), Expanded(child: Text('You will share as 최준혁. Your audience for posts on Facebook is Only me.'))]),
+              const SizedBox(height: 10),
+              Row(crossAxisAlignment: CrossAxisAlignment.start, children: const [Icon(Icons.settings_outlined, size: 22), SizedBox(width: 12), Expanded(child: Text('You can change your sharing settings in Accounts Center and each time you share.'))]),
+              const SizedBox(height: 18),
+
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(c);
+                    // proceed to actual share
+                    _startShareProcess();
+                  },
+                  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF2D5BFF)),
+                  child: const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 14),
+                    child: Text('Share posts', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  ),
                 ),
               ),
-              const Text('Sharing posts', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(c);
+                  // show the pause sheet after the share sheet is dismissed
+                  Future.delayed(const Duration(milliseconds: 200), () => _showPauseSheet());
+                },
+                child: const Text('Not now', style: TextStyle(color: Colors.black54)),
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showPauseSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (c) => Padding(
+        padding: EdgeInsets.only(bottom: MediaQuery.of(c).viewInsets.bottom),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 12),
+                decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(4)),
+              ),
+              const SizedBox(height: 4),
+              const Text('Pause these messages?', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
               const SizedBox(height: 12),
-              Row(children: const [Icon(Icons.info_outline), SizedBox(width: 8), Expanded(child: Text('Your account is public, so anyone can discover your posts and follow you.'))]),
-              const SizedBox(height: 8),
-              Row(children: const [Icon(Icons.repeat), SizedBox(width: 8), Expanded(child: Text('Anyone can reuse all or part of your post in features like remixes, sequences, templates and stickers, and download your post as part of their reel or post.'))]),
-              const SizedBox(height: 8),
-              Row(children: const [Icon(Icons.settings), SizedBox(width: 8), Expanded(child: Text('You can turn off reuse for each post or change the default in your settings.'))]),
+              const Text('You\'ll stop seeing messages about sharing to Facebook for 90 days. You can turn on crossposting when you share a story, post or reel.'),
               const SizedBox(height: 18),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () {
                     Navigator.pop(c);
-                    _startShareProcess();
+                    // implement pause action if needed (currently just closes)
                   },
-                  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF3797EF)),
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.grey[200], foregroundColor: Colors.black),
                   child: const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 14),
-                    child: Text('OK', style: TextStyle(fontWeight: FontWeight.bold)),
+                    padding: EdgeInsets.symmetric(vertical: 12),
+                    child: Text('Pause', style: TextStyle(fontWeight: FontWeight.bold)),
                   ),
                 ),
               ),
               const SizedBox(height: 8),
-              Center(
-                child: TextButton(
-                  onPressed: () {
-                    Navigator.pop(c);
-                    // Could navigate to settings or show a help URL
-                  },
-                  child: const Text('Manage settings', style: TextStyle(color: Colors.black54)),
-                ),
-              ),
+              TextButton(onPressed: () {
+                Navigator.pop(c);
+                Future.delayed(const Duration(milliseconds: 200), () => _startShareProcess());
+              }, child: const Text('No thanks', style: TextStyle(color: Colors.blue))),
+              const SizedBox(height: 8),
             ],
           ),
         ),
@@ -124,7 +178,7 @@ class _NewPostScreenState extends State<NewPostScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('New post', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text('New Post', style: TextStyle(fontWeight: FontWeight.bold)),
         actions: [
           TextButton(
             onPressed: _isSharing ? null : _onSharePressed,
@@ -132,38 +186,115 @@ class _NewPostScreenState extends State<NewPostScreen> {
           )
         ],
       ),
-      body: Stack(
-        children: [
-          Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
+      body: SafeArea(
+        child: Column(
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      width: 70,
-                      height: 70,
-                      decoration: BoxDecoration(image: DecorationImage(image: imageProvider, fit: BoxFit.cover)),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: TextField(
-                        controller: _captionController,
-                        decoration: const InputDecoration(hintText: 'Write a caption...', border: InputBorder.none),
-                        maxLines: 4,
+                    const SizedBox(height: 12),
+                    Center(
+                      child: Container(
+                        width: 300,
+                        height: 300,
+                        color: Colors.grey[100],
+                            child: Image(image: imageProvider, fit: BoxFit.contain),
                       ),
                     ),
+
+                    const SizedBox(height: 12),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: TextField(
+                        controller: _captionController,
+                        decoration: const InputDecoration(
+                          hintText: 'Add a caption...',
+                          border: InputBorder.none,
+                          isDense: true,
+                        ),
+                        maxLines: null,
+                        minLines: 1,
+                      ),
+                    ),
+
+                    const SizedBox(height: 8),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                      child: Wrap(
+                        spacing: 8,
+                        children: [
+                          OutlinedButton.icon(onPressed: () {}, icon: const Icon(Icons.poll_outlined, size: 16), label: const Text('Poll')), 
+                          OutlinedButton.icon(onPressed: () {}, icon: const Icon(Icons.lightbulb_outline, size: 16), label: const Text('Prompt')),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 12),
+                    const Divider(height: 1),
+                    ListTile(
+                      leading: const Icon(Icons.person_outline),
+                      title: const Text('Tag people'),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () {},
+                    ),
+                    const Divider(height: 1),
+                    ListTile(
+                      leading: const Icon(Icons.location_on_outlined),
+                      title: const Text('Add location'),
+                      subtitle: const Text('People you share this content with can see the location you tag and view this content on the map.'),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () {},
+                    ),
+                    const Divider(height: 1),
+
+                    const SizedBox(height: 8),
+                    const Divider(height: 1),
+                    ListTile(
+                      leading: const Icon(Icons.visibility_outlined),
+                      title: const Text('Audience'),
+                      trailing: Text('Everyone', style: TextStyle(color: Colors.grey[700])),
+                      onTap: () {},
+                    ),
+                    const Divider(height: 1),
+                    ListTile(
+                      leading: const Icon(Icons.share_outlined),
+                      title: const Text('Also share on...'),
+                      trailing: Row(mainAxisSize: MainAxisSize.min, children: const [Text('Off', style: TextStyle(color: Colors.grey)), SizedBox(width: 8), Icon(Icons.new_releases, color: Colors.blue, size: 18)]),
+                      onTap: () {},
+                    ),
+                    const Divider(height: 1),
+                    ListTile(
+                      leading: const Icon(Icons.more_horiz),
+                      title: const Text('More options'),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () {},
+                    ),
+                    const Divider(height: 1),
+                    const SizedBox(height: 80),
                   ],
                 ),
               ),
-              const Divider(),
-              const ListTile(title: Text('Tag people'), trailing: Icon(Icons.chevron_right)),
-              const ListTile(title: Text('Add location'), trailing: Icon(Icons.chevron_right)),
-            ],
+            ),
+
+            if (_isSharing) Container(color: Colors.black54, height: 4),
+          ],
+        ),
+      ),
+      bottomNavigationBar: SafeArea(
+        child: Container(
+          color: Colors.white,
+          padding: const EdgeInsets.all(12),
+          child: SizedBox(
+            height: 50,
+            child: ElevatedButton(
+              onPressed: _isSharing ? null : _onSharePressed,
+              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF3797EF)),
+              child: const Text('Share', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            ),
           ),
-          if (_isSharing) Container(color: Colors.black54, child: const Center(child: CircularProgressIndicator())),
-        ],
+        ),
       ),
     );
   }

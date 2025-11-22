@@ -1,96 +1,114 @@
+import 'dart:typed_data';
+import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:instagram/screens/new_post_screen.dart';
 
 class EditPostScreen extends StatefulWidget {
-  // [핵심] 오직 assetPath만 받습니다.
-  final String assetPath; 
-  
-  const EditPostScreen({
-    super.key, 
-    required this.assetPath // required로 변경
-  });
+  final Uint8List? imageBytes;
+  final File? imageFile;
+  final String? assetPath;
+
+  const EditPostScreen({super.key, this.imageBytes, this.imageFile, this.assetPath});
 
   @override
   State<EditPostScreen> createState() => _EditPostScreenState();
 }
 
 class _EditPostScreenState extends State<EditPostScreen> {
-  final List<String> _filters = ['Normal', 'Clarendon', 'Gingham', 'Moon', 'Lark', 'Reyes'];
+  final List<Map<String, String>> _songs = [
+    {'title': 'Magnetic', 'artist': 'Illit', 'art': 'assets/images/post1.jpg'},
+    {'title': 'Supernova', 'artist': 'aespa', 'art': 'assets/images/post2.jpg'},
+    {'title': 'Dreamscape', 'artist': 'Luna', 'art': 'assets/images/post3.jpg'},
+    {'title': 'Midnight', 'artist': 'Noah', 'art': 'assets/images/post4.jpg'},
+  ];
 
   @override
   Widget build(BuildContext context) {
+    final Widget imageWidget = widget.imageBytes != null
+        ? Image.memory(widget.imageBytes!, width: double.infinity, fit: BoxFit.cover)
+        : (widget.assetPath != null)
+            ? Image.asset(widget.assetPath!, width: double.infinity, fit: BoxFit.cover)
+            : widget.imageFile != null
+                ? Image.file(widget.imageFile!, width: double.infinity, fit: BoxFit.cover)
+                : Container(color: Colors.grey[300], width: double.infinity, height: 300, child: const Center(child: Text('No image')));
+
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Icon(Icons.auto_fix_high),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        leading: IconButton(icon: const Icon(Icons.close, color: Colors.black), onPressed: () => Navigator.pop(context)),
         actions: [
-          TextButton(
-            onPressed: () {
-              // [핵심] assetPath를 그대로 다음 화면으로 넘기고, 이동 직후 하단 모달이 뜨도록 autoShowShareSheet=true
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => NewPostScreen(imagePath: widget.assetPath, autoShowShareSheet: true),
-                ),
-              );
-            },
-            child: const Text('Next', style: TextStyle(color: Color(0xFF3797EF), fontSize: 16, fontWeight: FontWeight.bold)),
-          )
+          IconButton(icon: const Icon(Icons.check, color: Colors.black), onPressed: () => Navigator.pop(context)),
         ],
+        title: const Text('', style: TextStyle(color: Colors.black)),
       ),
       body: Column(
         children: [
-          // 이미지 표시: 화면에서 유연하게 크기를 차지하도록 Flexible 사용
-          Flexible(
-            flex: 7,
-            child: AspectRatio(
-              aspectRatio: 1,
-              child: Image.asset(widget.assetPath, fit: BoxFit.cover),
-            ),
-          ),
+          // Top image area
+          Expanded(
+            flex: 6,
+            child: Stack(
+              children: [
+                Positioned.fill(child: imageWidget),
 
-          // 필터 리스트: 고정 높이 대신 Flexible로 화면 비율을 사용
-          Flexible(
-            flex: 2,
-            child: Padding(
-              padding: const EdgeInsets.only(top: 8.0),
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: _filters.length,
-                itemBuilder: (context, index) => Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                // right-side vertical icon column
+                Positioned(
+                  top: 40,
+                  right: 12,
                   child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(
-                        _filters[index],
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: index == 0 ? Colors.black : Colors.grey,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Container(
-                        width: 60,
-                        height: 60,
-                        color: Colors.grey[300],
-                        child: index == 0 ? Image.asset(widget.assetPath, fit: BoxFit.cover) : null,
-                      ),
+                      _buildFloatingIcon(Icons.music_note, 'Music'),
+                      const SizedBox(height: 12),
+                      _buildFloatingIcon(Icons.text_fields, 'Aa'),
+                      const SizedBox(height: 12),
+                      _buildFloatingIcon(Icons.emoji_emotions_outlined, 'Sticker'),
+                      const SizedBox(height: 12),
+                      _buildFloatingIcon(Icons.auto_awesome, 'Sparkle'),
                     ],
                   ),
                 ),
-              ),
+              ],
             ),
           ),
 
-          // 하단 탭(필터/편집) — SafeArea로 키보드/홈바와 겹치지 않도록 함
-          SafeArea(
+          // Bottom songs list
+          Expanded(
+            flex: 4,
             child: Container(
-              height: 56,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: const [
-                  Text('FILTER', style: TextStyle(fontWeight: FontWeight.bold)),
-                  Text('EDIT', style: TextStyle(color: Colors.grey)),
+              color: Colors.white,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                    child: Text('For you', style: TextStyle(color: Colors.grey, fontSize: 13)),
+                  ),
+                  Expanded(
+                    child: ListView.separated(
+                      padding: const EdgeInsets.symmetric(vertical: 4.0),
+                      itemCount: _songs.length,
+                      separatorBuilder: (_, __) => const Divider(height: 1),
+                      itemBuilder: (context, index) {
+                        final item = _songs[index];
+                        return ListTile(
+                          leading: ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: SizedBox(
+                              width: 56,
+                              height: 56,
+                              child: _loadAlbumArt(item['art']!),
+                            ),
+                          ),
+                          title: Text(item['title'] ?? ''),
+                          subtitle: Text(item['artist'] ?? ''),
+                          onTap: () {
+                            // TODO: preview/play the song
+                          },
+                        );
+                      },
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -98,5 +116,27 @@ class _EditPostScreenState extends State<EditPostScreen> {
         ],
       ),
     );
+  }
+
+  Widget _buildFloatingIcon(IconData icon, String tooltip) {
+    return Container(
+      width: 44,
+      height: 44,
+      decoration: BoxDecoration(color: Colors.black38, shape: BoxShape.circle),
+      child: IconButton(
+        icon: Icon(icon, color: Colors.white, size: 20),
+        tooltip: tooltip,
+        onPressed: () {},
+      ),
+    );
+  }
+
+  Widget _loadAlbumArt(String path) {
+    // try to load asset; if missing, show placeholder
+    try {
+      return Image.asset(path, fit: BoxFit.cover);
+    } catch (_) {
+      return Container(color: Colors.grey[300], child: const Icon(Icons.music_note));
+    }
   }
 }

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:instagram/screens/edit_post_screen.dart';
+import 'package:instagram/screens/edit_filter_screen.dart';
 
 class CreatePostScreen extends StatefulWidget {
   const CreatePostScreen({super.key});
@@ -38,19 +38,19 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
           ],
         ),
         actions: [
-          TextButton(
-            onPressed: _selectedImage != null
-                ? () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => EditPostScreen(assetPath: _selectedImage!),
-                      ),
-                    );
-                  }
-                : null,
-            child: const Text('Next', style: TextStyle(color: Color(0xFF3797EF), fontSize: 16, fontWeight: FontWeight.bold)),
-          ),
+              TextButton(
+                onPressed: _selectedImage != null
+                    ? () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => EditFilterScreen(assetPath: _selectedImage!),
+                          ),
+                        );
+                      }
+                    : null,
+                child: const Text('Next', style: TextStyle(color: Color(0xFF3797EF), fontSize: 16, fontWeight: FontWeight.bold)),
+              ),
         ],
       ),
       body: Column(
