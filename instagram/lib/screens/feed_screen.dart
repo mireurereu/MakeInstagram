@@ -2,114 +2,85 @@ import 'package:flutter/material.dart';
 import 'package:instagram/screens/dm_list_screen.dart';
 import 'package:instagram/screens/notifications_screen.dart';
 import 'package:instagram/widgets/post_card_widget.dart';
+import 'package:instagram/widgets/suggested_reels_widget.dart';
 
 class FeedScreen extends StatelessWidget {
   const FeedScreen({super.key});
+
+  // Global feed notifier so other screens can prepend new posts
+  static final ValueNotifier<List<Map<String, dynamic>>> feedNotifier = ValueNotifier<List<Map<String, dynamic>>>([
+    {
+      'username': 'karinabluu',
+      'userAvatarUrl': 'https://picsum.photos/seed/karina/100/100',
+      'postImageUrls': ['https://picsum.photos/seed/post1/600/600','https://picsum.photos/seed/post2/600/600'],
+      'likeCount': '1,367,685',
+      'caption': 'more',
+      'timestamp': '5 days ago',
+      'isVideo': false
+    },
+    {
+      'username': 'aespa_official',
+      'userAvatarUrl': 'https://picsum.photos/seed/aespa/100/100',
+      'postImageUrls': ['https://picsum.photos/seed/video_thumb/600/600'],
+      'likeCount': '918,471',
+      'caption': 'Bee~ Gese Stay Alive 🐝',
+      'timestamp': '5 days ago',
+      'isVideo': true
+    },
+    {
+      'username': 'imwinter',
+      'userAvatarUrl': 'https://picsum.photos/seed/winter/100/100',
+      'postImageUrls': ['https://picsum.photos/seed/winter1/600/600','https://picsum.photos/seed/winter2/600/600'],
+      'likeCount': '886,981',
+      'caption': '사랑스러운 🗿🤍',
+      'timestamp': '3 days ago',
+      'isVideo': false
+    }
+  ]);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      
-      // 1. 상단 앱바
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: false,
-        // [수정] 로고 이미지 (없으면 텍스트로 대체)
         title: Image.asset(
-          'assets/images/insta_logo.png', // 로고 에셋 경로
+          'assets/images/insta_logo.png',
           height: 32.0,
           fit: BoxFit.contain,
-          errorBuilder: (context, error, stackTrace) {
-            // 에셋 없을 시 텍스트 로고 (Billabong 폰트 느낌)
-            return const Text(
-              'Instagram',
-              style: TextStyle(
-                color: Colors.black,
-                fontFamily: 'Billabong', // 폰트가 있다면 적용
-                fontSize: 28.0,
-                fontWeight: FontWeight.w500, // 약간 굵게
-              ),
-            );
-          },
+          errorBuilder: (context, error, stackTrace) => const Text('Instagram', style: TextStyle(color: Colors.black, fontFamily: 'Billabong', fontSize: 28.0, fontWeight: FontWeight.w500)),
         ),
         actions: [
-          // 알림(하트) 아이콘 -> 알림 화면으로 이동
-          IconButton(
-            icon: const Icon(Icons.favorite_border, color: Colors.black, size: 28),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const NotificationsScreen(),
-                ),
-              );
-            },
-          ),
-          // DM(번개 말풍선) 아이콘 -> DM 목록으로 이동
-          IconButton(
-            icon: const Icon(Icons.send_outlined, color: Colors.black, size: 28), // 또는 커스텀 아이콘
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const DmListScreen()),
-              );
-            },
-          ),
+          IconButton(icon: const Icon(Icons.favorite_border, color: Colors.black, size: 28), onPressed: () { Navigator.push(context, MaterialPageRoute(builder: (c) => const NotificationsScreen())); }),
+          IconButton(icon: const Icon(Icons.send_outlined, color: Colors.black, size: 28), onPressed: () { Navigator.push(context, MaterialPageRoute(builder: (c) => const DmListScreen())); }),
         ],
       ),
-
-      // 2. 메인 바디
-      body: ListView(
-        children: [
-          // [수정] 스토리 바 추가
-          _buildStoryBar(),
-          
-          const Divider(height: 1, color: Color(0xFFDBDBDB)), // 구분선
-
-          // [수정] 게시물 리스트 (영상 데이터 반영)
-          // 1. 카리나 게시물 (캐러셀)
-          PostCardWidget(
-            username: 'karinabluu',
-            userAvatarUrl: 'https://picsum.photos/seed/karina/100/100',
-            postImageUrls: const [
-              'https://picsum.photos/seed/post1/600/600',
-              'https://picsum.photos/seed/post2/600/600',
+      body: ValueListenableBuilder<List<Map<String, dynamic>>>(
+        valueListenable: feedNotifier,
+        builder: (context, feed, _) {
+          return ListView(
+            children: [
+              _buildStoryBar(),
+              const Divider(height: 1, color: Color(0xFFDBDBDB)),
+              // build posts from feed notifier
+              ...feed.map((post) => PostCardWidget(
+                username: post['username'],
+                userAvatarUrl: post['userAvatarUrl'],
+                postImageUrls: List<String>.from(post['postImageUrls']),
+                likeCount: post['likeCount'],
+                caption: post['caption'],
+                timestamp: post['timestamp'],
+                isVideo: post['isVideo'] ?? false,
+              )),
+              const SuggestedReelsWidget(),
             ],
-            likeCount: '1,367,685',
-            caption: 'more',
-            timestamp: '5 days ago',
-          ),
-
-          // 2. 에스파 공식 (동영상 느낌)
-          PostCardWidget(
-            username: 'aespa_official',
-            userAvatarUrl: 'https://picsum.photos/seed/aespa/100/100',
-            postImageUrls: const ['https://picsum.photos/seed/video_thumb/600/600'],
-            likeCount: '918,471',
-            caption: 'Bee~ Gese Stay Alive 🐝',
-            timestamp: '5 days ago',
-            isVideo: true, // 비디오 아이콘 표시
-          ),
-
-          // 3. 윈터 게시물
-          PostCardWidget(
-            username: 'imwinter',
-            userAvatarUrl: 'https://picsum.photos/seed/winter/100/100',
-            postImageUrls: const [
-              'https://picsum.photos/seed/winter1/600/600',
-              'https://picsum.photos/seed/winter2/600/600',
-            ],
-            likeCount: '886,981',
-            caption: '사랑스러운 🗿🤍',
-            timestamp: '3 days ago',
-          ),
-        ],
+          );
+        },
       ),
     );
   }
-
   // [신규] 스토리 바 위젯
   Widget _buildStoryBar() {
     // 스토리 데이터 (영상 00:11 상단 참조)

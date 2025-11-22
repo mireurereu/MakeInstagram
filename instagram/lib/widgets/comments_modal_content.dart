@@ -160,7 +160,7 @@ class _CommentsModalContentState extends State<CommentsModalContent> {
           // 1. 아바타
           CircleAvatar(
             radius: 18,
-            backgroundImage: NetworkImage(comment.avatarUrl),
+            backgroundImage: _resolveImageProvider(comment.avatarUrl),
           ),
           const SizedBox(width: 12.0),
           
@@ -247,6 +247,12 @@ class _CommentsModalContentState extends State<CommentsModalContent> {
         ],
       ),
     );
+  }
+  ImageProvider _resolveImageProvider(String url) {
+    if (url.startsWith('http://') || url.startsWith('https://')) return NetworkImage(url);
+    final idx = url.indexOf('assets/');
+    final path = idx >= 0 ? url.substring(idx) : url;
+    return AssetImage(path);
   }
   Widget _buildLikeTooltip() {
     return Container(

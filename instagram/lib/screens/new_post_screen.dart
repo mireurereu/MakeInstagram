@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import 'package:instagram/screens/home_screen.dart'; // 홈 피드 갱신용
+import 'package:instagram/screens/feed_screen.dart'; // 홈 피드 갱신용
 import 'package:instagram/screens/profile_screen.dart'; // 프로필 그리드 갱신용
 import 'package:instagram/screens/main_navigation_screen.dart'; // 탭 전환용
 
@@ -54,8 +54,8 @@ class _NewPostScreenState extends State<NewPostScreen> {
       'timestamp': 'Just now',
       'isVideo': false,
     };
-    final currentFeed = HomeScreen.feedNotifier.value;
-    HomeScreen.feedNotifier.value = [newPostData, ...currentFeed];
+    final currentFeed = FeedScreen.feedNotifier.value;
+    FeedScreen.feedNotifier.value = [newPostData, ...currentFeed];
 
     if (!mounted) return;
     mainNavKey.currentState?.changeTab(0);

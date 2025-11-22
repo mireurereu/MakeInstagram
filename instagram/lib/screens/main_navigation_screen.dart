@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:instagram/screens/home_screen.dart';
+import 'package:instagram/screens/feed_screen.dart';
 import 'package:instagram/screens/create_post_screen.dart';
 import 'package:instagram/screens/profile_screen.dart';
 // 아직 파일이 없다면 생성하거나 주석 처리해주세요.
@@ -21,7 +21,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
 
   // 탭별 화면 리스트
   static final List<Widget> _screens = [
-    const HomeScreen(), // 0: 홈
+    const FeedScreen(), // 0: 홈
     const SearchScreen(), // 1: 검색 (파일 없으면 Text('Search')로 대체)
     const SizedBox(), // 2: 게시물 작성 (Push로 이동하므로 비워둠)
     const ReelsScreen(), // 3: 릴스 (파일 없으면 Text('Reels')로 대체)

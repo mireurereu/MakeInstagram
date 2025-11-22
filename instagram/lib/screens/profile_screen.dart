@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:instagram/data/user_state.dart'; // 상태 관리 파일 임포트
 import 'package:instagram/screens/edit_profile_screen.dart';
 import 'package:instagram/screens/following_list_screen.dart';
 import 'package:instagram/screens/create_post_screen.dart';
@@ -8,8 +9,7 @@ class ProfileScreen extends StatefulWidget {
 
   const ProfileScreen({super.key, this.username});
 
-  // [핵심] 전역에서 접근 가능한 내 게시물 목록 (상태 감지기)
-  // 앱을 껐다 켜면 초기화되지만, 실행 중에는 유지됩니다.
+  // 내 게시물 목록 (상태 유지)
   static final ValueNotifier<List<String>> myPostsNotifier = ValueNotifier<List<String>>([
     'https://picsum.photos/seed/post1/300/300',
     'https://picsum.photos/seed/post2/300/300',
@@ -22,19 +22,20 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  
   bool _isCurrentUser = false;
   String _currentUsername = '';
+  bool _isSuggestedVisible = false; // 추천 친구 창 열림 여부
 
   // 프로필 정보
   String _name = '';
   String _bio = '';
   String _avatarUrl = 'https://picsum.photos/seed/default/200/200';
   String _followerCount = '0';
-  String _followingCount = '0';
-  List<String> _mutualFollowers = [];
+  // _followingCount는 UserState에서 실시간으로 가져옵니다.
   
-  // 타인 게시물 (고정 리스트)
-  List<String> _otherUserPosts = [];
+  List<String> _mutualFollowers = [];
+  List<String> _otherUserPosts = []; // 타인 게시물
 
   final Color _instaBlue = const Color(0xFF3797EF);
 
@@ -43,11 +44,10 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
 
-    const String loggedInUser = 'ta_junhyuk';
-
-    if (widget.username == null || widget.username == loggedInUser) {
+    // UserState에 정의된 내 ID 사용
+    if (widget.username == null || widget.username == UserState.myId) {
       _isCurrentUser = true;
-      _currentUsername = loggedInUser;
+      _currentUsername = UserState.myId;
       _loadMyData();
     } else {
       _isCurrentUser = false;
@@ -56,29 +56,38 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
     }
   }
 
+  // 화면에 돌아왔을 때 팔로잉 숫자 갱신을 위해 setState 호출
+  void _refresh() {
+    setState(() {});
+  }
+
   void _loadMyData() {
     setState(() {
       _name = 'puang';
       _bio = "I'm gonna be the God of Flutter!!";
       _avatarUrl = 'https://picsum.photos/seed/junhyuk/200/200';
-      // _postCount는 ValueNotifier의 길이를 사용하므로 여기서 설정 안 함
       _followerCount = '3';
-      _followingCount = '9';
     });
   }
 
   void _loadOtherUserData(String username) {
-    if (username == 'imwinter') {
-      setState(() {
+    setState(() {
+      // 기본 더미 데이터
+      _name = username;
+      _bio = 'Instagram User';
+      _avatarUrl = 'https://picsum.photos/seed/$username/200/200';
+      _followerCount = '120';
+      _mutualFollowers = [];
+      _otherUserPosts = List.generate(9, (i) => 'https://picsum.photos/seed/${username}_$i/300/300');
+
+      // 특정 유저(imwinter) 데이터 하드코딩
+      if (username == 'imwinter') {
         _name = 'WINTER';
         _bio = 'aespa';
-        _avatarUrl = 'https://picsum.photos/seed/winter/200/200';
         _followerCount = '13M';
-        _followingCount = '4';
-        _mutualFollowers = ['junehxuk', 'katarinabluu', 'aespa_official'];
-        _otherUserPosts = List.generate(12, (i) => 'https://picsum.photos/seed/winter$i/300/300');
-      });
-    }
+        _mutualFollowers = ['junehxuk', 'katarinabluu'];
+      }
+    });
   }
 
   @override
@@ -116,13 +125,21 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
         headerSliverBuilder: (context, innerBoxIsScrolled) {
           return [
             SliverToBoxAdapter(
-              // [수정] ValueListenableBuilder로 감싸서 게시물 수가 변하면 헤더도 갱신
-              child: _isCurrentUser 
-                  ? ValueListenableBuilder<List<String>>(
-                      valueListenable: ProfileScreen.myPostsNotifier,
-                      builder: (context, posts, _) => _buildProfileHeader(posts.length),
-                    )
-                  : _buildProfileHeader(_otherUserPosts.length),
+              child: Column(
+                children: [
+                  // 프로필 헤더
+                  _isCurrentUser
+                      ? ValueListenableBuilder<List<String>>(
+                          valueListenable: ProfileScreen.myPostsNotifier,
+                          builder: (context, posts, _) => _buildProfileHeader(posts.length),
+                        )
+                      : _buildProfileHeader(_otherUserPosts.length),
+                  
+                  // [추가] 추천 친구 섹션 (다른 사람 프로필이고, 팔로우 중이며, 펼쳐졌을 때)
+                  if (!_isCurrentUser && _isSuggestedVisible) 
+                    _buildSuggestedSection(),
+                ],
+              ),
             ),
             SliverPersistentHeader(
               delegate: _SliverAppBarDelegate(
@@ -145,7 +162,6 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
         body: TabBarView(
           controller: _tabController,
           children: [
-            // [핵심 수정] 게시물 그리드 (실시간 반영)
             _isCurrentUser ? _buildMyPostGrid() : _buildOtherPostGrid(),
             const Center(child: Text('Tagged Posts', style: TextStyle(color: Colors.grey))),
           ],
@@ -195,8 +211,10 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
     );
   }
 
-  // 헤더 (게시물 수 동적 표시)
   Widget _buildProfileHeader(int postCount) {
+    // [핵심] 팔로잉 숫자는 UserState에서 실시간으로 가져옴
+    final realFollowingCount = UserState.getFollowingCount(_currentUsername);
+
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Column(
@@ -209,11 +227,19 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    _buildStatItem('$postCount', 'Posts'), // 동적 게시물 수
+                    _buildStatItem('$postCount', 'Posts'),
                     _buildStatItem(_followerCount, 'Followers'),
+                    // [수정] Following 클릭 시 리스트 화면으로 이동
                     GestureDetector(
-                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const FollowingListScreen())),
-                      child: _buildStatItem(_followingCount, 'Following'),
+                      onTap: () {
+                        Navigator.push(
+                          context, 
+                          MaterialPageRoute(
+                            builder: (_) => FollowingListScreen(username: _currentUsername)
+                          )
+                        ).then((_) => _refresh()); // 돌아왔을 때 숫자 갱신
+                      },
+                      child: _buildStatItem('$realFollowingCount', 'Following'),
                     ),
                   ],
                 ),
@@ -230,8 +256,6 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
               child: Text('Followed by ${_mutualFollowers[0]} and others', style: const TextStyle(fontSize: 13)),
             ),
           
-          // [수정] 스토리 하이라이트 제거됨 (영상 반영)
-
           const SizedBox(height: 16),
           _isCurrentUser ? _buildMyButtons() : _buildOtherButtons(),
         ],
@@ -239,7 +263,6 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
     );
   }
 
-  // [핵심] 내 게시물 그리드 (ValueListenableBuilder 사용)
   Widget _buildMyPostGrid() {
     return ValueListenableBuilder<List<String>>(
       valueListenable: ProfileScreen.myPostsNotifier,
@@ -249,10 +272,8 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 3, crossAxisSpacing: 1, mainAxisSpacing: 1,
           ),
-          // 게시물 + 1 (추가 버튼)
           itemCount: posts.length + 1,
           itemBuilder: (context, index) {
-            // 마지막 아이템은 '+' 버튼
             if (index == posts.length) {
                return GestureDetector(
                  onTap: _showCreateModal,
@@ -266,7 +287,6 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
     );
   }
 
-  // 타인 게시물 그리드
   Widget _buildOtherPostGrid() {
     return GridView.builder(
       padding: EdgeInsets.zero,
@@ -286,24 +306,137 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
     return Row(children: [
       Expanded(child: _grayBtn('Edit profile', _navigateToEditProfile)), const SizedBox(width: 6),
       Expanded(child: _grayBtn('Share profile', () {})), const SizedBox(width: 6),
-      _iconBtn(),
+      _iconBtn(Icons.person_add_outlined, () {}),
     ]);
   }
 
+  // [수정] 타인 프로필 버튼 (팔로우/팔로잉 상태 반영)
   Widget _buildOtherButtons() {
+    final bool isFollowing = UserState.amIFollowing(_currentUsername);
+
     return Row(children: [
-      Expanded(child: ElevatedButton(style: ElevatedButton.styleFrom(backgroundColor: _instaBlue, elevation: 0, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))), onPressed: () {}, child: const Text('Follow', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)))), 
+      Expanded(
+        child: isFollowing
+            ? _grayBtn('Following', () {
+                setState(() {
+                  UserState.toggleFollow(_currentUsername);
+                });
+              })
+            : ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _instaBlue, 
+                  elevation: 0, 
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))
+                ),
+                onPressed: () {
+                  setState(() {
+                    UserState.toggleFollow(_currentUsername);
+                    // 팔로우하면 추천 친구창 열기
+                    _isSuggestedVisible = true;
+                  });
+                }, 
+                child: const Text('Follow', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white))
+              ),
+      ), 
       const SizedBox(width: 6),
       Expanded(child: _grayBtn('Message', () {})), const SizedBox(width: 6),
-      _iconBtn(),
+      // 추천 친구 토글 버튼
+      _iconBtn(
+        _isSuggestedVisible ? Icons.person_add : Icons.person_add_outlined,
+        () {
+          setState(() {
+            _isSuggestedVisible = !_isSuggestedVisible;
+          });
+        }
+      ),
     ]);
   }
 
   Widget _grayBtn(String text, VoidCallback onPressed) {
-    return ElevatedButton(style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFEFEFEF), foregroundColor: Colors.black, elevation: 0, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))), onPressed: onPressed, child: Text(text, style: const TextStyle(fontWeight: FontWeight.w600)));
+    return ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: const Color(0xFFEFEFEF), 
+        foregroundColor: Colors.black, 
+        elevation: 0, 
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))
+      ), 
+      onPressed: onPressed, 
+      child: Text(text, style: const TextStyle(fontWeight: FontWeight.w600))
+    );
   }
   
-  Widget _iconBtn() => Container(width: 36, height: 36, decoration: BoxDecoration(color: const Color(0xFFEFEFEF), borderRadius: BorderRadius.circular(8)), child: const Icon(Icons.person_add_outlined, size: 20));
+  Widget _iconBtn(IconData icon, VoidCallback onPressed) => GestureDetector(
+    onTap: onPressed,
+    child: Container(
+      width: 36, height: 36, 
+      decoration: BoxDecoration(color: const Color(0xFFEFEFEF), borderRadius: BorderRadius.circular(8)), 
+      child: Icon(icon, size: 20)
+    ),
+  );
+
+  // [신규] 추천 친구 섹션 위젯
+  Widget _buildSuggestedSection() {
+    return Container(
+      margin: const EdgeInsets.only(top: 4, bottom: 10),
+      height: 230,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: const [
+                Text('Suggested for you', style: TextStyle(fontWeight: FontWeight.bold)),
+                Text('See All', style: TextStyle(color: Color(0xFF3797EF), fontWeight: FontWeight.w600)),
+              ],
+            ),
+          ),
+          Expanded(
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              itemCount: 5,
+              itemBuilder: (context, index) {
+                return Container(
+                  width: 150,
+                  margin: const EdgeInsets.symmetric(horizontal: 4),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey[300]!),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.close, size: 16, color: Colors.grey), // 닫기 버튼 흉내
+                      const SizedBox(height: 4),
+                      CircleAvatar(
+                        radius: 34, 
+                        backgroundImage: NetworkImage('https://picsum.photos/seed/suggest$index/100/100')
+                      ),
+                      const SizedBox(height: 10),
+                      Text('User $index', style: const TextStyle(fontWeight: FontWeight.bold)),
+                      const Text('Suggested for you', style: TextStyle(color: Colors.grey, fontSize: 11)),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: () {},
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _instaBlue,
+                          minimumSize: const Size(120, 30),
+                          elevation: 0,
+                        ),
+                        child: const Text('Follow', style: TextStyle(color: Colors.white)),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   void _showCreateModal() {
     showModalBottomSheet(
