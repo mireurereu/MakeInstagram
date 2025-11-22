@@ -9,8 +9,9 @@ class NewPostScreen extends StatefulWidget {
   final String? imagePath;
   final Uint8List? imageBytes;
   final File? imageFile;
+  final bool autoShowShareSheet;
 
-  const NewPostScreen({Key? key, this.imagePath, this.imageBytes, this.imageFile}) : super(key: key);
+  const NewPostScreen({Key? key, this.imagePath, this.imageBytes, this.imageFile, this.autoShowShareSheet = false}) : super(key: key);
 
   @override
   State<NewPostScreen> createState() => _NewPostScreenState();
@@ -18,19 +19,68 @@ class NewPostScreen extends StatefulWidget {
 
 class _NewPostScreenState extends State<NewPostScreen> {
   bool _isSharing = false;
+  bool _didAutoShow = false;
   final TextEditingController _captionController = TextEditingController();
   final Color _instaBlue = const Color(0xFF3797EF);
 
   void _onSharePressed() {
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      builder: (c) => AlertDialog(
-        title: const Text("Share to Facebook?"),
-        content: const Text("You can change this later."),
-        actions: [
-          TextButton(onPressed: () { Navigator.pop(c); _startShareProcess(); }, child: const Text("Share")),
-          TextButton(onPressed: () { Navigator.pop(c); _startShareProcess(); }, child: const Text("Not now")),
-        ],
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
+      ),
+      builder: (c) => Padding(
+        padding: EdgeInsets.only(bottom: MediaQuery.of(c).viewInsets.bottom),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 12),
+                  decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(4)),
+                ),
+              ),
+              const Text('Sharing posts', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 12),
+              Row(children: const [Icon(Icons.info_outline), SizedBox(width: 8), Expanded(child: Text('Your account is public, so anyone can discover your posts and follow you.'))]),
+              const SizedBox(height: 8),
+              Row(children: const [Icon(Icons.repeat), SizedBox(width: 8), Expanded(child: Text('Anyone can reuse all or part of your post in features like remixes, sequences, templates and stickers, and download your post as part of their reel or post.'))]),
+              const SizedBox(height: 8),
+              Row(children: const [Icon(Icons.settings), SizedBox(width: 8), Expanded(child: Text('You can turn off reuse for each post or change the default in your settings.'))]),
+              const SizedBox(height: 18),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(c);
+                    _startShareProcess();
+                  },
+                  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF3797EF)),
+                  child: const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 14),
+                    child: Text('OK', style: TextStyle(fontWeight: FontWeight.bold)),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Center(
+                child: TextButton(
+                  onPressed: () {
+                    Navigator.pop(c);
+                    // Could navigate to settings or show a help URL
+                  },
+                  child: const Text('Manage settings', style: TextStyle(color: Colors.black54)),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -46,6 +96,7 @@ class _NewPostScreenState extends State<NewPostScreen> {
 
     // Add to home feed
     final newPostData = {
+      'id': DateTime.now().microsecondsSinceEpoch.toString(),
       'username': 'ta_junhyuk',
       'userAvatarUrl': 'https://picsum.photos/seed/junhyuk/100/100',
       'postImageUrls': [addedPath],
@@ -115,5 +166,16 @@ class _NewPostScreenState extends State<NewPostScreen> {
         ],
       ),
     );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (widget.autoShowShareSheet && !_didAutoShow) {
+        _didAutoShow = true;
+        _onSharePressed();
+      }
+    });
   }
 }

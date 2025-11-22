@@ -10,6 +10,7 @@ class FeedScreen extends StatelessWidget {
   // Global feed notifier so other screens can prepend new posts
   static final ValueNotifier<List<Map<String, dynamic>>> feedNotifier = ValueNotifier<List<Map<String, dynamic>>>([
     {
+      'id': 'seed1',
       'username': 'karinabluu',
       'userAvatarUrl': 'https://picsum.photos/seed/karina/100/100',
       'postImageUrls': ['https://picsum.photos/seed/post1/600/600','https://picsum.photos/seed/post2/600/600'],
@@ -19,6 +20,7 @@ class FeedScreen extends StatelessWidget {
       'isVideo': false
     },
     {
+      'id': 'seed2',
       'username': 'aespa_official',
       'userAvatarUrl': 'https://picsum.photos/seed/aespa/100/100',
       'postImageUrls': ['https://picsum.photos/seed/video_thumb/600/600'],
@@ -28,6 +30,7 @@ class FeedScreen extends StatelessWidget {
       'isVideo': true
     },
     {
+      'id': 'seed3',
       'username': 'imwinter',
       'userAvatarUrl': 'https://picsum.photos/seed/winter/100/100',
       'postImageUrls': ['https://picsum.photos/seed/winter1/600/600','https://picsum.photos/seed/winter2/600/600'],
@@ -66,6 +69,7 @@ class FeedScreen extends StatelessWidget {
               const Divider(height: 1, color: Color(0xFFDBDBDB)),
               // build posts from feed notifier
               ...feed.map((post) => PostCardWidget(
+                key: ValueKey(post['id']),
                 username: post['username'],
                 userAvatarUrl: post['userAvatarUrl'],
                 postImageUrls: List<String>.from(post['postImageUrls']),

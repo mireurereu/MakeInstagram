@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
-import 'package:instagram/screens/profile_screen.dart'; // 프로필 화면 이동용
+import 'package:instagram/screens/profile_screen.dart';
 import 'package:instagram/widgets/comment_model.dart';
 import 'package:instagram/widgets/comments_modal_content.dart';
 import 'package:intl/intl.dart';
-import 'package:flutter/gestures.dart';
+import 'package:flutter/gestures.dart'; // 제스처 인식을 위해 필요
 
 class PostCardWidget extends StatefulWidget {
   final String username;
@@ -15,6 +15,8 @@ class PostCardWidget extends StatefulWidget {
   final String timestamp;
   final bool isVideo;
   final bool isSponsored;
+  // [추가] 초기 댓글 리스트를 받을 수 있게 변경
+  final List<Comment>? initialComments;
 
   const PostCardWidget({
     super.key,
@@ -26,6 +28,8 @@ class PostCardWidget extends StatefulWidget {
     required this.timestamp,
     this.isVideo = false,
     this.isSponsored = false,
+    // [추가] 생성자에서 받음 (기본값 null)
+    this.initialComments,
   });
 
   @override
@@ -39,26 +43,25 @@ class _PostCardWidgetState extends State<PostCardWidget> {
   late int _currentLikeCount;
   final Color _instaBlue = const Color(0xFF3797EF);
 
-  final List<Comment> _comments = [
-    Comment(
-      username: 'haetbaaan',
-      avatarUrl: 'instagram/assets/images/profile2.jpg',
-      text: 'so cute!! 🥹🥹',
-      isLiked: true,
-      likeCount: 1,
-    ),
-    Comment(
-      username: 'junehxuk',
-      avatarUrl: 'https://picsum.photos/seed/junehxuk/100/100',
-      text: 'I love puang',
-      likeCount: 0,
-    ),
-  ];
+  // 댓글 리스트 (late로 선언하여 initState에서 초기화)
+  late List<Comment> _comments;
 
   @override
   void initState() {
     super.initState();
+    
+    // 1. 좋아요 수 파싱 (콤마 제거 후 정수 변환)
     _currentLikeCount = int.tryParse(widget.likeCount.replaceAll(',', '')) ?? 0;
+
+    // 2. [핵심 수정] 댓글 초기화 로직 변경
+    // 외부에서 댓글(initialComments)을 넘겨줬다면 그것을 사용하고,
+    // 아예 안 넘겨줬다면(null) 기존처럼 더미 데이터를 사용 (피드 화면용),
+    // 빈 리스트([])를 넘겨줬다면 댓글 0개로 시작 (새 게시물용).
+    if (widget.initialComments != null) {
+      _comments = List.from(widget.initialComments!);
+    } else {
+      _comments = []; // Initialize with an empty list instead of hardcoded comments
+    }
   }
 
   void _showCommentsModal() {
@@ -73,8 +76,8 @@ class _PostCardWidgetState extends State<PostCardWidget> {
           onCommentPosted: (text) {
             setState(() {
               _comments.add(Comment(
-                username: 'ta_junhyuk',
-                avatarUrl: 'instagram/assets/images/profile3.jpg',
+                username: 'ta_junhyuk', // 내 아이디
+                avatarUrl: 'assets/images/profile3.jpg', // 내 프사 경로 확인 필요
                 text: text,
               ));
             });
@@ -112,7 +115,6 @@ class _PostCardWidgetState extends State<PostCardWidget> {
     });
   }
 
-  // [신규] 프로필로 이동하는 함수
   void _navigateToProfile() {
     Navigator.push(
       context,
@@ -125,6 +127,7 @@ class _PostCardWidgetState extends State<PostCardWidget> {
   @override
   Widget build(BuildContext context) {
     final formattedLikes = NumberFormat.decimalPattern('en_US').format(_currentLikeCount);
+    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -133,12 +136,14 @@ class _PostCardWidgetState extends State<PostCardWidget> {
           padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 8.0),
           child: Row(
             children: [
-              // 프로필 사진 클릭 시 이동
               GestureDetector(
                 onTap: _navigateToProfile,
                 child: CircleAvatar(
                   radius: 16,
-                  backgroundImage: NetworkImage(widget.userAvatarUrl),
+                  backgroundImage: widget.userAvatarUrl.startsWith('http') 
+                      ? NetworkImage(widget.userAvatarUrl) 
+                      : AssetImage(widget.userAvatarUrl) as ImageProvider, 
+                      // 로컬/네트워크 이미지 모두 처리하도록 수정
                 ),
               ),
               const SizedBox(width: 10),
@@ -146,7 +151,6 @@ class _PostCardWidgetState extends State<PostCardWidget> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // 이름 클릭 시 이동
                     GestureDetector(
                       onTap: _navigateToProfile,
                       child: Text(
@@ -168,7 +172,7 @@ class _PostCardWidgetState extends State<PostCardWidget> {
           ),
         ),
 
-        // 2. 미디어
+        // 2. 미디어 (이미지 슬라이더)
         GestureDetector(
           onDoubleTap: _handleDoubleTap,
           child: Stack(
@@ -176,19 +180,27 @@ class _PostCardWidgetState extends State<PostCardWidget> {
             children: [
               CarouselSlider(
                 items: widget.postImageUrls.map((url) {
-                  return Image.network(
-                    url,
-                    fit: BoxFit.cover,
-                    width: double.infinity,
-                    loadingBuilder: (context, child, loadingProgress) {
-                      if (loadingProgress == null) return child;
-                      return Container(color: Colors.grey[200], child: const Center(child: Icon(Icons.image, color: Colors.grey)));
+                  return Builder(
+                    builder: (BuildContext context) {
+                      // URL이 http로 시작하면 네트워크 이미지, 아니면 로컬 에셋 (새 게시물은 로컬 경로일 수 있음)
+                      return url.startsWith('http') || url.startsWith('https')
+                          ? Image.network(
+                              url,
+                              fit: BoxFit.cover,
+                              width: double.infinity,
+                              errorBuilder: (c, o, s) => Container(color: Colors.grey[300]),
+                            )
+                          : Image.asset(
+                              url, // 로컬 파일 경로 또는 에셋 경로
+                              fit: BoxFit.cover,
+                              width: double.infinity,
+                              errorBuilder: (c, o, s) => Container(color: Colors.grey[300], child: const Center(child: Icon(Icons.broken_image))),
+                            );
                     },
-                    errorBuilder: (context, error, stackTrace) => Container(color: Colors.grey[300]),
                   );
                 }).toList(),
                 options: CarouselOptions(
-                  height: 400, 
+                  height: 400,
                   viewportFraction: 1.0,
                   enableInfiniteScroll: false,
                   onPageChanged: (index, reason) => setState(() => _currentCarouselIndex = index),
@@ -251,6 +263,7 @@ class _PostCardWidgetState extends State<PostCardWidget> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // 좋아요 수 (0개면 표시 방식 변경 가능, 여기선 0 likes로 표시)
               Text('$formattedLikes likes', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black)),
               const SizedBox(height: 6),
               RichText(
@@ -260,18 +273,24 @@ class _PostCardWidgetState extends State<PostCardWidget> {
                     TextSpan(
                       text: '${widget.username} ',
                       style: const TextStyle(fontWeight: FontWeight.bold),
-                      // [추가] 캡션의 아이디 클릭 시에도 이동
-                      recognizer:  TapGestureRecognizer()..onTap = _navigateToProfile,
+                      recognizer: TapGestureRecognizer()..onTap = _navigateToProfile,
                     ),
                     TextSpan(text: widget.caption),
                   ],
                 ),
               ),
               const SizedBox(height: 6),
-              GestureDetector(
-                onTap: _showCommentsModal,
-                child: const Text('View all comments', style: TextStyle(color: Colors.grey, fontSize: 14)),
-              ),
+              
+              // 댓글 미리보기 문구 (댓글 없으면 숨김)
+              if (_comments.isNotEmpty)
+                GestureDetector(
+                  onTap: _showCommentsModal,
+                  child: Text(
+                    'View all ${_comments.length} comments', 
+                    style: const TextStyle(color: Colors.grey, fontSize: 14)
+                  ),
+                ),
+                
               const SizedBox(height: 4),
               Text(widget.timestamp, style: const TextStyle(color: Colors.grey, fontSize: 12)),
               const SizedBox(height: 20),
@@ -282,5 +301,3 @@ class _PostCardWidgetState extends State<PostCardWidget> {
     );
   }
 }
-
-// RichText 내 제스처 인식을 위해 필요 (위로 이동됨)

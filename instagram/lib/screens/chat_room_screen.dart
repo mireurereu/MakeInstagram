@@ -100,7 +100,10 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
     _messageHistory.add(ApiMessage(role: 'user', content: text));
 
     try {
-      final response = await http.post(
+      // Use a short timeout and log response for diagnosis. On web this
+      // request may fail due to CORS when called from the browser.
+      final response = await http
+          .post(
         Uri.parse(OPENROUTER_ENDPOINT),
         headers: {
           'Authorization': 'Bearer $OPENROUTER_API_KEY',
@@ -110,20 +113,45 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
           'model': 'nvidia/nemotron-nano-12b-v2-vl:free',
           'messages': _messageHistory.map((msg) => msg.toJson()).toList(),
         }),
-      );
+      )
+          .timeout(const Duration(seconds: 15));
+
+      debugPrint('OpenRouter response status: ${response.statusCode}');
+      debugPrint('OpenRouter response body: ${utf8.decode(response.bodyBytes)}');
 
       if (response.statusCode == 200) {
         final responseBody = jsonDecode(utf8.decode(response.bodyBytes));
-        final String responseText = responseBody['choices'][0]['message']['content'];
+        // Defensive parsing: some endpoints return different nesting
+        String responseText = '';
+        try {
+          responseText = responseBody['choices'][0]['message']['content'];
+        } catch (_) {
+          try {
+            responseText = responseBody['choices'][0]['text'] ?? '';
+          } catch (_) {
+            responseText = jsonEncode(responseBody);
+          }
+        }
 
         if (!mounted) return;
         setState(() {
           _messages.add(Message(text: responseText, isSender: false, timestamp: DateTime.now()));
         });
         _messageHistory.add(ApiMessage(role: 'assistant', content: responseText));
+      } else {
+        // Show a helpful assistant message when the remote call fails
+        final err = 'Assistant unavailable (status ${response.statusCode}).';
+        if (mounted) setState(() {
+          _messages.add(Message(text: err, isSender: false, timestamp: DateTime.now()));
+        });
+        debugPrint('OpenRouter non-200: ${response.statusCode}');
       }
     } catch (e) {
-      debugPrint("Error: $e");
+      // Distinguish timeout / network / CORS errors when possible
+      debugPrint("Error sending to OpenRouter: $e");
+      if (mounted) setState(() {
+        _messages.add(Message(text: 'Assistant error: $e', isSender: false, timestamp: DateTime.now()));
+      });
     } finally {
       if (mounted) {
         setState(() {

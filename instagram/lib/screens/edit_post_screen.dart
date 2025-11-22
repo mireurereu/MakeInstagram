@@ -25,11 +25,11 @@ class _EditPostScreenState extends State<EditPostScreen> {
         actions: [
           TextButton(
             onPressed: () {
-              // [핵심] assetPath를 그대로 다음 화면으로 넘김
+              // [핵심] assetPath를 그대로 다음 화면으로 넘기고, 이동 직후 하단 모달이 뜨도록 autoShowShareSheet=true
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => NewPostScreen(imagePath: widget.assetPath),
+                  builder: (context) => NewPostScreen(imagePath: widget.assetPath, autoShowShareSheet: true),
                 ),
               );
             },
@@ -39,25 +39,62 @@ class _EditPostScreenState extends State<EditPostScreen> {
       ),
       body: Column(
         children: [
-          // 이미지 표시
-          AspectRatio(
-            aspectRatio: 1,
-            child: Image.asset(widget.assetPath, fit: BoxFit.cover),
+          // 이미지 표시: 화면에서 유연하게 크기를 차지하도록 Flexible 사용
+          Flexible(
+            flex: 7,
+            child: AspectRatio(
+              aspectRatio: 1,
+              child: Image.asset(widget.assetPath, fit: BoxFit.cover),
+            ),
           ),
-          const Spacer(),
-          // 필터 리스트
-          SizedBox(
-            height: 130,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: _filters.length,
-              itemBuilder: (context, index) => Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 10),
-                child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [Text(_filters[index], style: TextStyle(fontWeight: FontWeight.bold, color: index==0?Colors.black:Colors.grey)), const SizedBox(height: 8), Container(width: 60, height: 60, color: Colors.grey[300], child: index==0?Image.asset(widget.assetPath, fit: BoxFit.cover):null)]),
+
+          // 필터 리스트: 고정 높이 대신 Flexible로 화면 비율을 사용
+          Flexible(
+            flex: 2,
+            child: Padding(
+              padding: const EdgeInsets.only(top: 8.0),
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: _filters.length,
+                itemBuilder: (context, index) => Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        _filters[index],
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: index == 0 ? Colors.black : Colors.grey,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        width: 60,
+                        height: 60,
+                        color: Colors.grey[300],
+                        child: index == 0 ? Image.asset(widget.assetPath, fit: BoxFit.cover) : null,
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
           ),
-          SafeArea(child: Container(height: 50, child: Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: const [Text('FILTER', style: TextStyle(fontWeight: FontWeight.bold)), Text('EDIT', style: TextStyle(color: Colors.grey))]))),
+
+          // 하단 탭(필터/편집) — SafeArea로 키보드/홈바와 겹치지 않도록 함
+          SafeArea(
+            child: Container(
+              height: 56,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: const [
+                  Text('FILTER', style: TextStyle(fontWeight: FontWeight.bold)),
+                  Text('EDIT', style: TextStyle(color: Colors.grey)),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );
