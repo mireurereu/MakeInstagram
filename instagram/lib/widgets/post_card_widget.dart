@@ -17,6 +17,11 @@ class PostCardWidget extends StatefulWidget {
   final bool isSponsored;
   // [추가] 초기 댓글 리스트를 받을 수 있게 변경
   final List<Comment>? initialComments;
+  // Callbacks to persist changes upstream
+  final void Function(String postId, int likeCount, bool isLiked)? onLikeChanged;
+  final void Function(String postId, List<Comment> comments)? onCommentsChanged;
+  // initial liked state (persisted)
+  final bool? isLiked;
 
   const PostCardWidget({
     super.key,
@@ -30,6 +35,9 @@ class PostCardWidget extends StatefulWidget {
     this.isSponsored = false,
     // [추가] 생성자에서 받음 (기본값 null)
     this.initialComments,
+    this.onLikeChanged,
+    this.onCommentsChanged,
+    this.isLiked,
   });
 
   @override
@@ -62,6 +70,9 @@ class _PostCardWidgetState extends State<PostCardWidget> {
     } else {
       _comments = []; // Initialize with an empty list instead of hardcoded comments
     }
+
+    // initialize liked state from incoming prop (persisted in feed model)
+    _isLiked = widget.isLiked ?? false;
   }
 
   void _showCommentsModal() {
@@ -70,7 +81,7 @@ class _PostCardWidgetState extends State<PostCardWidget> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) {
-        return CommentsModalContent(
+          return CommentsModalContent(
           comments: _comments,
           postOwnerName: widget.username,
           onCommentPosted: (text) {
@@ -80,12 +91,17 @@ class _PostCardWidgetState extends State<PostCardWidget> {
                 avatarUrl: 'assets/images/profile3.jpg', // 내 프사 경로 확인 필요
                 text: text,
               ));
+              // propagate comment changes upstream if handler provided
+              final keyId = widget.key is ValueKey ? (widget.key as ValueKey).value : null;
+              if (keyId is String) widget.onCommentsChanged?.call(keyId, _comments);
             });
           },
           onCommentLiked: (comment) {
             setState(() {
               comment.isLiked = !comment.isLiked;
               if (comment.isLiked) comment.likeCount++; else comment.likeCount--;
+              final keyId = widget.key is ValueKey ? (widget.key as ValueKey).value : null;
+              if (keyId is String) widget.onCommentsChanged?.call(keyId, _comments);
             });
           },
         );
@@ -113,6 +129,9 @@ class _PostCardWidgetState extends State<PostCardWidget> {
       _isLiked = !_isLiked;
       if (_isLiked) _currentLikeCount++; else _currentLikeCount--;
     });
+    // propagate change upstream if caller provided a handler and this widget has a ValueKey id
+    final keyId = widget.key is ValueKey ? (widget.key as ValueKey).value : null;
+    if (keyId is String) widget.onLikeChanged?.call(keyId, _currentLikeCount, _isLiked);
   }
 
   void _navigateToProfile() {
@@ -233,9 +252,12 @@ class _PostCardWidgetState extends State<PostCardWidget> {
                     onTap: _toggleLike,
                     child: Icon(_isLiked ? Icons.favorite : Icons.favorite_border, color: _isLiked ? Colors.red : Colors.black, size: 28),
                   ),
-                  const SizedBox(width: 16),
+                  const SizedBox(width: 12),
                   GestureDetector(onTap: _showCommentsModal, child: const Icon(Icons.chat_bubble_outline, color: Colors.black, size: 28)),
-                  const SizedBox(width: 16),
+                  const SizedBox(width: 12),
+                  // extra action icon (share)
+                  GestureDetector(onTap: () {}, child: const Icon(Icons.ios_share, color: Colors.black, size: 26)),
+                  const SizedBox(width: 12),
                   const Icon(Icons.send_outlined, color: Colors.black, size: 28),
                   const Spacer(),
                   const Icon(Icons.bookmark_border, color: Colors.black, size: 28),
@@ -263,8 +285,9 @@ class _PostCardWidgetState extends State<PostCardWidget> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 좋아요 수 (0개면 표시 방식 변경 가능, 여기선 0 likes로 표시)
-              Text('$formattedLikes likes', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black)),
+              // 좋아요 수: 0이면 숨기고, 1이면 '1 like' 단수로 표시
+              if (_currentLikeCount > 0)
+                Text('$formattedLikes ${_currentLikeCount == 1 ? 'like' : 'likes'}', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black)),
               const SizedBox(height: 6),
               RichText(
                 text: TextSpan(

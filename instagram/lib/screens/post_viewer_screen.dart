@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:instagram/widgets/post_card_widget.dart';
+import 'package:instagram/screens/feed_screen.dart';
 
 class PostViewerScreen extends StatefulWidget {
   final List<Map<String, dynamic>> posts; // list of post data maps compatible with PostCardWidget
@@ -39,6 +40,7 @@ class _PostViewerScreenState extends State<PostViewerScreen> {
           final p = widget.posts[index];
           return SingleChildScrollView(
             child: PostCardWidget(
+              key: p['id'] != null ? ValueKey(p['id'] as String) : null,
               username: p['username'] as String? ?? 'user',
               userAvatarUrl: p['userAvatarUrl'] as String? ?? '',
               postImageUrls: List<String>.from(p['postImageUrls'] ?? [p['image'] ?? '']),
@@ -47,6 +49,23 @@ class _PostViewerScreenState extends State<PostViewerScreen> {
               timestamp: p['timestamp']?.toString() ?? '',
               isVideo: p['isVideo'] ?? false,
               initialComments: p['comments'] != null ? List.from(p['comments']) : null,
+              onLikeChanged: (postId, likeCount, isLiked) {
+                final current = FeedScreen.feedNotifier.value;
+                final idx = current.indexWhere((it) => it['id'] == postId);
+                if (idx != -1) {
+                  current[idx]['likeCount'] = likeCount.toString();
+                  current[idx]['isLiked'] = isLiked;
+                  FeedScreen.feedNotifier.value = List<Map<String, dynamic>>.from(current);
+                }
+              },
+              onCommentsChanged: (postId, comments) {
+                final current = FeedScreen.feedNotifier.value;
+                final idx = current.indexWhere((it) => it['id'] == postId);
+                if (idx != -1) {
+                  current[idx]['comments'] = comments;
+                  FeedScreen.feedNotifier.value = List<Map<String, dynamic>>.from(current);
+                }
+              },
             ),
           );
         },

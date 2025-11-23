@@ -3,6 +3,7 @@ import 'package:instagram/screens/dm_list_screen.dart';
 import 'package:instagram/screens/notifications_screen.dart';
 import 'package:instagram/widgets/post_card_widget.dart';
 import 'package:instagram/widgets/suggested_reels_widget.dart';
+import 'package:instagram/widgets/comment_model.dart';
 
 class FeedScreen extends StatelessWidget {
   const FeedScreen({super.key});
@@ -77,6 +78,25 @@ class FeedScreen extends StatelessWidget {
                 caption: post['caption'],
                 timestamp: post['timestamp'],
                 isVideo: post['isVideo'] ?? false,
+                initialComments: post['comments'] != null ? List<Comment>.from(post['comments']) : null,
+                onLikeChanged: (postId, likeCount, isLiked) {
+                  final current = feedNotifier.value;
+                  final idx = current.indexWhere((p) => p['id'] == postId);
+                  if (idx != -1) {
+                    current[idx]['likeCount'] = likeCount.toString();
+                    current[idx]['isLiked'] = isLiked;
+                    // trigger notifier update
+                    feedNotifier.value = List<Map<String, dynamic>>.from(current);
+                  }
+                },
+                onCommentsChanged: (postId, comments) {
+                  final current = feedNotifier.value;
+                  final idx = current.indexWhere((p) => p['id'] == postId);
+                  if (idx != -1) {
+                    current[idx]['comments'] = comments;
+                    feedNotifier.value = List<Map<String, dynamic>>.from(current);
+                  }
+                },
               )),
               const SuggestedReelsWidget(),
             ],
