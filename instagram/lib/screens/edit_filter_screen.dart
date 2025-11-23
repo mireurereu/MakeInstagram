@@ -136,7 +136,6 @@ class _EditFilterScreenState extends State<EditFilterScreen> {
                                 imagePath: widget.assetPath,
                                 imageBytes: widget.imageBytes,
                                 imageFile: widget.imageFile,
-                                autoShowShareSheet: true,
                               ),
                             ),
                           );

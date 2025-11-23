@@ -3,6 +3,7 @@ import 'package:instagram/data/user_state.dart'; // 상태 관리 파일 임포�
 import 'package:instagram/screens/edit_profile_screen.dart';
 import 'package:instagram/screens/following_list_screen.dart';
 import 'package:instagram/screens/create_post_screen.dart';
+import 'package:instagram/screens/post_viewer_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   final String? username;
@@ -273,14 +274,29 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
             crossAxisCount: 3, crossAxisSpacing: 1, mainAxisSpacing: 1,
           ),
           itemCount: posts.length + 1,
-          itemBuilder: (context, index) {
+            itemBuilder: (context, index) {
             if (index == posts.length) {
                return GestureDetector(
                  onTap: _showCreateModal,
                  child: Container(color: Colors.white, child: Icon(Icons.add, color: Colors.grey[400], size: 40)),
                );
             }
-            return ZoomableGridImage(imageUrl: posts[index]);
+            final url = posts[index];
+            return GestureDetector(
+              onTap: () {
+                final built = posts.map((p) => {
+                  'username': _currentUsername,
+                  'userAvatarUrl': _avatarUrl,
+                  'postImageUrls': [p],
+                  'likeCount': '0',
+                  'caption': '',
+                  'timestamp': '',
+                  'isVideo': false,
+                }).toList();
+                Navigator.push(context, MaterialPageRoute(builder: (_) => PostViewerScreen(posts: built, initialIndex: index)));
+              },
+              child: ZoomableGridImage(imageUrl: url),
+            );
           },
         );
       },
@@ -294,7 +310,24 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
         crossAxisCount: 3, crossAxisSpacing: 1, mainAxisSpacing: 1,
       ),
       itemCount: _otherUserPosts.length,
-      itemBuilder: (context, index) => ZoomableGridImage(imageUrl: _otherUserPosts[index]),
+      itemBuilder: (context, index) {
+        final url = _otherUserPosts[index];
+        return GestureDetector(
+          onTap: () {
+            final built = _otherUserPosts.map((p) => {
+              'username': _currentUsername,
+              'userAvatarUrl': _avatarUrl,
+              'postImageUrls': [p],
+              'likeCount': '0',
+              'caption': '',
+              'timestamp': '',
+              'isVideo': false,
+            }).toList();
+            Navigator.push(context, MaterialPageRoute(builder: (_) => PostViewerScreen(posts: built, initialIndex: index)));
+          },
+          child: ZoomableGridImage(imageUrl: url),
+        );
+      },
     );
   }
 

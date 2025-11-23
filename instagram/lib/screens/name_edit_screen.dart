@@ -46,7 +46,7 @@ class _NameEditScreenState extends State<NameEditScreen> {
           ),
           // 다이얼로그 타이틀 (중앙 정렬)
           title: Text(
-            "Change name to $newName?",
+            "Are you sure you want to change your name to $newName?",
             style: const TextStyle(
               color: Colors.black,
               fontSize: 17.0,
@@ -81,7 +81,7 @@ class _NameEditScreenState extends State<NameEditScreen> {
                     child: Text(
                       "Change name",
                       style: TextStyle(
-                        color: _instaBlue, // [수정] 인스타 블루
+                        color: const Color.fromARGB(255, 57, 11, 85), // [수정] 인스타 블루
                         fontSize: 16.0,
                         fontWeight: FontWeight.bold,
                       ),

@@ -97,10 +97,10 @@ class FeedScreen extends StatelessWidget {
     ];
 
     return SizedBox(
-      height: 100, // 스토리 바 높이
+      height: 128, // 스토리 bar height increased to avoid overflow on small devices
       child: ListView.builder(
         scrollDirection: Axis.horizontal, // 가로 스크롤
-        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
         itemCount: stories.length,
         itemBuilder: (context, index) {
           final story = stories[index];
