@@ -68,7 +68,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
   void _loadMyData() {
     setState(() {
       _name = 'puang';
-      _bio = "I'm gonna be the God of Flutter!!";
+      _bio = "I'm gonna be the God of Flutter!";
       _avatarUrl = 'https://picsum.photos/seed/junhyuk/200/200';
       _followerCount = '3';
     });

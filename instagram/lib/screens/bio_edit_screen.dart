@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class BioEditScreen extends StatefulWidget {
   final String initialBio;
@@ -11,6 +12,8 @@ class BioEditScreen extends StatefulWidget {
 
 class _BioEditScreenState extends State<BioEditScreen> {
   late TextEditingController _controller;
+  int _remaining = 150;
+  static const int _maxChars = 150;
 
   // 인스타그램 공식 블루 색상 상수 정의
   final Color _instaBlue = const Color(0xFF3797EF);
@@ -19,6 +22,13 @@ class _BioEditScreenState extends State<BioEditScreen> {
   void initState() {
     super.initState();
     _controller = TextEditingController(text: widget.initialBio);
+    _remaining = _maxChars - _controller.text.length;
+    _controller.addListener(() {
+      final len = _controller.text.characters.length;
+      setState(() {
+        _remaining = (_maxChars - len).clamp(0, _maxChars);
+      });
+    });
   }
 
   @override
@@ -65,48 +75,74 @@ class _BioEditScreenState extends State<BioEditScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            TextField(
-              controller: _controller,
-              autofocus: true,
-              // [수정 2] 커서 색상 변경
-              cursorColor: _instaBlue, 
-              style: const TextStyle(
-                color: Colors.black, 
-                fontSize: 16.0,
-                height: 1.2, // 줄 간격 조정
-              ),
-              maxLines: null,
-              keyboardType: TextInputType.multiline,
-              decoration: InputDecoration(
-                labelText: 'Bio',
-                // 라벨이 떠오를 때 색상 (회색)
-                floatingLabelStyle: const TextStyle(color: Colors.grey),
-                labelStyle: const TextStyle(color: Colors.grey),
-                // 포커스 잡혔을 때 밑줄 색상 (검은색)
-                focusedBorder: const UnderlineInputBorder(
-                  borderSide: BorderSide(color: Colors.black),
+            Expanded(
+              child: TextField(
+                controller: _controller,
+                autofocus: true,
+                cursorColor: _instaBlue,
+                style: const TextStyle(
+                  color: Colors.black,
+                  fontSize: 16.0,
+                  height: 1.2,
                 ),
-                // 평소 밑줄 색상 (연한 회색)
-                enabledBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: Colors.grey[300]!),
+                maxLines: null,
+                keyboardType: TextInputType.multiline,
+                inputFormatters: [
+                  LengthLimitingTextInputFormatter(_maxChars),
+                ],
+                decoration: InputDecoration(
+                  labelText: 'Bio',
+                  floatingLabelStyle: const TextStyle(color: Colors.grey),
+                  labelStyle: const TextStyle(color: Colors.grey),
+                  focusedBorder: const UnderlineInputBorder(
+                    borderSide: BorderSide(color: Colors.black),
+                  ),
+                  enabledBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(color: Colors.grey[300]!),
+                  ),
+                  contentPadding: const EdgeInsets.only(bottom: 8.0),
                 ),
-                contentPadding: const EdgeInsets.only(bottom: 8.0),
               ),
             ),
-            const SizedBox(height: 16.0),
-
-            // 하단 안내 문구
-            RichText(
-              text: TextSpan(
-                style: TextStyle(color: Colors.grey[600], fontSize: 13.0),
+            const SizedBox(height: 8.0),
+            // Bottom info + counter that stays above keyboard
+            AnimatedPadding(
+              duration: const Duration(milliseconds: 150),
+              padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom + 8),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  const TextSpan(
-                    text: 'Your bio is visible to everyone on and off Instagram. '
-                  ),
-                  TextSpan(
-                    text: 'Learn more',
-                    // [수정 3] 링크 텍스트 색상 변경
-                    style: TextStyle(color: _instaBlue),
+                  const Divider(height: 1, thickness: 1, color: Color(0xFFE0E0E0)),
+                  const SizedBox(height: 6),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Expanded(
+                        child: RichText(
+                          text: TextSpan(
+                            style: TextStyle(color: Colors.grey[600], fontSize: 13.0),
+                            children: [
+                              const TextSpan(
+                                text: 'Your bio is visible to everyone on and off Instagram. '
+                              ),
+                              TextSpan(
+                                text: 'Learn more',
+                                style: TextStyle(color: _instaBlue),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      // Remaining counter
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 2.0, right: 4.0),
+                        child: Text(
+                          '$_remaining',
+                          style: TextStyle(color: Colors.grey[600], fontSize: 12.0),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
