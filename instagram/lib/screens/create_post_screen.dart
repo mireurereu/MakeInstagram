@@ -10,7 +10,8 @@ class CreatePostScreen extends StatefulWidget {
 
 class _CreatePostScreenState extends State<CreatePostScreen> {
   // [설정] assets/images/ 폴더에 있는 파일명과 일치해야 함
-  final List<String> _images = List.generate(12, (index) => 'assets/images/post${index + 1}.jpg');
+  // 실제 프로젝트에는 post1..post8 까지 존재하므로 안전하게 8개만 생성합니다.
+  final List<String> _images = List.generate(8, (index) => 'assets/images/post${index + 1}.jpg');
   
   String? _selectedImage;
   
@@ -61,7 +62,14 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
             width: double.infinity,
             color: Colors.grey[200],
             child: _selectedImage != null
-                ? Image.asset(_selectedImage!, fit: BoxFit.cover)
+                ? Image.asset(
+                    _selectedImage!,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      color: Colors.grey[300],
+                      child: const Center(child: Icon(Icons.broken_image, color: Colors.grey, size: 48)),
+                    ),
+                  )
                 : const Center(child: Text('Select an image')),
           ),
           // 그리드
@@ -82,7 +90,11 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                   child: Stack(
                     fit: StackFit.expand,
                     children: [
-                      Image.asset(imagePath, fit: BoxFit.cover),
+                      Image.asset(
+                        imagePath,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) => Container(color: Colors.grey[200]),
+                      ),
                       if (isSelected) Container(color: Colors.white.withOpacity(0.5)),
                     ],
                   ),

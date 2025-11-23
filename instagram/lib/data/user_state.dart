@@ -20,12 +20,19 @@ class UserState {
   // [데이터] 다른 사용자의 팔로잉 목록 (시나리오용 하드코딩)
   static final Map<String, List<Map<String, String>>> _otherUsersFollowing = {
     'imwinter': [
-      {'username': 'katarinabluu', 'name': 'KARINA', 'img': 'karina'},
-      {'username': 'ningning', 'name': 'NINGNING', 'img': 'ningning'}, // 더미
-      {'username': 'giselle', 'name': 'GISELLE', 'img': 'giselle'}, // 더미
-      {'username': 'new_user_1', 'name': 'New User', 'img': 'post1'}, // 팔로우 테스트용
+      {'username': 'aerichandesu', 'name': 'GISELLE', 'img': 'aerichandesu'},
+      {'username': 'imnotningning', 'name': 'NINGNING', 'img': 'imnotningning'},
+      {'username': 'katarinabluu', 'name': 'KARINA', 'img': 'katarinabluu'},
+      {'username': 'aespa_official', 'name': 'aespa 에스파', 'img': 'aespa_official'},
     ],
   };
+
+  // 간단한 인증(verified) 시뮬레이션
+  static final Set<String> _verified = {
+    'imwinter', 'imnotningning', 'katarinabluu', 'aespa_official', 'aerichandesu'
+  };
+
+  static bool isVerified(String username) => _verified.contains(username);
 
   // 내가 팔로우 중인지 확인
   static bool amIFollowing(String targetUsername) {

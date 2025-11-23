@@ -21,9 +21,9 @@ class _EditFilterScreenState extends State<EditFilterScreen> {
   @override
   Widget build(BuildContext context) {
     final Widget imageWidget = widget.imageBytes != null
-      ? Image.memory(widget.imageBytes!, width: double.infinity, fit: BoxFit.cover)
+      ? Image.memory(widget.imageBytes!, width: double.infinity, fit: BoxFit.cover, errorBuilder: (c, e, s) => Container(color: Colors.grey[300]))
       : (widget.assetPath != null)
-        ? Image.asset(widget.assetPath!, width: double.infinity, fit: BoxFit.cover)
+        ? Image.asset(widget.assetPath!, width: double.infinity, fit: BoxFit.cover, errorBuilder: (c, e, s) => Container(color: Colors.grey[300]))
         : widget.imageFile != null
           ? Image.file(widget.imageFile!, width: double.infinity, fit: BoxFit.cover)
           : Container(color: Colors.grey[300], width: double.infinity, height: 300, child: const Center(child: Text('No image')));
@@ -103,7 +103,7 @@ class _EditFilterScreenState extends State<EditFilterScreen> {
                           children: [
                             ClipRRect(
                               borderRadius: BorderRadius.circular(8),
-                              child: Image.asset(thumb, width: 80, height: 80, fit: BoxFit.cover),
+                              child: Image.asset(thumb, width: 80, height: 80, fit: BoxFit.cover, errorBuilder: (c, e, s) => Container(color: Colors.grey[200], width: 80, height: 80)),
                             ),
                             const SizedBox(height: 6),
                             const SizedBox(width: 80, child: Text(' ', textAlign: TextAlign.center, style: TextStyle(fontSize: 12))),

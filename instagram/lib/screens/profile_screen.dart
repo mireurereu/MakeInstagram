@@ -43,8 +43,6 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
-
     // UserState에 정의된 내 ID 사용
     if (widget.username == null || widget.username == UserState.myId) {
       _isCurrentUser = true;
@@ -55,6 +53,11 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
       _currentUsername = widget.username!;
       _loadOtherUserData(_currentUsername);
     }
+
+    // TabController 길이는 현재 사용자일 때 2, 타인 프로필일 때 기본 3.
+    // 그러나 특정 사용자(imnotningning)는 4탭을 사용합니다.
+    final int tabCount = _isCurrentUser ? 2 : (_currentUsername == 'imnotningning' ? 4 : 3);
+    _tabController = TabController(length: tabCount, vsync: this);
   }
 
   // 화면에 돌아왔을 때 팔로잉 숫자 갱신을 위해 setState 호출
@@ -87,6 +90,15 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
         _bio = 'aespa';
         _followerCount = '13M';
         _mutualFollowers = ['junehxuk', 'katarinabluu'];
+      }
+
+      // 특정 유저(imnotningning) 데이터 하드코딩 (요청: 4탭, NINGNING, aespa)
+      if (username == 'imnotningning') {
+        _name = 'NINGNING';
+        _bio = 'aespa';
+        _followerCount = '10.7M';
+        _mutualFollowers = ['imwinter', 'katarinabluu', 'aespa_official'];
+        // 다른 사용자 게시물 수는 이미 9로 세팅되어 있음
       }
     });
   }
@@ -150,10 +162,23 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                   labelColor: Colors.black,
                   unselectedLabelColor: Colors.grey,
                   indicatorWeight: 1.0,
-                  tabs: const [
-                    Tab(icon: Icon(Icons.grid_on)),
-                    Tab(icon: Icon(Icons.person_pin_outlined)),
-                  ],
+                  tabs: _isCurrentUser
+                      ? const [
+                          Tab(icon: Icon(Icons.grid_on)),
+                          Tab(icon: Icon(Icons.person_pin_outlined)),
+                        ]
+                      : (_currentUsername == 'imnotningning'
+                          ? const [
+                              Tab(icon: Icon(Icons.grid_on)),
+                              Tab(icon: Icon(Icons.ondemand_video)),
+                              Tab(icon: Icon(Icons.loop)),
+                              Tab(icon: Icon(Icons.person_pin_outlined)),
+                            ]
+                          : const [
+                              Tab(icon: Icon(Icons.grid_on)),
+                              Tab(icon: Icon(Icons.ondemand_video)),
+                              Tab(icon: Icon(Icons.person_pin_outlined)),
+                            ]),
                 ),
               ),
               pinned: true,
@@ -162,10 +187,23 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
         },
         body: TabBarView(
           controller: _tabController,
-          children: [
-            _isCurrentUser ? _buildMyPostGrid() : _buildOtherPostGrid(),
-            const Center(child: Text('Tagged Posts', style: TextStyle(color: Colors.grey))),
-          ],
+          children: _isCurrentUser
+              ? [
+                  _buildMyPostGrid(),
+                  const Center(child: Text('Tagged Posts', style: TextStyle(color: Colors.grey))),
+                ]
+              : (_currentUsername == 'imnotningning'
+                  ? [
+                      _buildOtherPostGrid(),
+                      const Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(Icons.ondemand_video, size: 48, color: Colors.grey), SizedBox(height: 8), Text('Reels', style: TextStyle(color: Colors.grey))])),
+                      const Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(Icons.loop, size: 48, color: Colors.grey), SizedBox(height: 8), Text('Reposts', style: TextStyle(color: Colors.grey))])),
+                      const Center(child: Text('Tagged Posts', style: TextStyle(color: Colors.grey))),
+                    ]
+                  : [
+                      _buildOtherPostGrid(),
+                      const Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(Icons.ondemand_video, size: 48, color: Colors.grey), SizedBox(height: 8), Text('Reels', style: TextStyle(color: Colors.grey))])),
+                      const Center(child: Text('Tagged Posts', style: TextStyle(color: Colors.grey))),
+                    ]),
         ),
       ),
     );
