@@ -11,6 +11,7 @@ class Message {
   DateTime timestamp;
   bool seen;
   String? footer;
+  String? imageAsset;
 
   Message({
     required this.text,
@@ -18,6 +19,7 @@ class Message {
     required this.timestamp,
     this.seen = false,
     this.footer,
+    this.imageAsset,
   });
 }
 
@@ -52,6 +54,15 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
   final String opponentAvatarUrl = 'https://picsum.photos/seed/junhyuk/100/100';
   final Color _instaBlue = const Color(0xFF3797EF);
   final Color _senderPurple = const Color(0xFF7C3AED);
+  // assets list for picker
+  final List<String> _assetImages = [
+    'assets/images/post1.jpg',
+    'assets/images/post2.jpg',
+    'assets/images/post3.jpg',
+    'assets/images/post4.jpg',
+  ];
+  String? _selectedImage;
+  bool _isImageSheetOpen = false;
 
   @override
   void initState() {
@@ -79,7 +90,15 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
 
   Future<void> _sendMessage() async {
     final String text = _textController.text;
-    if (text.isEmpty) return;
+    if (text.isEmpty && _selectedImage == null) return;
+
+    // If the image picker sheet is currently open, close it first so the UI flows
+    if (_isImageSheetOpen) {
+      Navigator.of(context).pop();
+      // small delay to let the sheet visually close
+      await Future.delayed(const Duration(milliseconds: 200));
+      _isImageSheetOpen = false;
+    }
 
     _textController.clear();
     setState(() => _hasText = false);
@@ -88,7 +107,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
     final int sentIndex = _messages.length;
 
     setState(() {
-      _messages.add(Message(text: text, isSender: true, timestamp: messageTime));
+      _messages.add(Message(text: text, isSender: true, timestamp: messageTime, imageAsset: _selectedImage));
     });
     _scrollToBottom();
 
@@ -125,7 +144,8 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
     if (_fallbackTimer != null) _activeTimers.add(_fallbackTimer!);
 
     // network request
-    _messageHistory.add(ApiMessage(role: 'user', content: text));
+    final String apiContent = text.isNotEmpty ? text : (_selectedImage != null ? '[image]' : '');
+    _messageHistory.add(ApiMessage(role: 'user', content: apiContent));
     try {
       final response = await http
           .post(
@@ -174,6 +194,10 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
     } catch (e) {
       debugPrint('OpenRouter error: $e');
       // fallback will show
+    }
+    // after sending, clear selected image
+    if (_selectedImage != null) {
+      setState(() => _selectedImage = null);
     }
   }
 
@@ -248,9 +272,10 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
           const SizedBox(width: 8),
         ],
       ),
-      body: Column(children: [
-        Expanded(
-          child: ListView.builder(
+      body: Stack(children: [
+        Column(children: [
+          Expanded(
+            child: ListView.builder(
             controller: _scrollController,
             padding: const EdgeInsets.symmetric(vertical: 8.0),
             itemCount: _messages.length + (_isLoading ? 1 : 0),
@@ -262,7 +287,30 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
             },
           ),
         ),
-        _buildTextInputArea(),
+          _buildTextInputArea(),
+        ]),
+
+        // Selected image preview overlay (bottom-left)
+        if (_selectedImage != null)
+          Positioned(
+            left: 12,
+            bottom: 88,
+            child: Row(children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 6)]),
+                child: Row(children: [
+                  ClipRRect(borderRadius: BorderRadius.circular(16), child: Image.asset(_selectedImage!, width: 36, height: 36, fit: BoxFit.cover)),
+                ]),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18), boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 6)]),
+                child: const Text('Tap to preview and edit', style: TextStyle(color: Colors.black87)),
+              ),
+            ]),
+          ),
       ]),
     );
   }
@@ -275,11 +323,20 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
       child: ConstrainedBox(
         constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.7),
         child: Column(crossAxisAlignment: isSender ? CrossAxisAlignment.end : CrossAxisAlignment.start, children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-            decoration: BoxDecoration(color: isSender ? _senderPurple : const Color(0xFFEFEFEF), borderRadius: BorderRadius.circular(22.0)),
-            child: Text(message.text, style: TextStyle(color: isSender ? Colors.white : Colors.black, fontSize: 16.0)),
-          ),
+          // If message contains image, show image first
+          if (message.imageAsset != null)
+            Container(
+              clipBehavior: Clip.hardEdge,
+              decoration: BoxDecoration(color: isSender ? _senderPurple : const Color(0xFFEFEFEF), borderRadius: BorderRadius.circular(12.0)),
+              child: Image.asset(message.imageAsset!, fit: BoxFit.cover, width: MediaQuery.of(context).size.width * 0.6, height: 160),
+            ),
+          if (message.imageAsset != null && message.text.isNotEmpty) const SizedBox(height: 8.0),
+          if (message.text.isNotEmpty)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+              decoration: BoxDecoration(color: isSender ? _senderPurple : const Color(0xFFEFEFEF), borderRadius: BorderRadius.circular(22.0)),
+              child: Text(message.text, style: TextStyle(color: isSender ? Colors.white : Colors.black, fontSize: 16.0)),
+            ),
           const SizedBox(height: 6.0),
           if (message.seen && isSender) Padding(padding: const EdgeInsets.only(right: 4.0), child: Text('Seen just now', style: TextStyle(color: Colors.grey[600], fontSize: 12.0))),
           if (message.footer != null) Padding(padding: const EdgeInsets.only(left: 4.0), child: Text(message.footer!, style: TextStyle(color: Colors.grey[600], fontSize: 12.0))),
@@ -310,16 +367,70 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
             ]),
           ),
         ),
-        if (!_hasText) ...[
+        // Show action icons when there's no text and no selected image
+        if (!_hasText && _selectedImage == null) ...[
           const SizedBox(width: 8),
           IconButton(onPressed: () {}, icon: const Icon(Icons.mic_none, color: Colors.black, size: 24.0)),
-          IconButton(onPressed: () {}, icon: const Icon(Icons.image_outlined, color: Colors.black, size: 24.0)),
+          IconButton(onPressed: _openImagePickerSheet, icon: const Icon(Icons.image_outlined, color: Colors.black, size: 24.0)),
           IconButton(onPressed: () {}, icon: const Icon(Icons.emoji_emotions_outlined, color: Colors.black, size: 24.0)),
           IconButton(onPressed: () {}, icon: const Icon(Icons.add_circle_outline, color: Colors.black, size: 24.0)),
-        ] else
+        ]
+        // If there is text or a selected image, show Send
+        else
           TextButton(onPressed: _isLoading ? null : _sendMessage, child: Text('Send', style: TextStyle(color: _senderPurple, fontSize: 16.0, fontWeight: FontWeight.bold))),
       ]),
     );
+  }
+
+  Future<void> _openImagePickerSheet() async {
+    _isImageSheetOpen = true;
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: false,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(12))),
+      builder: (context) {
+        String? localSelected = _selectedImage;
+        return StatefulBuilder(builder: (context, sbSetState) {
+          return SizedBox(
+            height: 240,
+            child: Column(children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                  const Text('Recents', style: TextStyle(fontWeight: FontWeight.bold)),
+                  TextButton(onPressed: () => Navigator.pop(context), child: const Text('Done'))
+                ]),
+              ),
+              Expanded(
+                child: GridView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 4, mainAxisSpacing: 8, crossAxisSpacing: 8),
+                  itemCount: _assetImages.length,
+                  itemBuilder: (context, idx) {
+                    final asset = _assetImages[idx];
+                    final bool isSelected = localSelected == asset;
+                    return GestureDetector(
+                      onTap: () {
+                        // keep sheet open, update both sheet-local state and parent state
+                        sbSetState(() => localSelected = asset);
+                        setState(() => _selectedImage = asset);
+                      },
+                      child: Stack(children: [
+                        ClipRRect(borderRadius: BorderRadius.circular(8), child: Image.asset(asset, fit: BoxFit.cover, width: double.infinity, height: double.infinity)),
+                        if (isSelected)
+                          Positioned(right: 4, top: 4, child: Container(padding: const EdgeInsets.all(6), decoration: BoxDecoration(color: _instaBlue, shape: BoxShape.circle), child: const Text('1', style: TextStyle(color: Colors.white, fontSize: 12)))),
+                      ]),
+                    );
+                  },
+                ),
+              ),
+            ]),
+          );
+        });
+      },
+    );
+    _isImageSheetOpen = false;
   }
 }
 
