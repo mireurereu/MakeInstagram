@@ -1,20 +1,23 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
+import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'dart:async'; // [필수] 애니메이션 타이머용
-import 'package:intl/intl.dart';
 import 'package:instagram/constants.dart';
 
-// --- 모델 클래스 ---
 class Message {
-  final String text;
-  final bool isSender;
-  final DateTime timestamp;
+  String text;
+  bool isSender;
+  DateTime timestamp;
+  bool seen;
+  String? footer;
 
   Message({
     required this.text,
     required this.isSender,
     required this.timestamp,
+    this.seen = false,
+    this.footer,
   });
 }
 
@@ -23,13 +26,8 @@ class ApiMessage {
   final String content;
 
   ApiMessage({required this.role, required this.content});
-  
-  Map<String, String> toJson() {
-    return {
-      'role': role,
-      'content': content,
-    };
-  }
+
+  Map<String, String> toJson() => {'role': role, 'content': content};
 }
 
 class ChatRoomScreen extends StatefulWidget {
@@ -47,38 +45,35 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
   bool _hasText = false;
 
   final List<Message> _messages = [];
+  final List<Timer> _activeTimers = [];
   final List<ApiMessage> _messageHistory = [];
-  
+  Timer? _fallbackTimer;
+
   final String opponentAvatarUrl = 'https://picsum.photos/seed/junhyuk/100/100';
   final Color _instaBlue = const Color(0xFF3797EF);
+  final Color _senderPurple = const Color(0xFF7C3AED);
 
   @override
   void initState() {
     super.initState();
-    _messageHistory.add(ApiMessage(
-      role: 'system',
-      content: 'You are a helpful and friendly assistant.'
-    ));
-    
+    _messageHistory.add(ApiMessage(role: 'system', content: 'You are a helpful assistant.'));
+
     final now = DateTime.now();
     _messages.addAll([
       Message(text: 'Layout', isSender: true, timestamp: now.subtract(const Duration(hours: 2))),
       Message(text: 'Hi', isSender: true, timestamp: now.subtract(const Duration(hours: 1))),
       Message(text: "I'm ai assistan.... Can not reply...", isSender: false, timestamp: now.subtract(const Duration(minutes: 30))),
-      Message(text: "Hi!!!!!", isSender: false, timestamp: now.subtract(const Duration(minutes: 29))),
+      Message(text: 'Hi!!!!!', isSender: false, timestamp: now.subtract(const Duration(minutes: 29))),
     ]);
 
-    _textController.addListener(() {
-      setState(() {
-        _hasText = _textController.text.isNotEmpty;
-      });
-    });
+    _textController.addListener(() => setState(() => _hasText = _textController.text.isNotEmpty));
   }
 
   @override
   void dispose() {
     _textController.dispose();
     _scrollController.dispose();
+    for (final t in _activeTimers) t.cancel();
     super.dispose();
   }
 
@@ -90,18 +85,48 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
     setState(() => _hasText = false);
 
     final DateTime messageTime = DateTime.now();
+    final int sentIndex = _messages.length;
 
     setState(() {
       _messages.add(Message(text: text, isSender: true, timestamp: messageTime));
-      _isLoading = true;
     });
     _scrollToBottom();
-    
-    _messageHistory.add(ApiMessage(role: 'user', content: text));
 
+    // 1s: show Seen
+    final t1 = Timer(const Duration(seconds: 1), () {
+      if (!mounted) return;
+      setState(() {
+        if (sentIndex < _messages.length) _messages[sentIndex].seen = true;
+      });
+      _scrollToBottom();
+    });
+    _activeTimers.add(t1);
+
+    // 2s: hide Seen and show typing
+    final t2 = Timer(const Duration(seconds: 2), () {
+      if (!mounted) return;
+      setState(() {
+        if (sentIndex < _messages.length) _messages[sentIndex].seen = false;
+        _isLoading = true;
+      });
+      _scrollToBottom();
+    });
+    _activeTimers.add(t2);
+
+    // fallback after 5s
+    _fallbackTimer = Timer(const Duration(seconds: 5), () {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _messages.add(Message(text: 'Hi', isSender: false, timestamp: DateTime.now(), footer: 'Tap and hold to react'));
+      });
+      _scrollToBottom();
+    });
+    if (_fallbackTimer != null) _activeTimers.add(_fallbackTimer!);
+
+    // network request
+    _messageHistory.add(ApiMessage(role: 'user', content: text));
     try {
-      // Use a short timeout and log response for diagnosis. On web this
-      // request may fail due to CORS when called from the browser.
       final response = await http
           .post(
         Uri.parse(OPENROUTER_ENDPOINT),
@@ -111,54 +136,44 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
         },
         body: jsonEncode({
           'model': 'nvidia/nemotron-nano-12b-v2-vl:free',
-          'messages': _messageHistory.map((msg) => msg.toJson()).toList(),
+          'messages': _messageHistory.map((m) => m.toJson()).toList(),
         }),
       )
           .timeout(const Duration(seconds: 15));
 
       debugPrint('OpenRouter response status: ${response.statusCode}');
-      debugPrint('OpenRouter response body: ${utf8.decode(response.bodyBytes)}');
-
       if (response.statusCode == 200) {
-        final responseBody = jsonDecode(utf8.decode(response.bodyBytes));
-        // Defensive parsing: some endpoints return different nesting
         String responseText = '';
         try {
-          responseText = responseBody['choices'][0]['message']['content'];
-        } catch (_) {
+          final responseBody = jsonDecode(utf8.decode(response.bodyBytes));
           try {
-            responseText = responseBody['choices'][0]['text'] ?? '';
+            responseText = responseBody['choices'][0]['message']['content'];
           } catch (_) {
-            responseText = jsonEncode(responseBody);
+            responseText = responseBody['choices'][0]['text'] ?? jsonEncode(responseBody);
           }
+        } catch (e) {
+          responseText = 'Assistant response parsing error: $e';
         }
 
         if (!mounted) return;
+        if (_fallbackTimer != null && _fallbackTimer!.isActive) {
+          _fallbackTimer!.cancel();
+          _activeTimers.remove(_fallbackTimer);
+          _fallbackTimer = null;
+        }
+
         setState(() {
-          _messages.add(Message(text: responseText, isSender: false, timestamp: DateTime.now()));
+          _isLoading = false;
+          _messages.add(Message(text: responseText, isSender: false, timestamp: DateTime.now(), footer: 'Tap and hold to react'));
         });
         _messageHistory.add(ApiMessage(role: 'assistant', content: responseText));
+        _scrollToBottom();
       } else {
-        // Show a helpful assistant message when the remote call fails
-        final err = 'Assistant unavailable (status ${response.statusCode}).';
-        if (mounted) setState(() {
-          _messages.add(Message(text: err, isSender: false, timestamp: DateTime.now()));
-        });
         debugPrint('OpenRouter non-200: ${response.statusCode}');
       }
     } catch (e) {
-      // Distinguish timeout / network / CORS errors when possible
-      debugPrint("Error sending to OpenRouter: $e");
-      if (mounted) setState(() {
-        _messages.add(Message(text: 'Assistant error: $e', isSender: false, timestamp: DateTime.now()));
-      });
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false; 
-        });
-        _scrollToBottom();
-      }
+      debugPrint('OpenRouter error: $e');
+      // fallback will show
     }
   }
 
@@ -169,7 +184,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
       }
     });
   }
-  
+
   bool _shouldShowTimestamp(int index) {
     if (index == 0) return true;
     final DateTime current = _messages[index].timestamp;
@@ -177,7 +192,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
     if (current.difference(previous).inHours >= 1) return true;
     return false;
   }
-  
+
   Widget _buildTimestampMarker(DateTime timestamp) {
     return Center(
       child: Padding(
@@ -190,26 +205,18 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
     );
   }
 
-  // [수정] 실제 애니메이션 위젯 사용
   Widget _buildTypingIndicator() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
-          CircleAvatar(
-            radius: 14,
-            backgroundImage: NetworkImage(opponentAvatarUrl),
-          ),
+          CircleAvatar(radius: 14, backgroundImage: NetworkImage(opponentAvatarUrl)),
           const SizedBox(width: 8.0),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 12.0),
-            decoration: BoxDecoration(
-              color: const Color(0xFFEFEFEF),
-              borderRadius: BorderRadius.circular(22.0),
-            ),
-            // 여기에 애니메이션 위젯 배치
-            child: const _TypingAnimationWidget(), 
+            decoration: BoxDecoration(color: const Color(0xFFEFEFEF), borderRadius: BorderRadius.circular(22.0)),
+            child: const _TypingAnimationWidget(),
           ),
         ],
       ),
@@ -222,30 +229,17 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: Colors.white, 
+        backgroundColor: Colors.white,
         foregroundColor: Colors.black,
         titleSpacing: 0,
         title: Row(
           children: [
-            CircleAvatar(
-              radius: 16,
-              backgroundImage: NetworkImage(opponentAvatarUrl),
-            ),
+            CircleAvatar(radius: 16, backgroundImage: NetworkImage(opponentAvatarUrl)),
             const SizedBox(width: 10.0),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  widget.username,
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16.0),
-                ),
-                Text(
-                  'Active now',
-                  style: TextStyle(fontSize: 12.0, color: Colors.grey[600]),
-                ),
-              ],
-            ),
+            Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.center, children: [
+              Text(widget.username, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16.0)),
+              Text('Active now', style: TextStyle(fontSize: 12.0, color: Colors.grey[600])),
+            ])
           ],
         ),
         actions: [
@@ -254,59 +248,42 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
           const SizedBox(width: 8),
         ],
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: ListView.builder(
-              controller: _scrollController,
-              padding: const EdgeInsets.symmetric(vertical: 8.0),
-              itemCount: _messages.length + (_isLoading ? 1 : 0),
-              itemBuilder: (context, index) {
-                if (index == _messages.length) {
-                  return _buildTypingIndicator();
-                }
-                
-                final message = _messages[index];
-                final bool showTimestamp = _shouldShowTimestamp(index);
-
-                return Column(
-                  children: [
-                    if (showTimestamp) _buildTimestampMarker(message.timestamp),
-                    _buildMessageBubble(message, index),
-                  ],
-                );
-              },
-            ),
+      body: Column(children: [
+        Expanded(
+          child: ListView.builder(
+            controller: _scrollController,
+            padding: const EdgeInsets.symmetric(vertical: 8.0),
+            itemCount: _messages.length + (_isLoading ? 1 : 0),
+            itemBuilder: (context, index) {
+              if (index == _messages.length) return _buildTypingIndicator();
+              final message = _messages[index];
+              final showTimestamp = _shouldShowTimestamp(index);
+              return Column(children: [if (showTimestamp) _buildTimestampMarker(message.timestamp), _buildMessageBubble(message, index)]);
+            },
           ),
-          _buildTextInputArea(),
-        ],
-      ),
+        ),
+        _buildTextInputArea(),
+      ]),
     );
   }
 
   Widget _buildMessageBubble(Message message, int index) {
-    final bool isSender = message.isSender;
+    final isSender = message.isSender;
     return Container(
       alignment: isSender ? Alignment.centerRight : Alignment.centerLeft,
       padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 2.0),
       child: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxWidth: MediaQuery.of(context).size.width * 0.7,
-        ),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-          decoration: BoxDecoration(
-            color: isSender ? _instaBlue : const Color(0xFFEFEFEF),
-            borderRadius: BorderRadius.circular(22.0),
+        constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.7),
+        child: Column(crossAxisAlignment: isSender ? CrossAxisAlignment.end : CrossAxisAlignment.start, children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+            decoration: BoxDecoration(color: isSender ? _senderPurple : const Color(0xFFEFEFEF), borderRadius: BorderRadius.circular(22.0)),
+            child: Text(message.text, style: TextStyle(color: isSender ? Colors.white : Colors.black, fontSize: 16.0)),
           ),
-          child: Text(
-            message.text,
-            style: TextStyle(
-              color: isSender ? Colors.white : Colors.black,
-              fontSize: 16.0,
-            ),
-          ),
-        ),
+          const SizedBox(height: 6.0),
+          if (message.seen && isSender) Padding(padding: const EdgeInsets.only(right: 4.0), child: Text('Seen just now', style: TextStyle(color: Colors.grey[600], fontSize: 12.0))),
+          if (message.footer != null) Padding(padding: const EdgeInsets.only(left: 4.0), child: Text(message.footer!, style: TextStyle(color: Colors.grey[600], fontSize: 12.0))),
+        ]),
       ),
     );
   }
@@ -314,66 +291,41 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
   Widget _buildTextInputArea() {
     return Container(
       padding: const EdgeInsets.fromLTRB(8, 8, 8, 24),
-      child: Row(
-        children: [
-          Container(
-            margin: const EdgeInsets.only(right: 8),
-            padding: const EdgeInsets.all(8.0),
-            decoration: BoxDecoration(
-              color: _instaBlue,
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(Icons.camera_alt, color: Colors.white, size: 20.0),
-          ),
-          Expanded(
-            child: Container(
-              height: 44,
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              decoration: BoxDecoration(
-                color: const Color(0xFFEFEFEF),
-                borderRadius: BorderRadius.circular(22.0),
+      child: Row(children: [
+        Container(margin: const EdgeInsets.only(right: 8), padding: const EdgeInsets.all(8.0), decoration: BoxDecoration(color: _senderPurple, shape: BoxShape.circle), child: const Icon(Icons.camera_alt, color: Colors.white, size: 20.0)),
+        Expanded(
+          child: Container(
+            height: 44,
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            decoration: BoxDecoration(color: const Color(0xFFEFEFEF), borderRadius: BorderRadius.circular(22.0)),
+            child: Row(children: [
+              Expanded(
+                child: TextField(
+                  controller: _textController,
+                  style: const TextStyle(color: Colors.black),
+                  decoration: const InputDecoration(hintText: 'Message...', hintStyle: TextStyle(color: Colors.grey), border: InputBorder.none, contentPadding: EdgeInsets.zero),
+                  onSubmitted: (_) => _sendMessage(),
+                ),
               ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _textController,
-                      style: const TextStyle(color: Colors.black),
-                      decoration: const InputDecoration(
-                        hintText: 'Message...',
-                        hintStyle: TextStyle(color: Colors.grey),
-                        border: InputBorder.none,
-                        contentPadding: EdgeInsets.zero,
-                      ),
-                      onSubmitted: (_) => _sendMessage(),
-                    ),
-                  ),
-                  if (!_hasText) ...[
-                    const Icon(Icons.mic_none, color: Colors.black, size: 24.0),
-                    const SizedBox(width: 12.0),
-                    const Icon(Icons.image_outlined, color: Colors.black, size: 24.0),
-                    const SizedBox(width: 12.0),
-                    const Icon(Icons.sticky_note_2_outlined, color: Colors.black, size: 24.0),
-                  ],
-                ],
-              ),
-            ),
+            ]),
           ),
-          if (_hasText)
-             TextButton(
-               onPressed: _isLoading ? null : _sendMessage,
-               child: Text('Send', style: TextStyle(color: _instaBlue, fontSize: 16.0, fontWeight: FontWeight.bold)),
-             ),
-        ],
-      ),
+        ),
+        if (!_hasText) ...[
+          const SizedBox(width: 8),
+          IconButton(onPressed: () {}, icon: const Icon(Icons.mic_none, color: Colors.black, size: 24.0)),
+          IconButton(onPressed: () {}, icon: const Icon(Icons.image_outlined, color: Colors.black, size: 24.0)),
+          IconButton(onPressed: () {}, icon: const Icon(Icons.emoji_emotions_outlined, color: Colors.black, size: 24.0)),
+          IconButton(onPressed: () {}, icon: const Icon(Icons.add_circle_outline, color: Colors.black, size: 24.0)),
+        ] else
+          TextButton(onPressed: _isLoading ? null : _sendMessage, child: Text('Send', style: TextStyle(color: _senderPurple, fontSize: 16.0, fontWeight: FontWeight.bold))),
+      ]),
     );
   }
 }
 
-// [신규] 점 3개가 깜빡이는 애니메이션 위젯
+// Typing animation
 class _TypingAnimationWidget extends StatefulWidget {
   const _TypingAnimationWidget();
-
   @override
   State<_TypingAnimationWidget> createState() => _TypingAnimationWidgetState();
 }
@@ -381,15 +333,11 @@ class _TypingAnimationWidget extends StatefulWidget {
 class _TypingAnimationWidgetState extends State<_TypingAnimationWidget> {
   int _currentIndex = 0;
   late Timer _timer;
-
   @override
   void initState() {
     super.initState();
-    // 300ms마다 점의 불투명도를 변경하여 움직이는 듯한 효과
-    _timer = Timer.periodic(const Duration(milliseconds: 300), (timer) {
-      setState(() {
-        _currentIndex = (_currentIndex + 1) % 4; // 0, 1, 2, 3 (3은 쉬는 타임)
-      });
+    _timer = Timer.periodic(const Duration(milliseconds: 300), (_) {
+      setState(() => _currentIndex = (_currentIndex + 1) % 3);
     });
   }
 
@@ -401,23 +349,9 @@ class _TypingAnimationWidgetState extends State<_TypingAnimationWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: List.generate(3, (index) {
-        return AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          margin: const EdgeInsets.symmetric(horizontal: 1.5),
-          width: 7, // 점 크기
-          height: 7,
-          decoration: BoxDecoration(
-            // 순서대로 진한 회색이 되었다가 연해짐
-            color: index == _currentIndex % 3 
-                ? Colors.grey[600] 
-                : Colors.grey[400], 
-            shape: BoxShape.circle,
-          ),
-        );
-      }),
-    );
+    return Row(mainAxisSize: MainAxisSize.min, children: List.generate(3, (i) {
+      final active = i == _currentIndex;
+      return AnimatedContainer(duration: const Duration(milliseconds: 200), margin: const EdgeInsets.symmetric(horizontal: 1.5), width: 7, height: 7, decoration: BoxDecoration(color: active ? Colors.grey[600] : Colors.grey[400], shape: BoxShape.circle));
+    }));
   }
 }

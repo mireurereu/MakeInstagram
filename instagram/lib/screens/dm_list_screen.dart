@@ -142,7 +142,7 @@ class DmListScreen extends StatelessWidget {
                     ],
                   ),
                   child: Text(
-                    'Note...',
+                    "What's on your playlist",
                     style: TextStyle(color: Colors.grey[600], fontSize: 11.0),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
