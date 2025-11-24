@@ -14,11 +14,23 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   final List<String> _images = List.generate(8, (index) => 'assets/images/post${index + 1}.jpg');
   
   String? _selectedImage;
+  // multi-select support
+  bool _selectMultipleMode = false;
+  final List<String> _selectedImages = [];
+  late PageController _previewPageController;
   
   @override
   void initState() {
     super.initState();
     if (_images.isNotEmpty) _selectedImage = _images[0];
+    final initialIndex = _selectedImage != null ? _images.indexOf(_selectedImage!) : 0;
+    _previewPageController = PageController(initialPage: initialIndex >= 0 ? initialIndex : 0);
+  }
+
+  @override
+  void dispose() {
+    _previewPageController.dispose();
+    super.dispose();
   }
 
   @override
@@ -39,38 +51,93 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
           ],
         ),
         actions: [
-              TextButton(
-                onPressed: _selectedImage != null
-                    ? () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => EditPostScreen(assetPath: _selectedImage!),
-                          ),
-                        );
-                      }
-                    : null,
-                child: const Text('Next', style: TextStyle(color: Color(0xFF3797EF), fontSize: 16, fontWeight: FontWeight.bold)),
-              ),
+          TextButton(
+            onPressed: (_selectedImage != null || _selectedImages.isNotEmpty)
+                ? () {
+                    final toEdit = _selectedImages.isNotEmpty ? _selectedImages.last : _selectedImage!;
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => EditPostScreen(assetPath: toEdit),
+                      ),
+                    );
+                  }
+                : null,
+            child: const Text('Next', style: TextStyle(color: Color.fromARGB(255, 110, 35, 142), fontSize: 16, fontWeight: FontWeight.bold)),
+          ),
         ],
       ),
       body: Column(
         children: [
           // 선택된 이미지 프리뷰
-          Container(
-            height: 375, // 정사각형 비율 
-            width: double.infinity,
-            color: Colors.grey[200],
-            child: _selectedImage != null
-                ? Image.asset(
-                    _selectedImage!,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => Container(
-                      color: Colors.grey[300],
-                      child: const Center(child: Icon(Icons.broken_image, color: Colors.grey, size: 48)),
+          AspectRatio(
+            aspectRatio: 1,
+            child: Container(
+              width: double.infinity,
+              color: Colors.grey[200],
+              child: Stack(children: [
+                // Scrollable preview using PageView. Shows all images; when selection changes we jump to that page.
+                PageView.builder(
+                  controller: _previewPageController,
+                  itemCount: _images.length,
+                  onPageChanged: (i) {
+                    setState(() {
+                      _selectedImage = _images[i];
+                    });
+                  },
+                  itemBuilder: (context, i) {
+                    final imagePath = _images[i];
+                    return Image.asset(
+                      imagePath,
+                      fit: BoxFit.cover,
+                      width: double.infinity,
+                      height: double.infinity,
+                      errorBuilder: (context, error, stackTrace) => Container(color: Colors.grey[200]),
+                    );
+                  },
+                ),
+
+                // left icon (crop/rotate placeholder)
+                Positioned(left: 12, bottom: 12, child: Container(decoration: BoxDecoration(color: Colors.black45, borderRadius: BorderRadius.circular(20)), padding: const EdgeInsets.all(8), child: const Icon(Icons.crop, color: Colors.white))),
+
+                // Select Multiple toggle on preview (bottom-right dark pill)
+                Positioned(
+                  right: 12,
+                  bottom: 12,
+                  child: GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _selectMultipleMode = !_selectMultipleMode;
+                        if (!_selectMultipleMode && _selectedImages.isNotEmpty) {
+                          // when turning off, keep only last selection
+                          _selectedImage = _selectedImages.last;
+                          _selectedImages.clear();
+                          // jump preview to the remaining single image
+                          final idx = _images.indexOf(_selectedImage!);
+                          if (idx >= 0) _previewPageController.jumpToPage(idx);
+                        }
+                      });
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: _selectMultipleMode ? Colors.black87 : Colors.black87,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: Colors.black26),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.check_box, color: Colors.white, size: 14),
+                          const SizedBox(width: 6),
+                          Text('SELECT MULTIPLE', style: TextStyle(color: Colors.white, fontSize: 12)),
+                        ],
+                      ),
                     ),
-                  )
-                : const Center(child: Text('Select an image')),
+                  ),
+                ),
+              ]),
+            ),
           ),
           // 그리드
           Expanded(
@@ -79,14 +146,34 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                 crossAxisCount: 4,
                 crossAxisSpacing: 1,
                 mainAxisSpacing: 1,
+                childAspectRatio: 1.0,
               ),
               itemCount: _images.length,
               itemBuilder: (context, index) {
                 final imagePath = _images[index];
-                final isSelected = _selectedImage == imagePath;
-                
+                final bool isSelectedSingle = _selectedImage == imagePath;
+                final int multiIndex = _selectedImages.indexOf(imagePath);
+
                 return GestureDetector(
-                  onTap: () => setState(() => _selectedImage = imagePath),
+                  onTap: () {
+                    setState(() {
+                      if (_selectMultipleMode) {
+                        if (_selectedImages.contains(imagePath)) {
+                          _selectedImages.remove(imagePath);
+                        } else {
+                          _selectedImages.add(imagePath);
+                        }
+                      } else {
+                        _selectedImage = imagePath;
+                        _selectedImages.clear();
+                      }
+                    });
+
+                    // animate preview to tapped image
+                    try {
+                      _previewPageController.animateToPage(index, duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
+                    } catch (_) {}
+                  },
                   child: Stack(
                     fit: StackFit.expand,
                     children: [
@@ -95,7 +182,9 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) => Container(color: Colors.grey[200]),
                       ),
-                      if (isSelected) Container(color: Colors.white.withOpacity(0.5)),
+                      if (!_selectMultipleMode && isSelectedSingle) Container(color: Colors.white.withOpacity(0.35)),
+                      if (_selectMultipleMode && multiIndex != -1)
+                        Positioned(right: 6, top: 6, child: Container(padding: const EdgeInsets.all(6), decoration: const BoxDecoration(color: Color(0xFF3797EF), shape: BoxShape.circle), child: Text('${multiIndex + 1}', style: const TextStyle(color: Colors.white, fontSize: 12)))),
                     ],
                   ),
                 );

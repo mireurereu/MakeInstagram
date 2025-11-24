@@ -62,7 +62,11 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
     'assets/images/post4.jpg',
   ];
   String? _selectedImage;
+  // (single image selection for DM)
   bool _isImageSheetOpen = false;
+  // ensure typing/loading is shown for at least this duration
+  final Duration _minTypingDuration = const Duration(milliseconds: 1500);
+  DateTime? _loadingStartTime;
 
   @override
   void initState() {
@@ -127,6 +131,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
       setState(() {
         if (sentIndex < _messages.length) _messages[sentIndex].seen = false;
         _isLoading = true;
+        _loadingStartTime = DateTime.now();
       });
       _scrollToBottom();
     });
@@ -135,6 +140,13 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
     // fallback after 5s
     _fallbackTimer = Timer(const Duration(seconds: 5), () {
       if (!mounted) return;
+      // Cancel any outstanding timers and clear loading state before inserting fallback reply
+      for (final t in _activeTimers) {
+        try {
+          t.cancel();
+        } catch (_) {}
+      }
+      _activeTimers.clear();
       setState(() {
         _isLoading = false;
         _messages.add(Message(text: 'Hi', isSender: false, timestamp: DateTime.now(), footer: 'Tap and hold to react'));
@@ -176,14 +188,30 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
         }
 
         if (!mounted) return;
+        // Cancel fallback and any other timers related to this send sequence
         if (_fallbackTimer != null && _fallbackTimer!.isActive) {
           _fallbackTimer!.cancel();
           _activeTimers.remove(_fallbackTimer);
           _fallbackTimer = null;
         }
-
+        for (final t in _activeTimers) {
+          try {
+            t.cancel();
+          } catch (_) {}
+        }
+        _activeTimers.clear();
+        // ensure minimum typing duration
+        if (_loadingStartTime != null) {
+          final elapsed = DateTime.now().difference(_loadingStartTime!);
+          if (elapsed < _minTypingDuration) {
+            final wait = _minTypingDuration - elapsed;
+            await Future.delayed(wait);
+            if (!mounted) return;
+          }
+        }
         setState(() {
           _isLoading = false;
+          _loadingStartTime = null;
           _messages.add(Message(text: responseText, isSender: false, timestamp: DateTime.now(), footer: 'Tap and hold to react'));
         });
         _messageHistory.add(ApiMessage(role: 'assistant', content: responseText));
@@ -384,52 +412,42 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
 
   Future<void> _openImagePickerSheet() async {
     _isImageSheetOpen = true;
-    await showModalBottomSheet<void>(
+    final result = await showModalBottomSheet<String>(
       context: context,
       isScrollControlled: false,
       backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(12))),
       builder: (context) {
-        String? localSelected = _selectedImage;
-        return StatefulBuilder(builder: (context, sbSetState) {
-          return SizedBox(
-            height: 240,
-            child: Column(children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                  const Text('Recents', style: TextStyle(fontWeight: FontWeight.bold)),
-                  TextButton(onPressed: () => Navigator.pop(context), child: const Text('Done'))
-                ]),
+        return SizedBox(
+          height: 240,
+          child: Column(children: [
+            Padding(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10), child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Text('Recents', style: TextStyle(fontWeight: FontWeight.bold)), TextButton(onPressed: () => Navigator.pop(context), child: const Text('Done'))])),
+            Expanded(
+              child: GridView.builder(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 4, mainAxisSpacing: 8, crossAxisSpacing: 8, childAspectRatio: 1.0),
+                itemCount: _assetImages.length,
+                itemBuilder: (context, idx) {
+                  final asset = _assetImages[idx];
+                  return GestureDetector(
+                    onTap: () => Navigator.pop(context, asset),
+                    child: Stack(children: [
+                      ClipRRect(borderRadius: BorderRadius.circular(8), child: Image.asset(asset, fit: BoxFit.cover, width: double.infinity, height: double.infinity)),
+                      if (_selectedImage == asset)
+                        Positioned(right: 4, top: 4, child: Container(padding: const EdgeInsets.all(6), decoration: BoxDecoration(color: _instaBlue, shape: BoxShape.circle), child: const Text('1', style: TextStyle(color: Colors.white, fontSize: 12)))),
+                    ]),
+                  );
+                },
               ),
-              Expanded(
-                child: GridView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 4, mainAxisSpacing: 8, crossAxisSpacing: 8),
-                  itemCount: _assetImages.length,
-                  itemBuilder: (context, idx) {
-                    final asset = _assetImages[idx];
-                    final bool isSelected = localSelected == asset;
-                    return GestureDetector(
-                      onTap: () {
-                        // keep sheet open, update both sheet-local state and parent state
-                        sbSetState(() => localSelected = asset);
-                        setState(() => _selectedImage = asset);
-                      },
-                      child: Stack(children: [
-                        ClipRRect(borderRadius: BorderRadius.circular(8), child: Image.asset(asset, fit: BoxFit.cover, width: double.infinity, height: double.infinity)),
-                        if (isSelected)
-                          Positioned(right: 4, top: 4, child: Container(padding: const EdgeInsets.all(6), decoration: BoxDecoration(color: _instaBlue, shape: BoxShape.circle), child: const Text('1', style: TextStyle(color: Colors.white, fontSize: 12)))),
-                      ]),
-                    );
-                  },
-                ),
-              ),
-            ]),
-          );
-        });
+            ),
+          ]),
+        );
       },
     );
+
+    if (result != null) {
+      setState(() => _selectedImage = result);
+    }
     _isImageSheetOpen = false;
   }
 }
