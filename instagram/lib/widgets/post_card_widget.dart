@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:instagram/screens/profile_screen.dart';
+import 'package:instagram/data/user_state.dart';
 import 'package:instagram/widgets/comment_model.dart';
 import 'package:instagram/widgets/comments_modal_content.dart';
 import 'package:intl/intl.dart';
@@ -53,6 +54,7 @@ class _PostCardWidgetState extends State<PostCardWidget> {
 
   // 댓글 리스트 (late로 선언하여 initState에서 초기화)
   late List<Comment> _comments;
+  late bool _isFollowing;
 
   @override
   void initState() {
@@ -73,6 +75,8 @@ class _PostCardWidgetState extends State<PostCardWidget> {
 
     // initialize liked state from incoming prop (persisted in feed model)
     _isLiked = widget.isLiked ?? false;
+    // initialize following state for header (so Follow button can reflect current state)
+    _isFollowing = UserState.amIFollowing(widget.username);
   }
 
   void _showCommentsModal() {
@@ -181,12 +185,39 @@ class _PostCardWidgetState extends State<PostCardWidget> {
                         ),
                       ),
                     ),
+                    // If this is seed3 user and current user isn't following them,
+                    // show "Suggested for you" under the username.
+                    if (widget.username == 'beom_jun__k' && !_isFollowing)
+                      const Text('Suggested for you', style: TextStyle(fontSize: 12, color: Colors.grey)),
                     if (widget.isSponsored)
                       const Text('Sponsored', style: TextStyle(fontSize: 11, color: Colors.black)),
                   ],
                 ),
               ),
-              const Icon(Icons.more_horiz, color: Colors.black),
+              // If special case (seed3 and not following) show Follow button then menu icon
+              if (widget.username == 'beom_jun__k' && !_isFollowing)
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          UserState.toggleFollow(widget.username);
+                          _isFollowing = UserState.amIFollowing(widget.username);
+                        });
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                        decoration: BoxDecoration(color: Colors.grey[200], borderRadius: BorderRadius.circular(18)),
+                        child: const Text('Follow', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w600)),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    const Icon(Icons.more_horiz, color: Colors.black),
+                  ],
+                )
+              else
+                const Icon(Icons.more_horiz, color: Colors.black),
             ],
           ),
         ),

@@ -22,6 +22,8 @@ class MyApp extends StatelessWidget {
         appBarTheme: const AppBarTheme(
           backgroundColor: Colors.white, // 앱바 배경 흰색
           elevation: 0, // 그림자 없음
+          shadowColor: Colors.transparent,
+          surfaceTintColor: Colors.white,
           iconTheme: IconThemeData(color: Colors.black), // 뒤로가기 등 아이콘 검은색
           titleTextStyle: TextStyle( // 앱바 제목 스타일
             color: Colors.black,

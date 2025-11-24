@@ -160,7 +160,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                   controller: _tabController,
                   indicatorColor: Colors.black,
                   labelColor: Colors.black,
-                  unselectedLabelColor: Colors.grey,
+                  unselectedLabelColor: Colors.white,
                   indicatorWeight: 1.0,
                   tabs: _isCurrentUser
                       ? const [

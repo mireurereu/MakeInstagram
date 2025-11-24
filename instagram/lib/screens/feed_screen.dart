@@ -27,11 +27,21 @@ class FeedScreen extends StatelessWidget {
       'postImageUrls': ['https://picsum.photos/seed/video_thumb/600/600'],
       'likeCount': '918,471',
       'caption': 'Bee~ Gese Stay Alive 🐝',
-      'timestamp': '5 days ago',
+      'timestamp': '3 days ago',
       'isVideo': true
     },
     {
       'id': 'seed3',
+      'username': 'beom_jun__k',
+      'userAvatarUrl': 'https://picsum.photos/seed/beom/100/100',
+      'postImageUrls': ['https://picsum.photos/seed/post1/600/600','https://picsum.photos/seed/post2/600/600'],
+      'likeCount': '58,918',
+      'caption': '두번재 순례길\n햇빛도 그늘도 바람도 오르막도 내리막도 친구들도 \n전부 다 사랑해 정말로!!',
+      'timestamp': '17 hours ago',
+      'isVideo': false
+    },
+    {
+      'id': 'seed4',
       'username': 'imwinter',
       'userAvatarUrl': 'https://picsum.photos/seed/winter/100/100',
       'postImageUrls': ['https://picsum.photos/seed/winter1/600/600','https://picsum.photos/seed/winter2/600/600'],
@@ -111,7 +121,7 @@ class FeedScreen extends StatelessWidget {
     final stories = [
       {'name': 'Your story', 'img': 'https://picsum.photos/seed/junhyuk/100/100', 'isMe': true},
       {'name': 'newjeans', 'img': 'https://picsum.photos/seed/newjeans/100/100', 'isMe': false},
-      {'name': 'katarinabluu', 'img': 'https://picsum.photos/seed/karina/100/100', 'isMe': false},
+      {'name': 'katarinabluu', 'img': 'https://picsum.photos/seed/katarina/100/100', 'isMe': false},
       {'name': 'aespa_official', 'img': 'https://picsum.photos/seed/aespa/100/100', 'isMe': false},
       {'name': 'winter', 'img': 'https://picsum.photos/seed/winter/100/100', 'isMe': false},
     ];

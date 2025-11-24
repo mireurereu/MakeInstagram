@@ -1,6 +1,8 @@
 import 'dart:typed_data';
 import 'dart:io';
+import 'package:instagram/screens/edit_filter_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:instagram/screens/new_post_screen.dart';
 
 class EditPostScreen extends StatefulWidget {
   final Uint8List? imageBytes;
@@ -38,7 +40,23 @@ class _EditPostScreenState extends State<EditPostScreen> {
         elevation: 0,
         leading: IconButton(icon: const Icon(Icons.close, color: Colors.black), onPressed: () => Navigator.pop(context)),
         actions: [
-          IconButton(icon: const Icon(Icons.check, color: Colors.black), onPressed: () => Navigator.pop(context)),
+          // [수정] 체크 아이콘 대신 'Next' 텍스트 버튼으로 변경
+          TextButton(
+            onPressed: () {
+              // 노래 선택 후 필터 화면으로 이동 (또는 바로 NewPostScreen으로 이동 가능)
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) =>NewPostScreen(
+                    imagePath: widget.assetPath,
+                    imageFile: widget.imageFile,
+                    imageBytes: widget.imageBytes,
+                  ),
+                ),
+              );
+            },
+            child: const Text('Next', style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold, fontSize: 16)),
+          ),
         ],
         title: const Text('', style: TextStyle(color: Colors.black)),
       ),
