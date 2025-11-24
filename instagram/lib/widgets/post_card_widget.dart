@@ -85,7 +85,7 @@ class _PostCardWidgetState extends State<PostCardWidget> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) {
-          return CommentsModalContent(
+        return CommentsModalContent(
           comments: _comments,
           postOwnerName: widget.username,
           onCommentPosted: (text) {
@@ -334,15 +334,51 @@ class _PostCardWidgetState extends State<PostCardWidget> {
                 ),
               ),
               const SizedBox(height: 6),
-              
-              // 댓글 미리보기 문구 (댓글 없으면 숨김)
+
+              // If the post author left comments, show them inline with a small heart on the right
+              for (final c in _comments.where((cm) => cm.username == widget.username))
+                Padding(
+                  padding: const EdgeInsets.only(top: 6.0, bottom: 2.0),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: RichText(
+                          text: TextSpan(
+                            style: const TextStyle(color: Colors.black),
+                            children: [
+                              TextSpan(text: '${c.username} ', style: const TextStyle(fontWeight: FontWeight.bold)),
+                              TextSpan(text: c.text),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            c.isLiked = !c.isLiked;
+                            if (c.isLiked) c.likeCount++; else c.likeCount--;
+                            final keyId = widget.key is ValueKey ? (widget.key as ValueKey).value : null;
+                            if (keyId is String) widget.onCommentsChanged?.call(keyId, _comments);
+                          });
+                        },
+                        child: Column(
+                          children: [
+                            Icon(c.isLiked ? Icons.favorite : Icons.favorite_border, color: c.isLiked ? Colors.red : Colors.grey, size: 18),
+                            if (c.likeCount > 0) Text('${c.likeCount}', style: const TextStyle(color: Colors.grey, fontSize: 11)),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+              // 댓글 미리보기 문구 (댓글 있으면 전체 보기로 이동)
               if (_comments.isNotEmpty)
                 GestureDetector(
                   onTap: _showCommentsModal,
-                  child: Text(
-                    'View all ${_comments.length} comments', 
-                    style: const TextStyle(color: Colors.grey, fontSize: 14)
-                  ),
+                  child: Text('View all ${_comments.length} comments', style: const TextStyle(color: Colors.grey, fontSize: 14)),
                 ),
                 
               const SizedBox(height: 4),
