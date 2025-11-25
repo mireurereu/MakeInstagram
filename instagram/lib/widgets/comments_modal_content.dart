@@ -29,6 +29,12 @@ class _CommentsModalContentState extends State<CommentsModalContent> {
   bool _showLikeHint = false;
   // 툴팁을 띄울 대상 댓글 (방금 내가 쓴 댓글)
   Comment? _hintTargetComment;
+  
+  // 대댓글 관련 상태
+  String? _replyingToUsername;
+  
+  // 이모지 리스트
+  final List<String> _emojis = ['❤️', '🙌', '🔥', '👏', '😢', '😍', '😮', '😂'];
 
   void _toggleCommentLike(Comment comment) {
     setState(() {
@@ -58,6 +64,8 @@ class _CommentsModalContentState extends State<CommentsModalContent> {
 
     setState(() {
       widget.onCommentPosted(text);
+      // 대댓글 상태 초기화
+      _replyingToUsername = null;
     });
 
     _commentController.clear();
@@ -72,6 +80,22 @@ class _CommentsModalContentState extends State<CommentsModalContent> {
           curve: Curves.easeOut,
         );
       }
+    });
+  }
+  
+  void _startReplyTo(String username) {
+    setState(() {
+      _replyingToUsername = username;
+      _commentController.text = '@$username ';
+    });
+    // 키보드 포커스
+    FocusScope.of(context).requestFocus(FocusNode());
+  }
+  
+  void _cancelReply() {
+    setState(() {
+      _replyingToUsername = null;
+      _commentController.clear();
     });
   }
 
@@ -96,19 +120,39 @@ class _CommentsModalContentState extends State<CommentsModalContent> {
             ),
           ),
           
-          // 타이틀
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12.0),
-            child: const Text(
-              'Comments',
-              style: TextStyle(
-                color: Colors.black, // [수정] 검은색 텍스트
-                fontWeight: FontWeight.bold,
-                fontSize: 16.0,
+          // 타이틀 (Comments - 중앙)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 12.0),
+            child: Center(
+              child: Text(
+                'Comments',
+                style: TextStyle(
+                  color: Colors.black,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16.0,
+                ),
               ),
             ),
           ),
           const Divider(height: 1, color: Color(0xFFDBDBDB)),
+          
+          // For you (선 밑)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+            child: Row(
+              children: [
+                Text(
+                  'For you',
+                  style: TextStyle(
+                    color: Colors.grey,
+                    fontSize: 14.0,
+                  ),
+                ),
+                SizedBox(width: 6),
+                Icon(Icons.keyboard_arrow_down, size: 16, color: Colors.grey),
+              ],
+            ),
+          ),
 
           // 댓글 리스트
           Expanded(
@@ -169,13 +213,30 @@ class _CommentsModalContentState extends State<CommentsModalContent> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // 첫 번째 줄: 유저네임 + 시간 + (Author)
+                // 첫 번째 줄: 유저네임 + 하트/프로필 (좋아요 누른 경우) + 시간 + (Author)
                 Row(
                   children: [
                     Text(
                       comment.username,
                       style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.black),
                     ),
+                    // 내가 좋아요 누른 댓글에 하트와 프로필 사진 표시
+                    if (comment.isLiked) ...[
+                      const SizedBox(width: 6),
+                      const Icon(Icons.favorite, size: 12, color: Colors.red),
+                      const SizedBox(width: 4),
+                      Container(
+                        width: 14,
+                        height: 14,
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
+                          image: DecorationImage(
+                            image: NetworkImage('https://picsum.photos/seed/junhyuk/100/100'),
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      ),
+                    ],
                     const SizedBox(width: 6),
                     const Text(
                       '1s', // 시간은 임시 고정 (모델에 timestamp 추가 시 연동 가능)
@@ -200,10 +261,38 @@ class _CommentsModalContentState extends State<CommentsModalContent> {
                 
                 const SizedBox(height: 8),
                 
-                // 세 번째 줄: Reply 버튼
-                const Text(
-                  'Reply',
-                  style: TextStyle(color: Colors.grey, fontSize: 12, fontWeight: FontWeight.w600),
+                // 세 번째 줄: Reply to 버튼 (프로필 사진 + 텍스트)
+                GestureDetector(
+                  onTap: () => _startReplyTo(comment.username),
+                  child: Row(
+                    children: [
+                      // 내 프로필 사진 작게
+                      Container(
+                        width: 16,
+                        height: 16,
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
+                          image: DecorationImage(
+                            image: NetworkImage('https://picsum.photos/seed/junhyuk/100/100'),
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      RichText(
+                        text: TextSpan(
+                          style: const TextStyle(color: Colors.grey, fontSize: 12, fontWeight: FontWeight.w600),
+                          children: [
+                            const TextSpan(text: 'Reply to '),
+                            TextSpan(
+                              text: comment.username,
+                              style: const TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -272,41 +361,104 @@ class _CommentsModalContentState extends State<CommentsModalContent> {
 
   Widget _buildCommentInputArea() {
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 32), // 하단 여백 (아이폰 홈바 고려)
       decoration: const BoxDecoration(
         border: Border(top: BorderSide(color: Color(0xFFDBDBDB), width: 0.5)),
         color: Colors.white,
       ),
-      child: Row(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          const CircleAvatar(
-            radius: 18,
-            // 내 프로필 이미지 (하드코딩 or Provider)
-            backgroundImage: NetworkImage('https://picsum.photos/seed/junhyuk/100/100'),
-          ),
-          const SizedBox(width: 12.0),
-          Expanded(
-            child: TextField(
-              controller: _commentController,
-              style: const TextStyle(color: Colors.black), // [수정] 입력 텍스트 검은색
-              decoration: const InputDecoration(
-                hintText: 'Add a comment...',
-                hintStyle: TextStyle(color: Colors.grey),
-                border: InputBorder.none,
-                isDense: true,
+          // Replying to 표시 (대댓글 모드일 때만)
+          if (_replyingToUsername != null)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              color: Colors.grey[100],
+              child: Row(
+                children: [
+                  Text(
+                    'Replying to $_replyingToUsername',
+                    style: const TextStyle(color: Colors.grey, fontSize: 13),
+                  ),
+                  const Spacer(),
+                  GestureDetector(
+                    onTap: _cancelReply,
+                    child: const Icon(Icons.close, size: 18, color: Colors.grey),
+                  ),
+                ],
               ),
-              onSubmitted: (_) => _postComment(),
+            ),
+          
+          // 이모지 바
+          Container(
+            height: 50,
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: _emojis.length,
+              itemBuilder: (context, index) {
+                return GestureDetector(
+                  onTap: () {
+                    // 이모지를 댓글로 바로 포스트
+                    setState(() {
+                      widget.onCommentPosted(_emojis[index]);
+                      _replyingToUsername = null;
+                    });
+                  },
+                  child: Container(
+                    width: 44,
+                    height: 44,
+                    margin: const EdgeInsets.symmetric(horizontal: 4),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey[300]!, width: 1),
+                      borderRadius: BorderRadius.circular(22),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      _emojis[index],
+                      style: const TextStyle(fontSize: 24),
+                    ),
+                  ),
+                );
+              },
             ),
           ),
-          TextButton(
-            onPressed: _postComment,
-            child: Text(
-              'Post',
-              style: TextStyle(
-                color: _instaBlue, // [수정] 파란색
-                fontWeight: FontWeight.bold,
-                fontSize: 15.0,
-              ),
+          
+          // 입력창
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+            child: Row(
+              children: [
+                const CircleAvatar(
+                  radius: 18,
+                  backgroundImage: NetworkImage('https://picsum.photos/seed/junhyuk/100/100'),
+                ),
+                const SizedBox(width: 12.0),
+                Expanded(
+                  child: TextField(
+                    controller: _commentController,
+                    style: const TextStyle(color: Colors.black),
+                    decoration: const InputDecoration(
+                      hintText: 'Add a comment...',
+                      hintStyle: TextStyle(color: Colors.grey),
+                      border: InputBorder.none,
+                      isDense: true,
+                    ),
+                    onSubmitted: (_) => _postComment(),
+                  ),
+                ),
+                TextButton(
+                  onPressed: _postComment,
+                  child: Text(
+                    'Post',
+                    style: TextStyle(
+                      color: _instaBlue,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15.0,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
