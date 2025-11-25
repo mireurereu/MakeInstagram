@@ -1,5 +1,6 @@
 // 댓글 하나를 정의하는 데이터 클래스
 class Comment {
+  final String id; // 고유 ID
   final String username;
   final String avatarUrl;
   final String text;
@@ -9,6 +10,7 @@ class Comment {
   final bool isPosting; // Posting... 상태 표시용
 
   Comment({
+    required this.id,
     required this.username,
     required this.avatarUrl,
     required this.text,

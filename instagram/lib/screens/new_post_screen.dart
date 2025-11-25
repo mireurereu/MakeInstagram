@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:instagram/screens/feed_screen.dart'; // 홈 피드 갱신용
 import 'package:instagram/screens/profile_screen.dart'; // 프로필 그리드 갱신용
 import 'package:instagram/screens/main_navigation_screen.dart'; // 탭 전환용
+import 'package:instagram/data/user_state.dart';
 
 class NewPostScreen extends StatefulWidget {
   final String? imagePath;
@@ -152,7 +153,7 @@ class _NewPostScreenState extends State<NewPostScreen> {
     final newPostData = {
       'id': DateTime.now().microsecondsSinceEpoch.toString(),
       'username': 'ta_junhyuk',
-      'userAvatarUrl': 'https://picsum.photos/seed/junhyuk/100/100',
+      'userAvatarUrl': UserState.getMyAvatarUrl(),
       'postImageUrls': [addedPath],
       'likeCount': '0',
       'caption': _captionController.text,

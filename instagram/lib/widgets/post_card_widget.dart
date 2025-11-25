@@ -91,7 +91,9 @@ class _PostCardWidgetState extends State<PostCardWidget> {
           postOwnerName: widget.username,
           onCommentPosted: (text, replyToUsername) {
             setState(() {
+              final commentId = 'comment_${DateTime.now().millisecondsSinceEpoch}';
               _comments.add(Comment(
+                id: commentId,
                 username: 'ta_junhyuk', // 내 아이디
                 avatarUrl: 'assets/images/profile3.jpg', // 내 프사 경로 확인 필요
                 text: text,
@@ -101,29 +103,72 @@ class _PostCardWidgetState extends State<PostCardWidget> {
               final keyId = widget.key is ValueKey ? (widget.key as ValueKey).value : null;
               if (keyId is String) widget.onCommentsChanged?.call(keyId, _comments);
 
-              // Add notification for every comment (including own posts)
-              final currentNotifs = NotificationsScreen.notificationsNotifier.value;
-              NotificationsScreen.notificationsNotifier.value = [
-                {
-                  'type': NotificationType.comment,
-                  'username': 'ta_junhyuk',
-                  'content': 'commented: $text',
-                  'time': 'Just now',
-                  'avatarUrl': 'https://picsum.photos/seed/junhyuk/100/100',
-                  'postUrl': widget.postImageUrls.isNotEmpty ? widget.postImageUrls.first : null,
-                  'showReplyButton': false,
-                },
-                ...currentNotifs,
-              ];
+              // 알림 조건:
+              // 1. 내 게시물에 댓글이 달린 경우 (게시물 주인이 나)
+              // 2. 누군가 내 댓글에 대댓글을 남긴 경우 (replyToUsername이 나)
+              final isMyPost = widget.username == UserState.myId;
+              final isReplyToMe = replyToUsername == UserState.myId;
               
-              // Set unread badge to true
-              NotificationsScreen.hasUnreadNotifications.value = true;
+              if (isMyPost || isReplyToMe) {
+                final currentNotifs = NotificationsScreen.notificationsNotifier.value;
+                final notifId = 'notif_${DateTime.now().millisecondsSinceEpoch}';
+                
+                String notifContent;
+                if (isReplyToMe) {
+                  notifContent = 'replied: $text';
+                } else {
+                  notifContent = 'commented: $text';
+                }
+                
+                NotificationsScreen.notificationsNotifier.value = [
+                  {
+                    'type': NotificationType.comment,
+                    'username': UserState.myId,
+                    'content': notifContent,
+                    'time': 'Just now',
+                    'avatarUrl': UserState.getMyAvatarUrl(),
+                    'postUrl': widget.postImageUrls.isNotEmpty ? widget.postImageUrls.first : null,
+                    'showReplyButton': false,
+                    'notificationId': notifId,
+                    'postId': widget.key is ValueKey ? (widget.key as ValueKey).value : null,
+                    'commentId': commentId,
+                  },
+                  ...currentNotifs,
+                ];
+                
+                // Set unread badge to true
+                NotificationsScreen.hasUnreadNotifications.value = true;
+              }
             });
           },
           onCommentLiked: (comment) {
             setState(() {
+              final wasLiked = comment.isLiked;
               comment.isLiked = !comment.isLiked;
               if (comment.isLiked) comment.likeCount++; else comment.likeCount--;
+              
+              // 내 댓글에 좋아요가 눌렸을 때 알림
+              if (!wasLiked && comment.isLiked && comment.username == UserState.myId) {
+                final currentNotifs = NotificationsScreen.notificationsNotifier.value;
+                final notifId = 'notif_comment_like_${DateTime.now().millisecondsSinceEpoch}';
+                NotificationsScreen.notificationsNotifier.value = [
+                  {
+                    'type': NotificationType.like,
+                    'username': UserState.myId,
+                    'content': 'liked your comment.',
+                    'time': 'Just now',
+                    'avatarUrl': UserState.getMyAvatarUrl(),
+                    'postUrl': widget.postImageUrls.isNotEmpty ? widget.postImageUrls.first : null,
+                    'showReplyButton': false,
+                    'notificationId': notifId,
+                    'postId': widget.key is ValueKey ? (widget.key as ValueKey).value : null,
+                    'commentId': comment.id,
+                  },
+                  ...currentNotifs,
+                ];
+                NotificationsScreen.hasUnreadNotifications.value = true;
+              }
+              
               final keyId = widget.key is ValueKey ? (widget.key as ValueKey).value : null;
               if (keyId is String) widget.onCommentsChanged?.call(keyId, _comments);
             });
@@ -149,10 +194,33 @@ class _PostCardWidgetState extends State<PostCardWidget> {
   }
 
   void _toggleLike() {
+    final wasLiked = _isLiked;
     setState(() {
       _isLiked = !_isLiked;
       if (_isLiked) _currentLikeCount++; else _currentLikeCount--;
     });
+    
+    // 내 게시물에 좋아요가 눌렸을 때 알림
+    if (!wasLiked && _isLiked && widget.username == UserState.myId) {
+      final currentNotifs = NotificationsScreen.notificationsNotifier.value;
+      final notifId = 'notif_like_${DateTime.now().millisecondsSinceEpoch}';
+      NotificationsScreen.notificationsNotifier.value = [
+        {
+          'type': NotificationType.like,
+          'username': UserState.myId,
+          'content': 'liked your photo.',
+          'time': 'Just now',
+          'avatarUrl': UserState.getMyAvatarUrl(),
+          'postUrl': widget.postImageUrls.isNotEmpty ? widget.postImageUrls.first : null,
+          'showReplyButton': false,
+          'notificationId': notifId,
+          'postId': widget.key is ValueKey ? (widget.key as ValueKey).value : null,
+        },
+        ...currentNotifs,
+      ];
+      NotificationsScreen.hasUnreadNotifications.value = true;
+    }
+    
     // propagate change upstream if caller provided a handler and this widget has a ValueKey id
     final keyId = widget.key is ValueKey ? (widget.key as ValueKey).value : null;
     if (keyId is String) widget.onLikeChanged?.call(keyId, _currentLikeCount, _isLiked);

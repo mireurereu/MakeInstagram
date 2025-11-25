@@ -6,6 +6,7 @@ import 'package:instagram/widgets/post_card_widget.dart';
 import 'package:instagram/screens/_posted_banner.dart';
 import 'package:instagram/widgets/suggested_reels_widget.dart';
 import 'package:instagram/widgets/comment_model.dart';
+import 'package:instagram/data/user_state.dart';
 
 class FeedScreen extends StatelessWidget {
   const FeedScreen({super.key});
@@ -189,11 +190,21 @@ class FeedScreen extends StatelessWidget {
 
   // transient posted banner notifier: {'image': path, 'message': text}
   static final ValueNotifier<Map<String, String?>?> postedBannerNotifier = ValueNotifier(null);
+  
+  ImageProvider _getStoryImageProvider(String imagePath) {
+    if (imagePath.startsWith('http')) {
+      return NetworkImage(imagePath);
+    } else if (imagePath.startsWith('assets/')) {
+      return AssetImage(imagePath);
+    } else {
+      return NetworkImage(imagePath); // fallback
+    }
+  }
   // [신규] 스토리 바 위젯
   Widget _buildStoryBar() {
     // 스토리 데이터 (영상 00:11 상단 참조)
     final stories = [
-      {'name': 'Your story', 'img': 'https://picsum.photos/seed/junhyuk/100/100', 'isMe': true},
+      {'name': 'Your story', 'img': UserState.getMyAvatarUrl(), 'isMe': true},
       {'name': 'newjeans', 'img': 'https://picsum.photos/seed/newjeans/100/100', 'isMe': false},
       {'name': 'katarinabluu', 'img': 'https://picsum.photos/seed/katarina/100/100', 'isMe': false},
       {'name': 'aespa_official', 'img': 'https://picsum.photos/seed/aespa/100/100', 'isMe': false},
@@ -240,7 +251,7 @@ class FeedScreen extends StatelessWidget {
                     ),
                     child: CircleAvatar(
                       radius: 28,
-                      backgroundImage: NetworkImage(story['img'] as String),
+                      backgroundImage: _getStoryImageProvider(story['img'] as String),
                     ),
                   ),
                 ),

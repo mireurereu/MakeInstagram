@@ -70,7 +70,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
     setState(() {
       _name = 'puang';
       _bio = "I'm gonna be the God of Flutter!";
-      _avatarUrl = 'https://picsum.photos/seed/junhyuk/200/200';
+      _avatarUrl = UserState.getMyAvatarUrl();
       _followerCount = '3';
     });
   }
@@ -108,6 +108,16 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
   void dispose() {
     _tabController.dispose();
     super.dispose();
+  }
+  
+  ImageProvider _getAvatarImageProvider(String url) {
+    if (url.startsWith('http')) {
+      return NetworkImage(url);
+    } else if (url.startsWith('assets/')) {
+      return AssetImage(url);
+    } else {
+      return FileImage(File(url));
+    }
   }
 
   void _navigateToEditProfile() async {
@@ -269,9 +279,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
             children: [
               CircleAvatar(
                 radius: 44,
-                backgroundImage: _avatarUrl.startsWith('http')
-                    ? NetworkImage(_avatarUrl) as ImageProvider
-                    : FileImage(File(_avatarUrl)),
+                backgroundImage: _getAvatarImageProvider(_avatarUrl),
               ),
               Expanded(
                 child: Row(

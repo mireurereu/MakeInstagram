@@ -8,6 +8,7 @@ class CommentsModalContent extends StatefulWidget {
   final String postOwnerName;
   final Function(String text, String? replyToUsername) onCommentPosted;
   final Function(Comment) onCommentLiked;
+  final String? highlightedCommentId;
 
   const CommentsModalContent({
     super.key,
@@ -15,6 +16,7 @@ class CommentsModalContent extends StatefulWidget {
     required this.postOwnerName,
     required this.onCommentPosted,
     required this.onCommentLiked,
+    this.highlightedCommentId,
   });
 
   @override
@@ -29,14 +31,29 @@ class _CommentsModalContentState extends State<CommentsModalContent> {
   final Color _instaBlue = const Color(0xFF3797EF);
 
   bool _showLikeHint = false;
-  // 툴팁을 띄울 대상 댓글 (방금 내가 쓴 댓글)
+  // 툴팁을 띈울 대상 댓글 (방금 내가 쓴 댓글)
   Comment? _hintTargetComment;
   
   // 대댓글 관련 상태
   String? _replyingToUsername;
   
+  // 하이라이트된 댓글 ID (ValueNotifier로 관리)
+  late final ValueNotifier<String?> _highlightedCommentIdNotifier;
+  
   // 이모지 리스트
   final List<String> _emojis = ['❤️', '🙌', '🔥', '👏', '😢', '😍', '😮', '😂'];
+  
+  @override
+  void initState() {
+    super.initState();
+    _highlightedCommentIdNotifier = ValueNotifier<String?>(widget.highlightedCommentId);
+  }
+  
+  @override
+  void dispose() {
+    _highlightedCommentIdNotifier.dispose();
+    super.dispose();
+  }
 
   void _toggleCommentLike(Comment comment) {
     setState(() {
@@ -66,6 +83,7 @@ class _CommentsModalContentState extends State<CommentsModalContent> {
 
     // 1단계: Posting... 상태로 임시 댓글 추가
     final tempComment = Comment(
+      id: 'temp_${DateTime.now().millisecondsSinceEpoch}',
       username: 'ta_junhyuk',
       avatarUrl: UserState.getMyAvatarUrl(),
       text: text,
@@ -248,7 +266,19 @@ class _CommentsModalContentState extends State<CommentsModalContent> {
     // 이 댓글에 대한 대댓글이 있는지 확인 (Posting 상태가 아닌 것만)
     bool hasReplies = widget.comments.any((c) => c.replyToUsername == comment.username && !c.isPosting);
 
-    return Padding(
+    return ValueListenableBuilder<String?>(
+      valueListenable: _highlightedCommentIdNotifier,
+      builder: (ctx, highlightedId, _) {
+        final bool isHighlighted = highlightedId == comment.id;
+        
+        return GestureDetector(
+          onTap: () {
+            // 어느 댓글이라도 클릭하면 하이라이트 해제
+            _highlightedCommentIdNotifier.value = null;
+          },
+          child: Container(
+            color: isHighlighted ? const Color(0xFFE3F2FD) : Colors.transparent,
+            child: Padding(
       padding: EdgeInsets.only(
         left: isReply ? 52.0 : 16.0, // 대댓글은 들여쓰기
         right: 16.0,
@@ -437,8 +467,13 @@ class _CommentsModalContentState extends State<CommentsModalContent> {
             ),
         ],
       ),
+            ),
+          ),
+        );
+      },
     );
   }
+  
   ImageProvider _resolveImageProvider(String url) {
     if (url.startsWith('http://') || url.startsWith('https://')) return NetworkImage(url);
     final idx = url.indexOf('assets/');
