@@ -89,12 +89,13 @@ class _PostCardWidgetState extends State<PostCardWidget> {
         return CommentsModalContent(
           comments: _comments,
           postOwnerName: widget.username,
-          onCommentPosted: (text) {
+          onCommentPosted: (text, replyToUsername) {
             setState(() {
               _comments.add(Comment(
                 username: 'ta_junhyuk', // 내 아이디
                 avatarUrl: 'assets/images/profile3.jpg', // 내 프사 경로 확인 필요
                 text: text,
+                replyToUsername: replyToUsername,
               ));
               // propagate comment changes upstream if handler provided
               final keyId = widget.key is ValueKey ? (widget.key as ValueKey).value : null;

@@ -4,7 +4,7 @@ import 'package:instagram/widgets/comment_model.dart'; // 모델 경로 확인 �
 class CommentsModalContent extends StatefulWidget {
   final List<Comment> comments;
   final String postOwnerName;
-  final Function(String) onCommentPosted;
+  final Function(String text, String? replyToUsername) onCommentPosted;
   final Function(Comment) onCommentLiked;
 
   const CommentsModalContent({
@@ -58,19 +58,25 @@ class _CommentsModalContentState extends State<CommentsModalContent> {
     });
   }
 
-  void _postComment() {
+  void _postComment() async {
     final String text = _commentController.text;
     if (text.isEmpty) return;
 
+    // 1단계: Posting... 상태로 임시 댓글 추가
+    final tempComment = Comment(
+      username: 'ta_junhyuk',
+      avatarUrl: 'https://picsum.photos/seed/junhyuk/100/100',
+      text: text,
+      replyToUsername: _replyingToUsername,
+      isPosting: true, // Posting 상태
+    );
+    
     setState(() {
-      widget.onCommentPosted(text);
-      // 대댓글 상태 초기화
-      _replyingToUsername = null;
+      widget.comments.add(tempComment);
     });
 
     _commentController.clear();
-    FocusManager.instance.primaryFocus?.unfocus();
-
+    
     // 스크롤을 맨 아래로 이동
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollController.hasClients) {
@@ -81,6 +87,35 @@ class _CommentsModalContentState extends State<CommentsModalContent> {
         );
       }
     });
+
+    // 2단계: 2초 대기 후 실제 등록
+    await Future.delayed(const Duration(seconds: 2));
+    
+    if (mounted) {
+      setState(() {
+        // 임시 댓글 제거
+        widget.comments.remove(tempComment);
+        
+        // 실제 댓글 추가 (대댓글 정보 포함)
+        widget.onCommentPosted(text, _replyingToUsername);
+        
+        // 3단계: 대댓글 상태 초기화
+        _replyingToUsername = null;
+      });
+      
+      FocusManager.instance.primaryFocus?.unfocus();
+      
+      // 다시 스크롤
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_scrollController.hasClients) {
+          _scrollController.animateTo(
+            _scrollController.position.maxScrollExtent,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOut,
+          );
+        }
+      });
+    }
   }
   
   void _startReplyTo(String username) {
@@ -195,15 +230,24 @@ class _CommentsModalContentState extends State<CommentsModalContent> {
 
   Widget _buildCommentRow(Comment comment) {
     bool isAuthor = comment.username == widget.postOwnerName; // 작성자 확인
+    bool isReply = comment.replyToUsername != null; // 대댓글 여부
+    
+    // 이 댓글에 대한 대댓글이 있는지 확인 (Posting 상태가 아닌 것만)
+    bool hasReplies = widget.comments.any((c) => c.replyToUsername == comment.username && !c.isPosting);
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
+      padding: EdgeInsets.only(
+        left: isReply ? 52.0 : 16.0, // 대댓글은 들여쓰기
+        right: 16.0,
+        top: 12.0,
+        bottom: 12.0,
+      ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 1. 아바타
+          // 1. 아바타 (대댓글은 더 작게)
           CircleAvatar(
-            radius: 18,
+            radius: isReply ? 14 : 18,
             backgroundImage: _resolveImageProvider(comment.avatarUrl),
           ),
           const SizedBox(width: 12.0),
@@ -259,80 +303,125 @@ class _CommentsModalContentState extends State<CommentsModalContent> {
                   style: const TextStyle(color: Colors.black, fontSize: 14),
                 ),
                 
-                const SizedBox(height: 8),
-                
-                // 세 번째 줄: Reply to 버튼 (프로필 사진 + 텍스트)
-                GestureDetector(
-                  onTap: () => _startReplyTo(comment.username),
-                  child: Row(
+                // Posting 상태일 때 "Posting..." 표시
+                if (comment.isPosting) ...[
+                  const SizedBox(height: 4),
+                  const Text(
+                    'Posting...',
+                    style: TextStyle(color: Colors.grey, fontSize: 12, fontStyle: FontStyle.italic),
+                  ),
+                ] else ...[
+                  // Reply/Hide 버튼들
+                  const SizedBox(height: 8),
+                  
+                  Row(
                     children: [
-                      // 내 프로필 사진 작게
-                      Container(
-                        width: 16,
-                        height: 16,
-                        decoration: const BoxDecoration(
-                          shape: BoxShape.circle,
-                          image: DecorationImage(
-                            image: NetworkImage('https://picsum.photos/seed/junhyuk/100/100'),
-                            fit: BoxFit.cover,
-                          ),
+                      // Reply 버튼
+                      GestureDetector(
+                        onTap: () => _startReplyTo(comment.username),
+                        child: const Text(
+                          'Reply',
+                          style: TextStyle(color: Colors.grey, fontSize: 12, fontWeight: FontWeight.w600),
                         ),
                       ),
-                      const SizedBox(width: 6),
-                      RichText(
-                        text: TextSpan(
-                          style: const TextStyle(color: Colors.grey, fontSize: 12, fontWeight: FontWeight.w600),
-                          children: [
-                            const TextSpan(text: 'Reply to '),
-                            TextSpan(
-                              text: comment.username,
-                              style: const TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                          ],
+                      
+                      // 모든 댓글에 하트를 눌렀을 때 "Reply with a reel" 표시
+                      if (comment.isLiked) ...[
+                        const SizedBox(width: 12),
+                        const Text(
+                          'Reply with a reel',
+                          style: TextStyle(color: Colors.grey, fontSize: 12, fontWeight: FontWeight.w600),
                         ),
-                      ),
+                      ],
+                      
+                      // 다른 사람의 댓글이면 Hide 버튼 표시
+                      if (comment.username != 'ta_junhyuk') ...[
+                        const SizedBox(width: 12),
+                        const Text(
+                          'Hide',
+                          style: TextStyle(color: Colors.grey, fontSize: 12, fontWeight: FontWeight.w600),
+                        ),
+                      ],
                     ],
                   ),
-                ),
+                  
+                  // 대댓글이 아니고, 대댓글이 달리지 않은 일반 댓글에만 "Reply to username" 표시
+                  if (comment.replyToUsername == null && !hasReplies) ...[
+                    const SizedBox(height: 8),
+                    GestureDetector(
+                      onTap: () => _startReplyTo(comment.username),
+                      child: Row(
+                        children: [
+                          // 내 프로필 사진 작게
+                          Container(
+                            width: 16,
+                            height: 16,
+                            decoration: const BoxDecoration(
+                              shape: BoxShape.circle,
+                              image: DecorationImage(
+                                image: NetworkImage('https://picsum.photos/seed/junhyuk/100/100'),
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          RichText(
+                            text: TextSpan(
+                              style: const TextStyle(color: Colors.grey, fontSize: 12, fontWeight: FontWeight.w600),
+                              children: [
+                                const TextSpan(text: 'Reply to '),
+                                TextSpan(
+                                  text: comment.username,
+                                  style: const TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ],
               ],
             ),
           ),
 
-          // 3. 좋아요 하트 + 숫자 (수직 배치)
-          Stack(
-            alignment: Alignment.center, // 툴팁 위치 잡기 위함
-            clipBehavior: Clip.none,
-            children: [
-              Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  GestureDetector(
-                    onTap: () => _toggleCommentLike(comment),
-                    child: Icon(
-                      comment.isLiked ? Icons.favorite : Icons.favorite_border,
-                      size: 18.0, // 아이콘 크기 조정
-                      color: comment.isLiked ? Colors.red : Colors.grey,
+          // 3. 좋아요 하트 + 숫자 (수직 배치) - Posting 상태가 아닐 때만 표시
+          if (!comment.isPosting)
+            Stack(
+              alignment: Alignment.center, // 툴팁 위치 잡기 위함
+              clipBehavior: Clip.none,
+              children: [
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    GestureDetector(
+                      onTap: () => _toggleCommentLike(comment),
+                      child: Icon(
+                        comment.isLiked ? Icons.favorite : Icons.favorite_border,
+                        size: 18.0, // 아이콘 크기 조정
+                        color: comment.isLiked ? Colors.red : Colors.grey,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  // [수정] 좋아요 숫자: 하트 밑에 표시 (0이면 숨김)
-                  if (comment.likeCount > 0)
-                    Text(
-                      '${comment.likeCount}',
-                      style: const TextStyle(fontSize: 12, color: Colors.grey),
-                    ),
-                ],
-              ),
-              
-              // [신규] 툴팁 표시 (조건부 렌더링)
-              if (_showLikeHint && _hintTargetComment == comment)
-                Positioned(
-                  right: 24, // 하트 왼쪽으로 배치
-                  top: -10,
-                  child: _buildLikeTooltip(),
+                    const SizedBox(height: 4),
+                    // [수정] 좋아요 숫자: 하트 밑에 표시 (0이면 숨김)
+                    if (comment.likeCount > 0)
+                      Text(
+                        '${comment.likeCount}',
+                        style: const TextStyle(fontSize: 12, color: Colors.grey),
+                      ),
+                  ],
                 ),
-            ],
-          ),
+                
+                // [신규] 툴팁 표시 (조건부 렌더링)
+                if (_showLikeHint && _hintTargetComment == comment)
+                  Positioned(
+                    right: 24, // 하트 왼쪽으로 배치
+                    top: -10,
+                    child: _buildLikeTooltip(),
+                  ),
+              ],
+            ),
         ],
       ),
     );
@@ -392,35 +481,24 @@ class _CommentsModalContentState extends State<CommentsModalContent> {
           // 이모지 바
           Container(
             height: 50,
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: _emojis.length,
-              itemBuilder: (context, index) {
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: _emojis.map((emoji) {
                 return GestureDetector(
                   onTap: () {
                     // 이모지를 댓글로 바로 포스트
                     setState(() {
-                      widget.onCommentPosted(_emojis[index]);
+                      widget.onCommentPosted(emoji, null);
                       _replyingToUsername = null;
                     });
                   },
-                  child: Container(
-                    width: 44,
-                    height: 44,
-                    margin: const EdgeInsets.symmetric(horizontal: 4),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey[300]!, width: 1),
-                      borderRadius: BorderRadius.circular(22),
-                    ),
-                    alignment: Alignment.center,
-                    child: Text(
-                      _emojis[index],
-                      style: const TextStyle(fontSize: 24),
-                    ),
+                  child: Text(
+                    emoji,
+                    style: const TextStyle(fontSize: 28),
                   ),
                 );
-              },
+              }).toList(),
             ),
           ),
           
@@ -445,19 +523,36 @@ class _CommentsModalContentState extends State<CommentsModalContent> {
                       isDense: true,
                     ),
                     onSubmitted: (_) => _postComment(),
+                    onChanged: (_) => setState(() {}), // 텍스트 변경 감지
                   ),
                 ),
-                TextButton(
-                  onPressed: _postComment,
-                  child: Text(
-                    'Post',
-                    style: TextStyle(
-                      color: _instaBlue,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 15.0,
+                // 텍스트가 있으면 Post 버튼, 없으면 Stickers 아이콘
+                if (_commentController.text.isNotEmpty)
+                  GestureDetector(
+                    onTap: _postComment,
+                    child: Container(
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
+                        color: _instaBlue,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.arrow_upward,
+                        color: Colors.white,
+                        size: 18,
+                      ),
+                    ),
+                  )
+                else
+                  IconButton(
+                    onPressed: () {},
+                    icon: const Icon(
+                      Icons.insert_emoticon_outlined,
+                      color: Colors.black,
+                      size: 24,
                     ),
                   ),
-                ),
               ],
             ),
           ),
