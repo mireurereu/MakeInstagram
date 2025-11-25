@@ -4,15 +4,18 @@ class UserState {
   // 현재 로그인한 사용자 ID
   static const String myId = 'ta_junhyuk';
   
-  // [데이터] 내 프로필 사진 URL
-  static String _myAvatarUrl = 'assets/images/profile3.jpg';
+  // [데이터] 내 프로필 사진 URL - ValueNotifier로 변경하여 실시간 업데이트
+  static final ValueNotifier<String> _myAvatarUrlNotifier = ValueNotifier('assets/images/profile3.jpg');
+  
+  // 내 프로필 사진 Notifier 가져오기 (리스닝용)
+  static ValueNotifier<String> get myAvatarUrlNotifier => _myAvatarUrlNotifier;
   
   // 내 프로필 사진 가져오기
-  static String getMyAvatarUrl() => _myAvatarUrl;
+  static String getMyAvatarUrl() => _myAvatarUrlNotifier.value;
   
-  // 내 프로필 사진 업데이트
+  // 내 프로필 사진 업데이트 - 모든 리스너에게 즉시 알림
   static void updateMyAvatarUrl(String newUrl) {
-    _myAvatarUrl = newUrl;
+    _myAvatarUrlNotifier.value = newUrl;
   }
 
   // [데이터] 내가 팔로우한 사람 목록 (Set으로 중복 방지)

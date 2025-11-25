@@ -1,11 +1,90 @@
 import 'package:flutter/material.dart';
-import 'package:instagram/screens/chat_room_screen.dart'; // 채팅방 화면 import 필요
+import 'package:instagram/screens/chat_room_screen.dart';
+import 'package:instagram/data/user_state.dart';
 
-class DmListScreen extends StatelessWidget {
+class ChatPreview {
+  final String username;
+  final String avatarUrl;
+  String lastMessage;
+  DateTime lastMessageTime;
+
+  ChatPreview({
+    required this.username,
+    required this.avatarUrl,
+    required this.lastMessage,
+    required this.lastMessageTime,
+  });
+}
+
+class DmListScreen extends StatefulWidget {
   const DmListScreen({super.key});
+
+  @override
+  State<DmListScreen> createState() => _DmListScreenState();
+}
+
+class _DmListScreenState extends State<DmListScreen> {
+  // 대화 목록 저장
+  final List<ChatPreview> _chats = [
+    ChatPreview(
+      username: '최준혁',
+      avatarUrl: 'https://picsum.photos/seed/junhyuk/100/100',
+      lastMessage: 'Sent 3m ago',
+      lastMessageTime: DateTime.now().subtract(const Duration(minutes: 3)),
+    ),
+    ChatPreview(
+      username: '신해빈',
+      avatarUrl: 'https://picsum.photos/seed/haebin/100/100',
+      lastMessage: 'Seen',
+      lastMessageTime: DateTime.now().subtract(const Duration(hours: 1)),
+    ),
+  ];
 
   // [수정] 인스타 블루 색상 정의
   final Color _instaBlue = const Color(0xFF3797EF);
+
+  // 채팅방에서 돌아올 때 마지막 메시지 업데이트
+  void _updateChatPreview(String username, String lastMessage) {
+    setState(() {
+      final index = _chats.indexWhere((chat) => chat.username == username);
+      if (index != -1) {
+        _chats[index].lastMessage = lastMessage;
+        _chats[index].lastMessageTime = DateTime.now();
+        
+        // 최근 대화를 맨 위로 이동
+        final chat = _chats.removeAt(index);
+        _chats.insert(0, chat);
+      }
+    });
+  }
+
+  String _getTimeAgo(DateTime time) {
+    final now = DateTime.now();
+    final difference = now.difference(time);
+    
+    if (difference.inMinutes < 1) {
+      return 'Just now';
+    } else if (difference.inMinutes < 60) {
+      return '${difference.inMinutes}m';
+    } else if (difference.inHours < 24) {
+      return '${difference.inHours}h';
+    } else if (difference.inDays < 7) {
+      return '${difference.inDays}d';
+    } else {
+      return '${(difference.inDays / 7).floor()}w';
+    }
+  }
+
+  // 이미지 프로바이더 헬퍼 함수
+  ImageProvider _getImageProvider(String url) {
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return NetworkImage(url);
+    } else if (url.startsWith('assets/')) {
+      return AssetImage(url);
+    } else {
+      return AssetImage(url);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -66,18 +145,12 @@ class DmListScreen extends StatelessWidget {
           _buildMessageRequestsRow(),
 
           // 4. 대화 목록
-          _buildChatItem(
-            context: context,
-            username: '최준혁',
-            status: 'Sent 3m ago',
-            avatarUrl: 'https://picsum.photos/seed/junhyuk/100/100',
-          ),
-          _buildChatItem(
-            context: context,
-            username: '신해빈',
-            status: 'Seen',
-            avatarUrl: 'https://picsum.photos/seed/haebin/100/100',
-          ),
+          ..._chats.map((chat) => _buildChatItem(
+                context: context,
+                username: chat.username,
+                status: chat.lastMessage,
+                avatarUrl: chat.avatarUrl,
+              )),
 
           // 5. 친구 찾기 섹션
           _buildFindFriendsSection(),
@@ -110,17 +183,20 @@ class DmListScreen extends StatelessWidget {
   }
 
   Widget _buildYourNote() {
-    return Padding(
-      padding: const EdgeInsets.only(right: 16.0), // 아이템 간격
-      child: Column(
-        children: [
-          Stack(
-            clipBehavior: Clip.none,
+    return ValueListenableBuilder<String>(
+      valueListenable: UserState.myAvatarUrlNotifier,
+      builder: (context, myAvatarUrl, child) {
+        return Padding(
+          padding: const EdgeInsets.only(right: 16.0), // 아이템 간격
+          child: Column(
             children: [
-              const CircleAvatar(
-                radius: 36, // 크기 키움
-                backgroundImage: NetworkImage('https://picsum.photos/seed/junhyuk/100/100'),
-              ),
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  CircleAvatar(
+                    radius: 36, // 크기 키움
+                    backgroundImage: _getImageProvider(myAvatarUrl),
+                  ),
               // 말풍선
               Positioned(
                 top: -10,
@@ -171,6 +247,8 @@ class DmListScreen extends StatelessWidget {
           ),
         ],
       ),
+        );
+      },
     );
   }
 
@@ -222,13 +300,18 @@ class DmListScreen extends StatelessWidget {
         style: const TextStyle(color: Colors.grey),
       ),
       trailing: const Icon(Icons.camera_alt_outlined, color: Colors.grey, size: 28),
-      onTap: () {
-        Navigator.push(
+      onTap: () async {
+        final result = await Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => ChatRoomScreen(username: username),
           ),
         );
+        
+        // 채팅방에서 돌아올 때 마지막 메시지 업데이트
+        if (result != null && result is String) {
+          _updateChatPreview(username, result);
+        }
       },
     );
   }

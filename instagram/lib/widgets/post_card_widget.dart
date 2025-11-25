@@ -17,6 +17,7 @@ class PostCardWidget extends StatefulWidget {
   final String timestamp;
   final bool isVideo;
   final bool isSponsored;
+  final bool isVerified; // 인증 배지
   // [추가] 초기 댓글 리스트를 받을 수 있게 변경
   final List<Comment>? initialComments;
   // Callbacks to persist changes upstream
@@ -35,6 +36,7 @@ class PostCardWidget extends StatefulWidget {
     required this.timestamp,
     this.isVideo = false,
     this.isSponsored = false,
+    this.isVerified = false,
     // [추가] 생성자에서 받음 (기본값 null)
     this.initialComments,
     this.onLikeChanged,
@@ -95,7 +97,7 @@ class _PostCardWidgetState extends State<PostCardWidget> {
               _comments.add(Comment(
                 id: commentId,
                 username: 'ta_junhyuk', // 내 아이디
-                avatarUrl: 'assets/images/profile3.jpg', // 내 프사 경로 확인 필요
+                avatarUrl: UserState.getMyAvatarUrl(), // UserState에서 프로필 사진 가져오기
                 text: text,
                 replyToUsername: replyToUsername,
               ));
@@ -265,18 +267,31 @@ class _PostCardWidgetState extends State<PostCardWidget> {
                   children: [
                     GestureDetector(
                       onTap: _navigateToProfile,
-                      child: Text(
-                        widget.username,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
-                          color: Colors.black,
-                        ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            widget.username,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                              color: Colors.black,
+                            ),
+                          ),
+                          if (widget.isVerified) ...const [
+                            SizedBox(width: 4),
+                            Icon(
+                              Icons.verified,
+                              color: Color(0xFF3897F0),
+                              size: 14,
+                            ),
+                          ],
+                        ],
                       ),
                     ),
                     // If this is seed3 user and current user isn't following them,
                     // show "Suggested for you" under the username.
-                    if (widget.username == 'beom_jun__k' && !_isFollowing)
+                    if ((widget.username == 'beom_jun__k' || widget.username == 'akmu_suhyun') && !_isFollowing)
                       const Text('Suggested for you', style: TextStyle(fontSize: 12, color: Colors.grey)),
                     if (widget.isSponsored)
                       const Text('Sponsored', style: TextStyle(fontSize: 11, color: Colors.black)),

@@ -21,7 +21,8 @@ class FeedScreen extends StatelessWidget {
       'likeCount': '918,471',
       'caption': 'Ouch!',
       'timestamp': 'September 19',
-      'isVideo': true
+      'isVideo': true,
+      'isVerified': true,
     },
     {
       'id': 'seed2',
@@ -52,6 +53,17 @@ class FeedScreen extends StatelessWidget {
       'caption': '두번재 순례길\n햇빛도 그늘도 바람도 오르막도 내리막도 친구들도 \n전부 다 사랑해 정말로!!',
       'timestamp': '17 hours ago',
       'isVideo': false
+    },
+    {
+      'id': 'seed_akmu',
+      'username': 'akmu_suhyun',
+      'userAvatarUrl': 'https://picsum.photos/seed/akmu/100/100',
+      'postImageUrls': ['https://picsum.photos/seed/akmu1/600/600'],
+      'likeCount': '245,821',
+      'caption': '🎵✨',
+      'timestamp': '2 days ago',
+      'isVideo': false,
+      'isVerified': true,
     },
     
     {
@@ -160,6 +172,7 @@ class FeedScreen extends StatelessWidget {
                 caption: post['caption'],
                 timestamp: post['timestamp'],
                 isVideo: post['isVideo'] ?? false,
+                isVerified: post['isVerified'] ?? false,
                 initialComments: post['comments'] != null ? List<Comment>.from(post['comments']) : null,
                 onLikeChanged: (postId, likeCount, isLiked) {
                   final current = feedNotifier.value;
@@ -202,70 +215,81 @@ class FeedScreen extends StatelessWidget {
   }
   // [신규] 스토리 바 위젯
   Widget _buildStoryBar() {
-    // 스토리 데이터 (영상 00:11 상단 참조)
-    final stories = [
-      {'name': 'Your story', 'img': UserState.getMyAvatarUrl(), 'isMe': true},
-      {'name': 'newjeans', 'img': 'https://picsum.photos/seed/newjeans/100/100', 'isMe': false},
-      {'name': 'katarinabluu', 'img': 'https://picsum.photos/seed/katarina/100/100', 'isMe': false},
-      {'name': 'aespa_official', 'img': 'https://picsum.photos/seed/aespa/100/100', 'isMe': false},
-      {'name': 'winter', 'img': 'https://picsum.photos/seed/winter/100/100', 'isMe': false},
-    ];
+    return ValueListenableBuilder<String>(
+      valueListenable: UserState.myAvatarUrlNotifier,
+      builder: (context, myAvatarUrl, child) {
+        // 스토리 데이터 (영상 00:11 상단 참조)
+        final stories = [
+          {'name': 'Your story', 'img': myAvatarUrl, 'isMe': true},
+          {'name': 'newjeans', 'img': 'https://picsum.photos/seed/newjeans/100/100', 'isMe': false},
+          {'name': 'katarinabluu', 'img': 'https://picsum.photos/seed/katarina/100/100', 'isMe': false},
+          {'name': 'aespa_official', 'img': 'https://picsum.photos/seed/aespa/100/100', 'isMe': false},
+          {'name': 'winter', 'img': 'https://picsum.photos/seed/winter/100/100', 'isMe': false},
+        ];
 
-    return SizedBox(
-      height: 128, // 스토리 bar height increased to avoid overflow on small devices
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal, // 가로 스크롤
-        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
-        itemCount: stories.length,
-        itemBuilder: (context, index) {
-          final story = stories[index];
-          final bool isMe = story['isMe'] == true;
+        return SizedBox(
+          height: 140, // 스토리 bar height
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal, // 가로 스크롤
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+            itemCount: stories.length,
+            itemBuilder: (context, index) {
+              final story = stories[index];
+              final bool isMe = story['isMe'] == true;
 
-          return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8.0),
-            child: Column(
-              children: [
-                // 그라데이션 링 + 프로필 사진
-                Container(
-                  padding: const EdgeInsets.all(3.0), // 링 두께
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    // 내 스토리는 링 없음 (또는 회색), 팔로잉은 무지개 링
-                    gradient: isMe
-                        ? null
-                        : const LinearGradient(
-                            colors: [
-                              Color(0xFFFBAA47), // 노랑
-                              Color(0xFFD91A46), // 빨강
-                              Color(0xFFA60F93), // 보라
-                            ],
-                            begin: Alignment.bottomLeft,
-                            end: Alignment.topRight,
-                          ),
-                  ),
-                  child: Container(
-                    padding: const EdgeInsets.all(2.0), // 사진과 링 사이 흰색 테두리
-                    decoration: const BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.white,
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 6.0),
+                child: Column(
+                  children: [
+                    // 그라데이션 링 + 프로필 사진
+                    Container(
+                      padding: const EdgeInsets.all(3.5), // 링 두께
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        // 내 스토리는 링 없음 (또는 회색), 팔로잉은 무지개 링
+                        gradient: isMe
+                            ? null
+                            : const LinearGradient(
+                                colors: [
+                                  Color(0xFFFBAA47), // 노랑
+                                  Color(0xFFD91A46), // 빨강
+                                  Color(0xFFA60F93), // 보라
+                                ],
+                                begin: Alignment.bottomLeft,
+                                end: Alignment.topRight,
+                              ),
+                      ),
+                      child: Container(
+                        padding: const EdgeInsets.all(2.5), // 사진과 링 사이 흰색 테두리
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white,
+                        ),
+                        child: CircleAvatar(
+                          radius: 34,
+                          backgroundImage: _getStoryImageProvider(story['img'] as String),
+                        ),
+                      ),
                     ),
-                    child: CircleAvatar(
-                      radius: 28,
-                      backgroundImage: _getStoryImageProvider(story['img'] as String),
+                    const SizedBox(height: 6.0),
+                    // 이름
+                    SizedBox(
+                      width: 76,
+                      child: Text(
+                        story['name'] as String,
+                        style: const TextStyle(fontSize: 12.0, color: Colors.black),
+                        textAlign: TextAlign.center,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
-                  ),
+                  ],
                 ),
-                const SizedBox(height: 4.0),
-                // 이름
-                Text(
-                  story['name'] as String,
-                  style: const TextStyle(fontSize: 12.0, color: Colors.black),
-                ),
-              ],
-            ),
-          );
-        },
-      ),
+              );
+            },
+          ),
+        );
+      },
     );
   }
 }

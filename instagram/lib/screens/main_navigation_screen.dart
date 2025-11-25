@@ -117,21 +117,26 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             ),
             // 5. Profile (내 프로필 사진)
             BottomNavigationBarItem(
-              icon: Container(
-                width: 28,
-                height: 28,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.grey[300], // 이미지 로딩 전 배경
-                  // [수정] 선택되었을 때만 검은색 테두리 표시
-                  border: _selectedIndex == 4
-                      ? Border.all(color: Colors.black, width: 1.5)
-                      : null,
-                  image: DecorationImage(
-                    image: _getImageProvider(UserState.getMyAvatarUrl()),
-                    fit: BoxFit.cover,
-                  ),
-                ),
+              icon: ValueListenableBuilder<String>(
+                valueListenable: UserState.myAvatarUrlNotifier,
+                builder: (context, avatarUrl, child) {
+                  return Container(
+                    width: 28,
+                    height: 28,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.grey[300], // 이미지 로딩 전 배경
+                      // [수정] 선택되었을 때만 검은색 테두리 표시
+                      border: _selectedIndex == 4
+                          ? Border.all(color: Colors.black, width: 1.5)
+                          : null,
+                      image: DecorationImage(
+                        image: _getImageProvider(avatarUrl),
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  );
+                },
               ),
               label: 'Profile',
             ),

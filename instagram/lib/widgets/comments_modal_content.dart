@@ -85,7 +85,7 @@ class _CommentsModalContentState extends State<CommentsModalContent> {
     final tempComment = Comment(
       id: 'temp_${DateTime.now().millisecondsSinceEpoch}',
       username: 'ta_junhyuk',
-      avatarUrl: UserState.getMyAvatarUrl(),
+      avatarUrl: UserState.myAvatarUrlNotifier.value,
       text: text,
       replyToUsername: _replyingToUsername,
       isPosting: true, // Posting 상태
@@ -154,8 +154,7 @@ class _CommentsModalContentState extends State<CommentsModalContent> {
     });
   }
   
-  ImageProvider _getMyImageProvider() {
-    final path = UserState.getMyAvatarUrl();
+  ImageProvider _getImageProvider(String path) {
     if (path.startsWith('http')) {
       return NetworkImage(path);
     } else if (path.startsWith('assets/')) {
@@ -315,12 +314,19 @@ class _CommentsModalContentState extends State<CommentsModalContent> {
                       Container(
                         width: 14,
                         height: 14,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          image: DecorationImage(
-                            image: _getMyImageProvider(),
-                            fit: BoxFit.cover,
-                          ),
+                        child: ValueListenableBuilder<String>(
+                          valueListenable: UserState.myAvatarUrlNotifier,
+                          builder: (context, avatarUrl, child) {
+                            return Container(
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                image: DecorationImage(
+                                  image: _getImageProvider(avatarUrl),
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                            );
+                          },
                         ),
                       ),
                     ],
@@ -396,16 +402,21 @@ class _CommentsModalContentState extends State<CommentsModalContent> {
                       child: Row(
                         children: [
                           // 내 프로필 사진 작게
-                          Container(
-                            width: 16,
-                            height: 16,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              image: DecorationImage(
-                                image: _getMyImageProvider(),
-                                fit: BoxFit.cover,
-                              ),
-                            ),
+                          ValueListenableBuilder<String>(
+                            valueListenable: UserState.myAvatarUrlNotifier,
+                            builder: (context, avatarUrl, child) {
+                              return Container(
+                                width: 16,
+                                height: 16,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  image: DecorationImage(
+                                    image: _getImageProvider(avatarUrl),
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                              );
+                            },
                           ),
                           const SizedBox(width: 6),
                           RichText(
@@ -555,9 +566,14 @@ class _CommentsModalContentState extends State<CommentsModalContent> {
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
             child: Row(
               children: [
-                CircleAvatar(
-                  radius: 18,
-                  backgroundImage: _getMyImageProvider(),
+                ValueListenableBuilder<String>(
+                  valueListenable: UserState.myAvatarUrlNotifier,
+                  builder: (context, avatarUrl, child) {
+                    return CircleAvatar(
+                      radius: 18,
+                      backgroundImage: _getImageProvider(avatarUrl),
+                    );
+                  },
                 ),
                 const SizedBox(width: 12.0),
                 Expanded(

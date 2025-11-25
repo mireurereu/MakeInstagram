@@ -75,10 +75,8 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
 
     final now = DateTime.now();
     _messages.addAll([
-      Message(text: 'Layout', isSender: true, timestamp: now.subtract(const Duration(hours: 2))),
-      Message(text: 'Hi', isSender: true, timestamp: now.subtract(const Duration(hours: 1))),
-      Message(text: "I'm ai assistan.... Can not reply...", isSender: false, timestamp: now.subtract(const Duration(minutes: 30))),
-      Message(text: 'Hi!!!!!', isSender: false, timestamp: now.subtract(const Duration(minutes: 29))),
+      Message(text: 'Hi!', isSender: true, timestamp: now.subtract(const Duration(hours: 2))),
+      Message(text: 'Nice to meet you!', isSender: true, timestamp: now.subtract(const Duration(hours: 2))),
     ]);
 
     _textController.addListener(() => setState(() => _hasText = _textController.text.isNotEmpty));
@@ -152,6 +150,15 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
         _messages.add(Message(text: 'Hi', isSender: false, timestamp: DateTime.now(), footer: 'Tap and hold to react'));
       });
       _scrollToBottom();
+      
+      // Hide footer after 5 seconds
+      final messageIndex = _messages.length - 1;
+      Timer(const Duration(seconds: 5), () {
+        if (!mounted || messageIndex >= _messages.length) return;
+        setState(() {
+          _messages[messageIndex].footer = null;
+        });
+      });
     });
     if (_fallbackTimer != null) _activeTimers.add(_fallbackTimer!);
 
@@ -169,6 +176,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
         body: jsonEncode({
           'model': 'nvidia/nemotron-nano-12b-v2-vl:free',
           'messages': _messageHistory.map((m) => m.toJson()).toList(),
+          'max_tokens': 60,
         }),
       )
           .timeout(const Duration(seconds: 15));
@@ -216,6 +224,15 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
         });
         _messageHistory.add(ApiMessage(role: 'assistant', content: responseText));
         _scrollToBottom();
+        
+        // Hide footer after 5 seconds
+        final messageIndex = _messages.length - 1;
+        Timer(const Duration(seconds: 5), () {
+          if (!mounted || messageIndex >= _messages.length) return;
+          setState(() {
+            _messages[messageIndex].footer = null;
+          });
+        });
       } else {
         debugPrint('OpenRouter non-200: ${response.statusCode}');
       }
@@ -283,6 +300,25 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
         elevation: 0,
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            // 마지막 수신 메시지 찾기
+            String lastMessage = 'Seen';
+            if (_messages.isNotEmpty) {
+              try {
+                final lastReceivedMessage = _messages.reversed.firstWhere(
+                  (msg) => !msg.isSender,
+                  orElse: () => Message(text: 'Seen', isSender: false, timestamp: DateTime.now()),
+                );
+                lastMessage = lastReceivedMessage.text;
+              } catch (e) {
+                lastMessage = 'Seen';
+              }
+            }
+            Navigator.pop(context, lastMessage);
+          },
+        ),
         titleSpacing: 0,
         title: Row(
           children: [
@@ -294,12 +330,12 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
             ])
           ],
         ),
-        actions: [
-          IconButton(icon: const Icon(Icons.call_outlined, size: 28.0), onPressed: () {}),
-          IconButton(icon: const Icon(Icons.videocam_outlined, size: 28.0), onPressed: () {}),
-          const SizedBox(width: 8),
-        ],
-      ),
+          actions: [
+            IconButton(icon: const Icon(Icons.call_outlined, size: 28.0), onPressed: () {}),
+            IconButton(icon: const Icon(Icons.videocam_outlined, size: 28.0), onPressed: () {}),
+            const SizedBox(width: 8),
+          ],
+        ),
       body: Stack(children: [
         Column(children: [
           Expanded(
@@ -478,9 +514,24 @@ class _TypingAnimationWidgetState extends State<_TypingAnimationWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Row(mainAxisSize: MainAxisSize.min, children: List.generate(3, (i) {
-      final active = i == _currentIndex;
-      return AnimatedContainer(duration: const Duration(milliseconds: 200), margin: const EdgeInsets.symmetric(horizontal: 1.5), width: 7, height: 7, decoration: BoxDecoration(color: active ? Colors.grey[600] : Colors.grey[400], shape: BoxShape.circle));
-    }));
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: List.generate(3, (i) {
+        final isActive = i == _currentIndex;
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeInOut,
+          margin: const EdgeInsets.symmetric(horizontal: 2),
+          width: 7,
+          height: 7,
+          transform: Matrix4.translationValues(0, isActive ? -4 : 0, 0),
+          decoration: BoxDecoration(
+            color: Colors.grey[600],
+            shape: BoxShape.circle,
+          ),
+        );
+      }),
+    );
   }
 }
