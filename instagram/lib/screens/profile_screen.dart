@@ -544,7 +544,57 @@ class _ZoomableGridImageState extends State<ZoomableGridImage> {
   OverlayEntry? _overlayEntry;
   void _showOverlay(BuildContext context) {
     final overlay = Overlay.of(context);
-    _overlayEntry = OverlayEntry(builder: (context) => Stack(children: [Container(color: Colors.black54), Center(child: Material(color: Colors.transparent, child: ClipRRect(borderRadius: BorderRadius.circular(12), child: Image.network(widget.imageUrl, width: MediaQuery.of(context).size.width * 0.9, fit: BoxFit.cover))))]));
+    final screenW = MediaQuery.of(context).size.width;
+    final imageWidth = screenW * 0.9;
+    _overlayEntry = OverlayEntry(builder: (context) {
+      return Stack(
+        children: [
+          Container(color: Colors.black54),
+          // Centered column with enlarged image and action bar immediately beneath it
+          Center(
+            child: Material(
+              color: Colors.transparent,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image.network(
+                      widget.imageUrl,
+                      width: imageWidth,
+                      fit: BoxFit.cover,
+                      errorBuilder: (c, e, s) => Container(width: imageWidth, height: imageWidth, color: Colors.grey[300]),
+                    ),
+                  ),
+                  // action bar directly attached under image
+                  Container(
+                    width: imageWidth,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: const BorderRadius.only(
+                        bottomLeft: Radius.circular(12),
+                        bottomRight: Radius.circular(12),
+                      ),
+                      border: Border(top: BorderSide(color: const Color(0xFFECECEC))),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 6),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        IconButton(onPressed: () {}, icon: const Icon(Icons.favorite, color: Colors.black)),
+                        IconButton(onPressed: () {}, icon: const Icon(Icons.search, color: Colors.black)),
+                        IconButton(onPressed: () {}, icon: const Icon(Icons.send_outlined, color: Colors.black)),
+                        IconButton(onPressed: () {}, icon: const Icon(Icons.more_horiz, color: Colors.black)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      );
+    });
     overlay.insert(_overlayEntry!);
   }
   void _removeOverlay() { _overlayEntry?.remove(); _overlayEntry = null; }

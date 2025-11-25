@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:instagram/screens/dm_list_screen.dart';
 import 'package:instagram/screens/notifications_screen.dart';
 import 'package:instagram/widgets/post_card_widget.dart';
+import 'package:instagram/screens/_posted_banner.dart';
 import 'package:instagram/widgets/suggested_reels_widget.dart';
 import 'package:instagram/widgets/comment_model.dart';
 
@@ -12,26 +13,36 @@ class FeedScreen extends StatelessWidget {
   static final ValueNotifier<List<Map<String, dynamic>>> feedNotifier = ValueNotifier<List<Map<String, dynamic>>>([
     {
       'id': 'seed1',
-      'username': 'karinabluu',
-      'userAvatarUrl': 'https://picsum.photos/seed/karina/100/100',
-      'postImageUrls': ['https://picsum.photos/seed/post1/600/600','https://picsum.photos/seed/post2/600/600'],
-      'likeCount': '1,367,685',
-      'caption': 'more',
-      'timestamp': '5 days ago',
-      'isVideo': false
-    },
-    {
-      'id': 'seed2',
       'username': 'aespa_official',
       'userAvatarUrl': 'https://picsum.photos/seed/aespa/100/100',
       'postImageUrls': ['https://picsum.photos/seed/video_thumb/600/600'],
       'likeCount': '918,471',
-      'caption': 'Bee~ Gese Stay Alive 🐝',
-      'timestamp': '3 days ago',
+      'caption': 'Ouch!',
+      'timestamp': 'September 19',
       'isVideo': true
     },
     {
+      'id': 'seed2',
+      'username': 'kingshot_mobile',
+      'userAvatarUrl': 'https://picsum.photos/seed/kingshot/100/100',
+      'postImageUrls': ['https://picsum.photos/seed/post1/600/600','https://picsum.photos/seed/post2/600/600'],
+      'likeCount': '3,120',
+      'caption': '적을 물리치고 1%가 되어라!',
+      'timestamp': '5 days ago',
+      'isVideo': false
+    },
+    {
       'id': 'seed3',
+      'username': 'katarinabluu',
+      'userAvatarUrl': 'https://picsum.photos/seed/karina/100/100',
+      'postImageUrls': ['https://picsum.photos/seed/post1/600/600','https://picsum.photos/seed/post2/600/600','https://picsum.photos/seed/post2/600/600','https://picsum.photos/seed/post2/600/600','https://picsum.photos/seed/post2/600/600','https://picsum.photos/seed/post2/600/600','https://picsum.photos/seed/post2/600/600','https://picsum.photos/seed/post2/600/600','https://picsum.photos/seed/post2/600/600','https://picsum.photos/seed/post2/600/600','https://picsum.photos/seed/post2/600/600','https://picsum.photos/seed/post2/600/600'],
+      'likeCount': '1,367,684',
+      'caption': ' ',
+      'timestamp': '5 days ago',
+      'isVideo': false
+    },
+    {
+      'id': 'seed4',
       'username': 'beom_jun__k',
       'userAvatarUrl': 'https://picsum.photos/seed/beom/100/100',
       'postImageUrls': ['https://picsum.photos/seed/post1/600/600','https://picsum.photos/seed/post2/600/600'],
@@ -40,8 +51,19 @@ class FeedScreen extends StatelessWidget {
       'timestamp': '17 hours ago',
       'isVideo': false
     },
+    
     {
-      'id': 'seed4',
+      'id': 'seed5',
+      'username': 'hotelsdotcom',
+      'userAvatarUrl': 'https://picsum.photos/seed/hotels/100/100',
+      'postImageUrls': ['https://picsum.photos/seed/video_thumb/600/600'],
+      'likeCount': '548',
+      'caption': 'ad',
+      'timestamp': '3 days ago',
+      'isVideo': true
+    },
+    {
+      'id': 'seed6',
       'username': 'imwinter',
       'userAvatarUrl': 'https://picsum.photos/seed/winter/100/100',
       'postImageUrls': ['https://picsum.photos/seed/winter1/600/600','https://picsum.photos/seed/winter2/600/600'],
@@ -77,6 +99,24 @@ class FeedScreen extends StatelessWidget {
           return ListView(
             children: [
               _buildStoryBar(),
+              const SizedBox(height: 8),
+              // Posted banner (transient) — shows when a new post was just created
+              ValueListenableBuilder<Map<String, String?>?>(
+                valueListenable: postedBannerNotifier,
+                builder: (c, banner, __) {
+                  if (banner == null) return const SizedBox.shrink();
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                    child: PostedBanner(
+                      imagePath: banner['image'] ?? '',
+                      message: banner['message'] ?? 'Posted! Way to go.',
+                      onSend: () {
+                        postedBannerNotifier.value = null;
+                      },
+                    ),
+                  );
+                },
+              ),
               const Divider(height: 1, color: Color(0xFFDBDBDB)),
               // build posts from feed notifier
               ...feed.map((post) => PostCardWidget(
@@ -115,6 +155,9 @@ class FeedScreen extends StatelessWidget {
       ),
     );
   }
+
+  // transient posted banner notifier: {'image': path, 'message': text}
+  static final ValueNotifier<Map<String, String?>?> postedBannerNotifier = ValueNotifier(null);
   // [신규] 스토리 바 위젯
   Widget _buildStoryBar() {
     // 스토리 데이터 (영상 00:11 상단 참조)

@@ -150,6 +150,7 @@ class _PostCardWidgetState extends State<PostCardWidget> {
   @override
   Widget build(BuildContext context) {
     final formattedLikes = NumberFormat.decimalPattern('en_US').format(_currentLikeCount);
+    final bool hasAuthorComment = _comments.any((cm) => cm.username == widget.username);
     
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -375,14 +376,15 @@ class _PostCardWidgetState extends State<PostCardWidget> {
                 ),
 
               // 댓글 미리보기 문구 (댓글 있으면 전체 보기로 이동)
-              if (_comments.isNotEmpty)
+              // If the post author has commented, hide the "View all" line and show "Just now" as timestamp.
+              if (_comments.isNotEmpty && !hasAuthorComment)
                 GestureDetector(
                   onTap: _showCommentsModal,
                   child: Text('View all ${_comments.length} comments', style: const TextStyle(color: Colors.grey, fontSize: 14)),
                 ),
-                
+
               const SizedBox(height: 4),
-              Text(widget.timestamp, style: const TextStyle(color: Colors.grey, fontSize: 12)),
+              Text(hasAuthorComment ? 'Just now' : widget.timestamp, style: const TextStyle(color: Colors.grey, fontSize: 12)),
               const SizedBox(height: 20),
             ],
           ),

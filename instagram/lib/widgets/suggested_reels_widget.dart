@@ -20,7 +20,7 @@ class SuggestedReelsWidget extends StatelessWidget {
     ];
 
     return Container(
-      color: Colors.grey[50],
+      color: Colors.white,
       padding: const EdgeInsets.symmetric(vertical: 10),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

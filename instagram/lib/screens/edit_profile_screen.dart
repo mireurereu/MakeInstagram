@@ -395,6 +395,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             // (수정) LinkButton들을 Padding 밖으로 이동 (구분선이 꽉 차도록)
             _buildLinkButton('Switch to professional account'),
             _buildLinkButton('Personal information settings'),
+            _buildLinkButton('Show your profile is verified'),
             
             const SizedBox(height: 32.0),
           ],

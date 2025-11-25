@@ -162,6 +162,15 @@ class _NewPostScreenState extends State<NewPostScreen> {
     final currentFeed = FeedScreen.feedNotifier.value;
     FeedScreen.feedNotifier.value = [newPostData, ...currentFeed];
 
+    // Show the transient "Posted" banner in the feed with a thumbnail.
+    FeedScreen.postedBannerNotifier.value = {'image': addedPath, 'message': 'Posted! Way to go.'};
+    // Auto-clear the banner after a short delay (if the user hasn't dismissed it).
+    Future.delayed(const Duration(seconds: 6), () {
+      if (FeedScreen.postedBannerNotifier.value != null && FeedScreen.postedBannerNotifier.value!['image'] == addedPath) {
+        FeedScreen.postedBannerNotifier.value = null;
+      }
+    });
+
     if (!mounted) return;
     mainNavKey.currentState?.changeTab(0);
     Navigator.of(context).popUntil((route) => route.isFirst);
