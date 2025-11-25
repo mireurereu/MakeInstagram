@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:instagram/screens/dm_list_screen.dart';
 import 'package:instagram/screens/notifications_screen.dart';
 import 'package:instagram/widgets/post_card_widget.dart';
@@ -82,11 +83,10 @@ class FeedScreen extends StatelessWidget {
         backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: false,
-        title: Image.asset(
-          'assets/images/insta_logo.png',
+        title: SvgPicture.asset(
+          'assets/svg/Logo.svg',
           height: 32.0,
           fit: BoxFit.contain,
-          errorBuilder: (context, error, stackTrace) => const Text('Instagram', style: TextStyle(color: Colors.black, fontFamily: 'Billabong', fontSize: 28.0, fontWeight: FontWeight.w500)),
         ),
         actions: [
           // Notifications button with badge

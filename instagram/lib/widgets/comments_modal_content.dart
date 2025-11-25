@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:instagram/widgets/comment_model.dart'; // 모델 경로 확인 필요 (lib/models/comment.dart)
+import 'package:instagram/widgets/comment_model.dart';
+import 'package:instagram/data/user_state.dart';
+import 'dart:io';
 
 class CommentsModalContent extends StatefulWidget {
   final List<Comment> comments;
@@ -65,7 +67,7 @@ class _CommentsModalContentState extends State<CommentsModalContent> {
     // 1단계: Posting... 상태로 임시 댓글 추가
     final tempComment = Comment(
       username: 'ta_junhyuk',
-      avatarUrl: 'https://picsum.photos/seed/junhyuk/100/100',
+      avatarUrl: UserState.getMyAvatarUrl(),
       text: text,
       replyToUsername: _replyingToUsername,
       isPosting: true, // Posting 상태
@@ -132,6 +134,17 @@ class _CommentsModalContentState extends State<CommentsModalContent> {
       _replyingToUsername = null;
       _commentController.clear();
     });
+  }
+  
+  ImageProvider _getMyImageProvider() {
+    final path = UserState.getMyAvatarUrl();
+    if (path.startsWith('http')) {
+      return NetworkImage(path);
+    } else if (path.startsWith('assets/')) {
+      return AssetImage(path);
+    } else {
+      return FileImage(File(path));
+    }
   }
 
   @override
@@ -272,10 +285,10 @@ class _CommentsModalContentState extends State<CommentsModalContent> {
                       Container(
                         width: 14,
                         height: 14,
-                        decoration: const BoxDecoration(
+                        decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           image: DecorationImage(
-                            image: NetworkImage('https://picsum.photos/seed/junhyuk/100/100'),
+                            image: _getMyImageProvider(),
                             fit: BoxFit.cover,
                           ),
                         ),
@@ -356,10 +369,10 @@ class _CommentsModalContentState extends State<CommentsModalContent> {
                           Container(
                             width: 16,
                             height: 16,
-                            decoration: const BoxDecoration(
+                            decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               image: DecorationImage(
-                                image: NetworkImage('https://picsum.photos/seed/junhyuk/100/100'),
+                                image: _getMyImageProvider(),
                                 fit: BoxFit.cover,
                               ),
                             ),
@@ -507,9 +520,9 @@ class _CommentsModalContentState extends State<CommentsModalContent> {
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
             child: Row(
               children: [
-                const CircleAvatar(
+                CircleAvatar(
                   radius: 18,
-                  backgroundImage: NetworkImage('https://picsum.photos/seed/junhyuk/100/100'),
+                  backgroundImage: _getMyImageProvider(),
                 ),
                 const SizedBox(width: 12.0),
                 Expanded(

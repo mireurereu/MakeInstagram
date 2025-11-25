@@ -132,14 +132,80 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       'gender': _gender,
     });
   }
+  
+  ImageProvider _getImageProvider() {
+    if (_newAvatarFile != null) {
+      return FileImage(File(_newAvatarFile!));
+    } else if (_avatarUrl.startsWith('http')) {
+      return NetworkImage(_avatarUrl);
+    } else if (_avatarUrl.startsWith('assets/')) {
+      return AssetImage(_avatarUrl);
+    } else {
+      return FileImage(File(_avatarUrl));
+    }
+  }
 
   // 6. 갤러리/카메라 관련 함수들
   Future<void> _pickImageFromGallery() async {
-    final XFile? pickedFile =
-        await _picker.pickImage(source: ImageSource.gallery);
-    if (pickedFile != null) {
+    // assets/images의 샘플 이미지 선택 다이얼로그 표시
+    final selectedImage = await showDialog<String>(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          child: Container(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'Choose from library',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 16),
+                GridView.builder(
+                  shrinkWrap: true,
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 8,
+                    mainAxisSpacing: 8,
+                  ),
+                  itemCount: 4,
+                  itemBuilder: (context, index) {
+                    final imagePath = 'assets/images/sample${index + 1}.jpg';
+                    return GestureDetector(
+                      onTap: () => Navigator.pop(context, imagePath),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.asset(
+                            imagePath,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(height: 16),
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Cancel'),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+    
+    if (selectedImage != null) {
       setState(() {
-        _newAvatarFile = pickedFile.path;
+        _avatarUrl = selectedImage;
+        _newAvatarFile = null; // assets이므로 파일 경로가 아님
       });
     }
   }
@@ -179,9 +245,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 children: [
                   CircleAvatar(
                     radius: 24,
-                    backgroundImage: _newAvatarFile != null
-                        ? FileImage(File(_newAvatarFile!))
-                        : NetworkImage(_avatarUrl) as ImageProvider,
+                    backgroundImage: _getImageProvider(),
                   ),
                   const SizedBox(width: 16.0),
                   CircleAvatar(
@@ -224,8 +288,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 onTap: () {
                   setState(() {
                     _newAvatarFile = null;
-                    _avatarUrl =
-                        'https://picsum.photos/seed/default/200/200'; // 기본 이미지로
+                    _avatarUrl = 'assets/images/profile3.jpg'; // 기본 이미지로
                   });
                   Navigator.pop(context);
                 },
@@ -342,9 +405,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         onTap: () => _showPictureModal(context),
                         child: CircleAvatar(
                           radius: 44,
-                          backgroundImage: _newAvatarFile != null
-                              ? FileImage(File(_newAvatarFile!))
-                              : NetworkImage(_avatarUrl) as ImageProvider,
+                          backgroundImage: _getImageProvider(),
                         ),
                       ),
                       const SizedBox(width: 16.0),

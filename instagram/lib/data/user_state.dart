@@ -3,6 +3,17 @@ import 'package:flutter/material.dart';
 class UserState {
   // 현재 로그인한 사용자 ID
   static const String myId = 'ta_junhyuk';
+  
+  // [데이터] 내 프로필 사진 URL
+  static String _myAvatarUrl = 'assets/images/profile3.jpg';
+  
+  // 내 프로필 사진 가져오기
+  static String getMyAvatarUrl() => _myAvatarUrl;
+  
+  // 내 프로필 사진 업데이트
+  static void updateMyAvatarUrl(String newUrl) {
+    _myAvatarUrl = newUrl;
+  }
 
   // [데이터] 내가 팔로우한 사람 목록 (Set으로 중복 방지)
   static final Set<String> _myFollowingList = {

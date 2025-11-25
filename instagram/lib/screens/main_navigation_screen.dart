@@ -1,10 +1,11 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:instagram/screens/feed_screen.dart';
 import 'package:instagram/screens/create_post_screen.dart';
 import 'package:instagram/screens/profile_screen.dart';
-// 아직 파일이 없다면 생성하거나 주석 처리해주세요.
 import 'package:instagram/screens/search_screen.dart'; 
 import 'package:instagram/screens/reels_screen.dart';
+import 'package:instagram/data/user_state.dart';
 
 // Global key so other screens can programmatically change tabs (e.g. after posting)
 final GlobalKey<_MainNavigationScreenState> mainNavKey = GlobalKey<_MainNavigationScreenState>();
@@ -51,6 +52,16 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     setState(() {
       _selectedIndex = index;
     });
+  }
+  
+  ImageProvider _getImageProvider(String path) {
+    if (path.startsWith('http')) {
+      return NetworkImage(path);
+    } else if (path.startsWith('assets/')) {
+      return AssetImage(path);
+    } else {
+      return FileImage(File(path));
+    }
   }
 
   @override
@@ -116,8 +127,8 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                   border: _selectedIndex == 4
                       ? Border.all(color: Colors.black, width: 1.5)
                       : null,
-                  image: const DecorationImage(
-                    image: NetworkImage('https://picsum.photos/seed/junhyuk/100/100'),
+                  image: DecorationImage(
+                    image: _getImageProvider(UserState.getMyAvatarUrl()),
                     fit: BoxFit.cover,
                   ),
                 ),

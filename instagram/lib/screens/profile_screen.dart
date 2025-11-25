@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:instagram/data/user_state.dart'; // 상태 관리 파일 임포트
 import 'package:instagram/screens/edit_profile_screen.dart';
@@ -125,6 +126,11 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
       setState(() {
         _name = result['name'];
         _bio = result['bio'];
+        if (result['avatarUrl'] != null) {
+          _avatarUrl = result['avatarUrl'];
+          // UserState에도 업데이트
+          UserState.updateMyAvatarUrl(_avatarUrl);
+        }
       });
     }
   }
@@ -261,7 +267,12 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
         children: [
           Row(
             children: [
-              CircleAvatar(radius: 44, backgroundImage: NetworkImage(_avatarUrl)),
+              CircleAvatar(
+                radius: 44,
+                backgroundImage: _avatarUrl.startsWith('http')
+                    ? NetworkImage(_avatarUrl) as ImageProvider
+                    : FileImage(File(_avatarUrl)),
+              ),
               Expanded(
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
