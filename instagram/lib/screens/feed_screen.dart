@@ -89,7 +89,38 @@ class FeedScreen extends StatelessWidget {
           errorBuilder: (context, error, stackTrace) => const Text('Instagram', style: TextStyle(color: Colors.black, fontFamily: 'Billabong', fontSize: 28.0, fontWeight: FontWeight.w500)),
         ),
         actions: [
-          IconButton(icon: const Icon(Icons.favorite_border, color: Colors.black, size: 28), onPressed: () { Navigator.push(context, MaterialPageRoute(builder: (c) => const NotificationsScreen())); }),
+          // Notifications button with badge
+          ValueListenableBuilder<bool>(
+            valueListenable: NotificationsScreen.hasUnreadNotifications,
+            builder: (context, hasUnread, _) {
+              return Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.favorite_border, color: Colors.black, size: 28),
+                    onPressed: () {
+                      // Clear badge when opening notifications
+                      NotificationsScreen.hasUnreadNotifications.value = false;
+                      Navigator.push(context, MaterialPageRoute(builder: (c) => const NotificationsScreen()));
+                    },
+                  ),
+                  if (hasUnread)
+                    Positioned(
+                      right: 8,
+                      top: 8,
+                      child: Container(
+                        width: 8,
+                        height: 8,
+                        decoration: const BoxDecoration(
+                          color: Colors.red,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            },
+          ),
           IconButton(icon: const Icon(Icons.send_outlined, color: Colors.black, size: 28), onPressed: () { Navigator.push(context, MaterialPageRoute(builder: (c) => const DmListScreen())); }),
         ],
       ),

@@ -3,6 +3,12 @@ import 'package:flutter/material.dart';
 class NotificationsScreen extends StatelessWidget {
   const NotificationsScreen({super.key});
 
+  // Global notifications notifier (list of notification items)
+  static final ValueNotifier<List<Map<String, dynamic>>> notificationsNotifier = ValueNotifier<List<Map<String, dynamic>>>([]);
+  
+  // Global notifier for unread notifications badge
+  static final ValueNotifier<bool> hasUnreadNotifications = ValueNotifier<bool>(false);
+
   final Color _instaBlue = const Color(0xFF3797EF);
 
   @override
@@ -18,13 +24,27 @@ class NotificationsScreen extends StatelessWidget {
           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
         ),
       ),
-      body: ListView(
-        children: [
-          // 1. Today 섹션
-          _buildSectionHeader('Today'),
-          
-          // 댓글 알림 (haetbaaan)
-          _buildNotificationItem(
+      body: ValueListenableBuilder<List<Map<String, dynamic>>>(
+        valueListenable: notificationsNotifier,
+        builder: (context, notifications, _) {
+          return ListView(
+            children: [
+              // 1. Today 섹션
+              _buildSectionHeader('Today'),
+              
+              // Dynamic notifications from notifier (most recent first)
+              ...notifications.map((notif) => _buildNotificationItem(
+                type: notif['type'] as NotificationType,
+                username: notif['username'] as String,
+                content: notif['content'] as String,
+                time: notif['time'] as String,
+                avatarUrl: notif['avatarUrl'] as String,
+                postUrl: notif['postUrl'] as String?,
+                showReplyButton: notif['showReplyButton'] as bool? ?? false,
+              )),
+
+              // 댓글 알림 (haetbaaan)
+              _buildNotificationItem(
             type: NotificationType.comment,
             username: 'haetbaaan',
             content: 'commented: so cute!!',
@@ -82,7 +102,9 @@ class NotificationsScreen extends StatelessWidget {
             text: 'You have 2 new accounts in your Accounts Center.',
             time: '2w',
           ),
-        ],
+            ],
+          );
+        },
       ),
     );
   }

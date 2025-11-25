@@ -4,6 +4,7 @@ import 'package:instagram/screens/profile_screen.dart';
 import 'package:instagram/data/user_state.dart';
 import 'package:instagram/widgets/comment_model.dart';
 import 'package:instagram/widgets/comments_modal_content.dart';
+import 'package:instagram/screens/notifications_screen.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/gestures.dart'; // 제스처 인식을 위해 필요
 
@@ -98,6 +99,24 @@ class _PostCardWidgetState extends State<PostCardWidget> {
               // propagate comment changes upstream if handler provided
               final keyId = widget.key is ValueKey ? (widget.key as ValueKey).value : null;
               if (keyId is String) widget.onCommentsChanged?.call(keyId, _comments);
+
+              // Add notification for every comment (including own posts)
+              final currentNotifs = NotificationsScreen.notificationsNotifier.value;
+              NotificationsScreen.notificationsNotifier.value = [
+                {
+                  'type': NotificationType.comment,
+                  'username': 'ta_junhyuk',
+                  'content': 'commented: $text',
+                  'time': 'Just now',
+                  'avatarUrl': 'https://picsum.photos/seed/junhyuk/100/100',
+                  'postUrl': widget.postImageUrls.isNotEmpty ? widget.postImageUrls.first : null,
+                  'showReplyButton': false,
+                },
+                ...currentNotifs,
+              ];
+              
+              // Set unread badge to true
+              NotificationsScreen.hasUnreadNotifications.value = true;
             });
           },
           onCommentLiked: (comment) {
