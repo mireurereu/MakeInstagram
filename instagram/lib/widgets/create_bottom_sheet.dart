@@ -32,6 +32,16 @@ class CreateBottomSheet extends StatelessWidget {
           Divider(color: Colors.grey[200]),
           _buildOption(
             context,
+            icon: Icons.movie_outlined,
+            title: 'Reel',
+            onTap: () {},
+          ),
+          Padding(
+            padding: const EdgeInsets.only(left: 56, right: 16),
+            child: Divider(color: Colors.grey[200], height: 1),
+          ),
+          _buildOption(
+            context,
             icon: Icons.grid_on,
             title: 'Post',
             onTap: () {
@@ -43,17 +53,16 @@ class CreateBottomSheet extends StatelessWidget {
               );
             },
           ),
-          _buildOption(
-            context,
-            icon: Icons.movie_outlined,
-            title: 'Reel',
-            onTap: () {},
+          Padding(
+            padding: const EdgeInsets.only(left: 56, right: 16),
+            child: Divider(color: Colors.grey[200], height: 1),
           ),
           _buildOption(
             context,
-            icon: Icons.history_outlined,
-            title: 'Story',
+            icon: Icons.person_pin_outlined,
+            title: 'Share only to profile',
             onTap: () {},
+            showNew: true,
           ),
           const SizedBox(height: 20),
         ],
@@ -73,12 +82,12 @@ class CreateBottomSheet extends StatelessWidget {
       title: Text(title, style: const TextStyle(fontSize: 16, color: Colors.black)),
       trailing: showNew
           ? Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
               decoration: BoxDecoration(
                 color: const Color(0xFF3797EF),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(20),
               ),
-              child: const Text('New', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600)),
+              child: const Text('New', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600)),
             )
           : null,
       onTap: onTap,

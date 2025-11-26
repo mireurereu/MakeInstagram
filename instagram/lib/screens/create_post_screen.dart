@@ -18,6 +18,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   bool _selectMultipleMode = false;
   final List<String> _selectedImages = [];
   late PageController _previewPageController;
+  bool _showingFullImage = false;
   
   @override
   void initState() {
@@ -31,6 +32,31 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   void dispose() {
     _previewPageController.dispose();
     super.dispose();
+  }
+
+  Future<void> _onNextPressed() async {
+    final toEdit = _selectedImages.isNotEmpty ? _selectedImages.last : _selectedImage!;
+    
+    setState(() {
+      _showingFullImage = true;
+    });
+    
+    await Future.delayed(const Duration(milliseconds: 500));
+    
+    if (!mounted) return;
+    
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EditPostScreen(assetPath: toEdit),
+      ),
+    ).then((_) {
+      if (mounted) {
+        setState(() {
+          _showingFullImage = false;
+        });
+      }
+    });
   }
 
   @override
@@ -53,15 +79,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
         actions: [
           TextButton(
             onPressed: (_selectedImage != null || _selectedImages.isNotEmpty)
-                ? () {
-                    final toEdit = _selectedImages.isNotEmpty ? _selectedImages.last : _selectedImage!;
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => EditPostScreen(assetPath: toEdit),
-                      ),
-                    );
-                  }
+                ? _onNextPressed
                 : null,
             child: const Text('Next', style: TextStyle(color: Color.fromARGB(255, 110, 35, 142), fontSize: 16, fontWeight: FontWeight.bold)),
           ),
@@ -89,7 +107,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                     final imagePath = _images[i];
                     return Image.asset(
                       imagePath,
-                      fit: BoxFit.cover,
+                      fit: _showingFullImage ? BoxFit.contain : BoxFit.cover,
                       width: double.infinity,
                       height: double.infinity,
                       errorBuilder: (context, error, stackTrace) => Container(color: Colors.grey[200]),
@@ -194,14 +212,29 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
         ],
       ),
       bottomNavigationBar: Container(
-        height: 50,
+        height: 60,
         color: Colors.white,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: const [
-            Text('GALLERY', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black)),
-            Text('PHOTO', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
-            Text('VIDEO', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
+        child: Stack(
+          children: [
+            Center(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: const [
+                  Text('GALLERY', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black)),
+                  Text('PHOTO', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
+                  Text('VIDEO', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
+                ],
+              ),
+            ),
+            Positioned(
+              bottom: 8,
+              left: 0,
+              child: Container(
+                height: 3,
+                width: MediaQuery.of(context).size.width / 3,
+                color: Colors.black,
+              ),
+            ),
           ],
         ),
       ),

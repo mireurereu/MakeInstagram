@@ -1,6 +1,8 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:instagram/screens/profile_screen.dart';
 import 'package:instagram/data/user_state.dart';
+import 'package:instagram/screens/main_navigation_screen.dart';
 
 class FollowingListScreen extends StatefulWidget {
   final String? username;
@@ -88,7 +90,91 @@ class _FollowingListScreenState extends State<FollowingListScreen>
           ],
         ],
       ),
+      bottomNavigationBar: _buildBottomNavBar(),
     );
+  }
+
+  Widget _buildBottomNavBar() {
+    return Container(
+      decoration: const BoxDecoration(
+        border: Border(
+          top: BorderSide(color: Color(0xFFDBDBDB), width: 0.5),
+        ),
+      ),
+      child: BottomNavigationBar(
+        currentIndex: 4,
+        onTap: (index) {
+          if (index == 4) {
+            Navigator.pop(context);
+          } else {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const MainNavigationScreen(),
+              ),
+              (route) => false,
+            );
+            mainNavKey.currentState?.changeTab(index);
+          }
+        },
+        backgroundColor: Colors.white,
+        type: BottomNavigationBarType.fixed,
+        showSelectedLabels: false,
+        showUnselectedLabels: false,
+        selectedItemColor: Colors.black,
+        unselectedItemColor: Colors.black,
+        elevation: 0,
+        items: [
+          const BottomNavigationBarItem(
+            icon: Icon(Icons.home_outlined, size: 28),
+            label: 'Home',
+          ),
+          const BottomNavigationBarItem(
+            icon: Icon(Icons.search, size: 28),
+            label: 'Search',
+          ),
+          const BottomNavigationBarItem(
+            icon: Icon(Icons.add_box_outlined, size: 28),
+            label: 'Add',
+          ),
+          const BottomNavigationBarItem(
+            icon: Icon(Icons.movie_outlined, size: 28),
+            label: 'Reels',
+          ),
+          BottomNavigationBarItem(
+            icon: ValueListenableBuilder<String>(
+              valueListenable: UserState.myAvatarUrlNotifier,
+              builder: (context, avatarUrl, child) {
+                return Container(
+                  width: 28,
+                  height: 28,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.grey[300],
+                    border: Border.all(color: Colors.black, width: 1.5),
+                    image: DecorationImage(
+                      image: _getImageProvider(avatarUrl),
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                );
+              },
+            ),
+            label: 'Profile',
+          ),
+        ],
+      ),
+    );
+  }
+
+  ImageProvider _getImageProvider(String path) {
+    if (path.startsWith('http')) {
+      return NetworkImage(path);
+    } else if (path.startsWith('assets/')) {
+      return AssetImage(path);
+    } else {
+      return FileImage(File(path));
+    }
   }
   Widget _buildFollowingList({bool showSearch = false, bool showSync = false}) {
     return Column(
@@ -145,6 +231,10 @@ class _FollowingListScreenState extends State<FollowingListScreen>
             ),
           ),
 
+        // Divider before Sorted by Default
+        if (showSync)
+          const Divider(height: 1, color: Color(0xFFE0E0E0)),
+
         // Sorted by Default row for own profile
         if (showSync)
           Padding(
@@ -157,8 +247,6 @@ class _FollowingListScreenState extends State<FollowingListScreen>
               ],
             ),
           ),
-
-        const Divider(height: 1, color: Color(0xFFE0E0E0)),
 
         Expanded(
           child: ListView.builder(
@@ -194,6 +282,9 @@ class _FollowingListScreenState extends State<FollowingListScreen>
   }
 
   Widget _buildUserTile(Map<String, String> user) {
+    // imwinter의 following 화면인지 확인
+    final bool isImwinterFollowing = (widget.username ?? UserState.myId) == 'imwinter';
+    
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       leading: CircleAvatar(
@@ -207,30 +298,30 @@ class _FollowingListScreenState extends State<FollowingListScreen>
           Icon(Icons.verified, color: const Color(0xFF3797EF), size: 16),
       ]),
       subtitle: Text(user['name'] ?? '', style: const TextStyle(color: Colors.grey, fontSize: 14)),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          UserState.amIFollowing(user['username'] ?? '')
+      trailing: isImwinterFollowing
+          ? (UserState.amIFollowing(user['username'] ?? '')
               ? ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFFEFEFEF),
                     foregroundColor: Colors.black,
                     elevation: 0,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    minimumSize: const Size(0, 32),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                    padding: EdgeInsets.zero,
+                    minimumSize: const Size(105, 34),
+                    maximumSize: const Size(105, 34),
                   ),
                   onPressed: () {},
-                  child: const Text('Message', style: TextStyle(fontWeight: FontWeight.w600)),
+                  child: const Text('Message', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
                 )
               : ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: _instaBlue,
                     foregroundColor: Colors.white,
                     elevation: 0,
-                    minimumSize: const Size(70, 32),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                    padding: EdgeInsets.zero,
+                    minimumSize: const Size(105, 34),
+                    maximumSize: const Size(105, 34),
                   ),
                   onPressed: () {
                     setState(() {
@@ -238,12 +329,45 @@ class _FollowingListScreenState extends State<FollowingListScreen>
                       followingList = UserState.getFollowingList(widget.username ?? UserState.myId);
                     });
                   },
-                  child: const Text('Follow', style: TextStyle(fontWeight: FontWeight.bold)),
-                ),
-          const SizedBox(width: 8),
-          IconButton(icon: const Icon(Icons.more_horiz, color: Colors.black), constraints: const BoxConstraints(), onPressed: () {}),
-        ],
-      ),
+                  child: const Text('Follow', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                ))
+          : Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                UserState.amIFollowing(user['username'] ?? '')
+                    ? ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFEFEFEF),
+                          foregroundColor: Colors.black,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          minimumSize: const Size(0, 32),
+                        ),
+                        onPressed: () {},
+                        child: const Text('Message', style: TextStyle(fontWeight: FontWeight.w600)),
+                      )
+                    : ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _instaBlue,
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          minimumSize: const Size(70, 32),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            UserState.toggleFollow(user['username'] ?? '');
+                            followingList = UserState.getFollowingList(widget.username ?? UserState.myId);
+                          });
+                        },
+                        child: const Text('Follow', style: TextStyle(fontWeight: FontWeight.bold)),
+                      ),
+                const SizedBox(width: 8),
+                IconButton(icon: const Icon(Icons.more_horiz, color: Colors.black), constraints: const BoxConstraints(), onPressed: () {}),
+              ],
+            ),
       onTap: () {
         Navigator.push(context, MaterialPageRoute(builder: (context) => ProfileScreen(username: user['username'])));
       },

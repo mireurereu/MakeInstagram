@@ -5,6 +5,8 @@ import 'package:instagram/screens/edit_profile_screen.dart';
 import 'package:instagram/screens/following_list_screen.dart';
 import 'package:instagram/screens/create_post_screen.dart';
 import 'package:instagram/screens/post_viewer_screen.dart';
+import 'package:instagram/widgets/create_bottom_sheet.dart';
+import 'package:instagram/screens/main_navigation_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   final String? username;
@@ -176,8 +178,9 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                   controller: _tabController,
                   indicatorColor: Colors.black,
                   labelColor: Colors.black,
-                  unselectedLabelColor: Colors.white,
+                  unselectedLabelColor: Colors.grey,
                   indicatorWeight: 1.0,
+                  indicatorSize: TabBarIndicatorSize.tab,
                   tabs: _isCurrentUser
                       ? const [
                           Tab(icon: Icon(Icons.grid_on)),
@@ -221,6 +224,80 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                       const Center(child: Text('Tagged Posts', style: TextStyle(color: Colors.grey))),
                     ]),
         ),
+      ),
+      bottomNavigationBar: !_isCurrentUser ? _buildBottomNavBar() : null,
+    );
+  }
+
+  Widget _buildBottomNavBar() {
+    return Container(
+      decoration: const BoxDecoration(
+        border: Border(
+          top: BorderSide(color: Color(0xFFDBDBDB), width: 0.5),
+        ),
+      ),
+      child: BottomNavigationBar(
+        currentIndex: 4,
+        onTap: (index) {
+          if (index == 4) {
+            Navigator.pop(context);
+          } else {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const MainNavigationScreen(),
+              ),
+              (route) => false,
+            );
+            mainNavKey.currentState?.changeTab(index);
+          }
+        },
+        backgroundColor: Colors.white,
+        type: BottomNavigationBarType.fixed,
+        showSelectedLabels: false,
+        showUnselectedLabels: false,
+        selectedItemColor: Colors.black,
+        unselectedItemColor: Colors.black,
+        elevation: 0,
+        items: [
+          const BottomNavigationBarItem(
+            icon: Icon(Icons.home_outlined, size: 28),
+            label: 'Home',
+          ),
+          const BottomNavigationBarItem(
+            icon: Icon(Icons.search, size: 28),
+            label: 'Search',
+          ),
+          const BottomNavigationBarItem(
+            icon: Icon(Icons.add_box_outlined, size: 28),
+            label: 'Add',
+          ),
+          const BottomNavigationBarItem(
+            icon: Icon(Icons.movie_outlined, size: 28),
+            label: 'Reels',
+          ),
+          BottomNavigationBarItem(
+            icon: ValueListenableBuilder<String>(
+              valueListenable: UserState.myAvatarUrlNotifier,
+              builder: (context, avatarUrl, child) {
+                return Container(
+                  width: 28,
+                  height: 28,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.grey[300],
+                    border: Border.all(color: Colors.black, width: 1.5),
+                    image: DecorationImage(
+                      image: _getAvatarImageProvider(avatarUrl),
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                );
+              },
+            ),
+            label: 'Profile',
+          ),
+        ],
       ),
     );
   }
@@ -531,18 +608,8 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
   void _showCreateModal() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(16),
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
-           Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2))),
-           const SizedBox(height: 16), const Text('Create', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)), const Divider(),
-           ListTile(leading: const Icon(Icons.grid_on), title: const Text('Post'), onTap: () { Navigator.pop(context); Navigator.push(context, MaterialPageRoute(builder: (_) => const CreatePostScreen())); }),
-           ListTile(leading: const Icon(Icons.movie_outlined), title: const Text('Reel'), onTap: (){}),
-           ListTile(leading: const Icon(Icons.history), title: const Text('Story'), onTap: (){}),
-        ]),
-      ),
+      backgroundColor: Colors.transparent,
+      builder: (context) => const CreateBottomSheet(),
     );
   }
 }

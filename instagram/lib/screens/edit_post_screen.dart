@@ -26,6 +26,27 @@ class _EditPostScreenState extends State<EditPostScreen> {
     {'title': 'Nightfall', 'artist': 'Rin', 'art': 'assets/images/music5.jpg'},
   ];
   int _selectedSongIndex = -1;
+  bool _showTooltip = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // 1초 후에 툴팁 표시, 3초 동안 보이기
+    Future.delayed(const Duration(seconds: 1), () {
+      if (mounted) {
+        setState(() {
+          _showTooltip = true;
+        });
+        Future.delayed(const Duration(seconds: 3), () {
+          if (mounted) {
+            setState(() {
+              _showTooltip = false;
+            });
+          }
+        });
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -43,21 +64,21 @@ class _EditPostScreenState extends State<EditPostScreen> {
         ? Image.memory(
             widget.imageBytes!,
             width: double.infinity,
-            fit: BoxFit.cover,
+            fit: BoxFit.contain,
             errorBuilder: (c, e, st) => Container(color: Colors.grey[300], child: const Center(child: Icon(Icons.broken_image))),
           )
         : (widget.assetPath != null)
             ? Image.asset(
                 widget.assetPath!,
                 width: double.infinity,
-                fit: BoxFit.cover,
+                fit: BoxFit.contain,
                 errorBuilder: (c, e, st) => Container(color: Colors.grey[300], child: const Center(child: Icon(Icons.broken_image))),
               )
             : widget.imageFile != null
                 ? Image.file(
                     widget.imageFile!,
                     width: double.infinity,
-                    fit: BoxFit.cover,
+                    fit: BoxFit.contain,
                     errorBuilder: (c, e, st) => Container(color: Colors.grey[300], child: const Center(child: Icon(Icons.broken_image))),
                   )
                 : Container(color: Colors.grey[300], width: double.infinity, height: 300, child: const Center(child: Text('No image')));
@@ -111,48 +132,92 @@ class _EditPostScreenState extends State<EditPostScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: 8),
-                SizedBox(
-                  height: scrollerHeight,
-                  child: ListView.separated(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    scrollDirection: Axis.horizontal,
-                    itemCount: _songs.length,
-                    separatorBuilder: (_, __) => const SizedBox(width: 12),
-                    itemBuilder: (context, index) {
-                      final item = _songs[index];
-                      final selected = _selectedSongIndex == index;
-                      return GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            _selectedSongIndex = index;
-                          });
-                        },
-                                        child: SizedBox(
-                                          width: thumbSize,
-                                          child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            children: [
-                                              ClipRRect(
-                                                borderRadius: BorderRadius.circular(8),
-                                                child: Stack(
-                                                  children: [
-                                                    SizedBox(width: thumbSize, height: thumbSize, child: _loadAlbumArt(item['art']!)),
-                                                    if (selected)
-                                                      Positioned.fill(
-                                                        child: Container(color: Colors.black26),
-                                                      ),
-                                                  ],
-                                                ),
-                                              ),
-                                              const SizedBox(height: 6),
-                                              Text(item['title'] ?? '', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-                                              Text(item['artist'] ?? '', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12, color: Colors.grey)),
-                                            ],
+                Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    SizedBox(
+                      height: scrollerHeight,
+                      child: ListView.separated(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        scrollDirection: Axis.horizontal,
+                        itemCount: _songs.length,
+                        separatorBuilder: (_, __) => const SizedBox(width: 12),
+                        itemBuilder: (context, index) {
+                          final item = _songs[index];
+                          final selected = _selectedSongIndex == index;
+                          return GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                _selectedSongIndex = index;
+                              });
+                            },
+                            child: SizedBox(
+                              width: thumbSize,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(8),
+                                    child: Stack(
+                                      children: [
+                                        SizedBox(width: thumbSize, height: thumbSize, child: _loadAlbumArt(item['art']!)),
+                                        if (selected)
+                                          Positioned.fill(
+                                            child: Container(color: Colors.black26),
                                           ),
-                                        ),
-                      );
-                    },
-                  ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Text(item['title'] ?? '', maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                                  Text(item['artist'] ?? '', maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    // 툴팁을 ListView 밖에서 표시 (z-index 최상위)
+                    if (_showTooltip)
+                      Positioned(
+                        top: -42,
+                        left: 12 + (thumbSize + 12) * 1 + thumbSize / 2 - 80,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(8),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.25),
+                                    blurRadius: 12,
+                                    offset: const Offset(0, 4),
+                                    spreadRadius: 2,
+                                  ),
+                                ],
+                              ),
+                              child: const Text(
+                                'Add audio to your post',
+                                style: TextStyle(
+                                  color: Colors.black,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                maxLines: 1,
+                              ),
+                            ),
+                            CustomPaint(
+                              size: const Size(16, 6),
+                              painter: _TooltipTrianglePainter(),
+                            ),
+                          ],
+                        ),
+                      ),
+                  ],
                 ),
               ],
             ),
@@ -223,4 +288,25 @@ class _EditPostScreenState extends State<EditPostScreen> {
       ),
     );
   }
+}
+
+class _TooltipTrianglePainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.fill;
+
+    final path = Path();
+    path.moveTo(size.width / 2, size.height); // 아래 끝점 (뾰족한 부분)
+    path.lineTo(0, 0); // 왼쪽 위
+    path.lineTo(size.width, 0); // 오른쪽 위
+    path.close();
+
+    canvas.drawShadow(path, Colors.black.withOpacity(0.25), 4, true);
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
