@@ -298,7 +298,7 @@ class _NewPostScreenState extends State<NewPostScreen> {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SizedBox(width: 24), // 아이콘과 정확히 맞추기
+                    const SizedBox(width: 16), // 아이콘과 정확히 맞추기
                     Expanded(
                       child: Text(
                         'People you share this content with can see the location you tag and view this content on the map.',
