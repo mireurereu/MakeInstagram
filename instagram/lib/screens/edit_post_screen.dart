@@ -192,6 +192,7 @@ class _EditPostScreenState extends State<EditPostScreen> {
                       imagePath: imagePath,
                       imageBytes: widget.imageBytes,
                       imageFile: widget.imageFile,
+                      autoShowShareSheet: true,
                     ),
                   ),
                 );

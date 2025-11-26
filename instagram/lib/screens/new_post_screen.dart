@@ -24,10 +24,133 @@ class _NewPostScreenState extends State<NewPostScreen> {
   final TextEditingController _captionController = TextEditingController();
   final Color _instaBlue = const Color(0xFF3797EF);
 
+  void _showSharingInfoSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      clipBehavior: Clip.antiAliasWithSaveLayer,
+      builder: (c) => Padding(
+        padding: EdgeInsets.only(bottom: MediaQuery.of(c).viewInsets.bottom),
+        child: Container(
+          color: Colors.white,
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(4)),
+                ),
+              ),
+              const Text('Sharing posts', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, letterSpacing: 0.3)),
+              const SizedBox(height: 16),
+
+              // Info rows with icons
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: const [
+                  Icon(Icons.public, size: 24),
+                  SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Your account is public, so anyone can discover your posts and follow you.', style: TextStyle(fontSize: 14)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: const [
+                  Icon(Icons.add_photo_alternate_outlined, size: 24),
+                  SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Anyone can reuse all or part of your post in features like remixes, sequences, templates and stickers, and download your post as part of their reel or post.', style: TextStyle(fontSize: 14)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: const [
+                  Icon(Icons.block_outlined, size: 24),
+                  SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('You can turn off reuse for each post or change the default in your settings.', style: TextStyle(fontSize: 14)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+
+              // OK button
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(c);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF0095F6),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                  child: const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 12),
+                    child: Text('OK', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white)),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Center(
+                child: TextButton(
+                  onPressed: () {
+                    // Navigate to settings
+                  },
+                  child: const Text('Manage settings', style: TextStyle(color: Color(0xFF0095F6), fontSize: 14, fontWeight: FontWeight.w600)),
+                ),
+              ),
+              const SizedBox(height: 4),
+              Center(
+                child: TextButton(
+                  onPressed: () {
+                    // Open help center
+                  },
+                  child: const Text('Learn more in the Help Center.', style: TextStyle(color: Colors.black87, fontSize: 14)),
+                ),
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   void _onSharePressed() {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
@@ -75,8 +198,14 @@ class _NewPostScreenState extends State<NewPostScreen> {
               TextButton(
                 onPressed: () {
                   Navigator.pop(c);
-                  // show the pause sheet after the share sheet is dismissed
-                  Future.delayed(const Duration(milliseconds: 200), () => _showPauseSheet());
+                  // Navigate to profile and then show pause sheet
+                  Navigator.of(context).popUntil((route) => route.isFirst);
+                  mainNavKey.currentState?.changeTab(4);
+                  Future.delayed(const Duration(milliseconds: 300), () {
+                    if (mounted) {
+                      _showPauseSheet();
+                    }
+                  });
                 },
                 child: const Text('Not now', style: TextStyle(color: Colors.black54)),
               ),
@@ -92,6 +221,7 @@ class _NewPostScreenState extends State<NewPostScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
@@ -128,9 +258,12 @@ class _NewPostScreenState extends State<NewPostScreen> {
                 ),
               ),
               const SizedBox(height: 8),
-              TextButton(onPressed: () {
+              TextButton(onPressed: () async {
                 Navigator.pop(c);
-                Future.delayed(const Duration(milliseconds: 200), () => _startShareProcess());
+                // Wait 0.5 seconds then navigate to feed and share
+                await Future.delayed(const Duration(milliseconds: 500));
+                await _addPostToFeed();
+                mainNavKey.currentState?.changeTab(0);
               }, child: const Text('No thanks', style: TextStyle(color: Colors.blue))),
               const SizedBox(height: 8),
             ],
@@ -141,9 +274,18 @@ class _NewPostScreenState extends State<NewPostScreen> {
   }
 
   Future<void> _startShareProcess() async {
+    if (!mounted) return;
     setState(() => _isSharing = true);
     await Future.delayed(const Duration(seconds: 2));
 
+    await _addPostToFeed();
+
+    if (!mounted) return;
+    mainNavKey.currentState?.changeTab(0);
+    Navigator.of(context).popUntil((route) => route.isFirst);
+  }
+
+  Future<void> _addPostToFeed() async {
     // Add to profile grid
     final currentMyPosts = ProfileScreen.myPostsNotifier.value;
     final String addedPath = widget.imagePath ?? widget.imageFile?.path ?? '';
@@ -171,10 +313,6 @@ class _NewPostScreenState extends State<NewPostScreen> {
         FeedScreen.postedBannerNotifier.value = null;
       }
     });
-
-    if (!mounted) return;
-    mainNavKey.currentState?.changeTab(0);
-    Navigator.of(context).popUntil((route) => route.isFirst);
   }
 
   @override
@@ -277,7 +415,7 @@ class _NewPostScreenState extends State<NewPostScreen> {
               
               // Tag people
               ListTile(
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                 leading: const Icon(Icons.person_outline, color: Colors.black),
                 title: const Text('Tag people', style: TextStyle(fontSize: 15)),
                 trailing: const Icon(Icons.chevron_right, color: Colors.grey),
@@ -286,7 +424,7 @@ class _NewPostScreenState extends State<NewPostScreen> {
               
               // Add location (선 없이 바로 이어짐)
               ListTile(
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                 leading: const Icon(Icons.location_on_outlined, color: Colors.black),
                 title: const Text('Add location', style: TextStyle(fontSize: 15)),
                 trailing: const Icon(Icons.chevron_right, color: Colors.grey),
@@ -312,7 +450,7 @@ class _NewPostScreenState extends State<NewPostScreen> {
 
               // Audience
               ListTile(
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                 leading: const Icon(Icons.visibility_outlined, color: Colors.black),
                 title: const Text('Audience', style: TextStyle(fontSize: 15)),
                 trailing: Row(
@@ -328,7 +466,7 @@ class _NewPostScreenState extends State<NewPostScreen> {
               
               // Also share on...
               ListTile(
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                 leading: const Icon(Icons.share_outlined, color: Colors.black),
                 title: const Text('Also share on...', style: TextStyle(fontSize: 15)),
                 trailing: Row(
@@ -354,7 +492,7 @@ class _NewPostScreenState extends State<NewPostScreen> {
               
               // More options
               ListTile(
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                 leading: const Icon(Icons.more_horiz, color: Colors.black),
                 title: const Text('More options', style: TextStyle(fontSize: 15)),
                 trailing: const Icon(Icons.chevron_right, color: Colors.grey),
@@ -412,7 +550,9 @@ class _NewPostScreenState extends State<NewPostScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (widget.autoShowShareSheet && !_didAutoShow) {
         _didAutoShow = true;
-        _onSharePressed();
+        Future.delayed(const Duration(milliseconds: 500), () {
+          _showSharingInfoSheet();
+        });
       }
     });
   }
