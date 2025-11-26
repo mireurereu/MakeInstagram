@@ -168,7 +168,36 @@ class FeedScreen extends StatelessWidget {
               );
             },
           ),
-          IconButton(icon: const Icon(Icons.send_outlined, color: Colors.black, size: 28), onPressed: () { Navigator.push(context, MaterialPageRoute(builder: (c) => const DmListScreen())); }),
+          IconButton(
+            icon: const Icon(Icons.send_outlined, color: Colors.black, size: 28),
+            onPressed: () {
+              Navigator.of(context).push(
+                PageRouteBuilder(
+                  pageBuilder: (context, animation, secondaryAnimation) {
+                    return const DmListScreen();
+                  },
+                  transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                    // 오른쪽에서 왼쪽으로 슬라이드
+                    const begin = Offset(1.0, 0.0); // 오른쪽 시작
+                    const end = Offset.zero; // 중앙 끝
+                    const curve = Curves.easeInOut;
+                    
+                    var tween = Tween(begin: begin, end: end);
+                    var curvedAnimation = CurvedAnimation(
+                      parent: animation,
+                      curve: curve,
+                    );
+                    
+                    return SlideTransition(
+                      position: tween.animate(curvedAnimation),
+                      child: child,
+                    );
+                  },
+                  transitionDuration: const Duration(milliseconds: 800),
+                ),
+              );
+            },
+          ),
         ],
       ),
       body: ValueListenableBuilder<List<Map<String, dynamic>>>(

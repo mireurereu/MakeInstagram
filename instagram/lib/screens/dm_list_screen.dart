@@ -301,10 +301,28 @@ class _DmListScreenState extends State<DmListScreen> {
       ),
       trailing: const Icon(Icons.camera_alt_outlined, color: Colors.grey, size: 28),
       onTap: () async {
-        final result = await Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => ChatRoomScreen(username: username),
+        final result = await Navigator.of(context).push(
+          PageRouteBuilder(
+            pageBuilder: (context, animation, secondaryAnimation) {
+              return ChatRoomScreen(username: username);
+            },
+            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+              const begin = Offset(1.0, 0.0);
+              const end = Offset.zero;
+              const curve = Curves.easeInOut;
+              
+              var tween = Tween(begin: begin, end: end);
+              var curvedAnimation = CurvedAnimation(
+                parent: animation,
+                curve: curve,
+              );
+              
+              return SlideTransition(
+                position: tween.animate(curvedAnimation),
+                child: child,
+              );
+            },
+            transitionDuration: const Duration(milliseconds: 600),
           ),
         );
         
