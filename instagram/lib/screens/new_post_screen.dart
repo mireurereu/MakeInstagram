@@ -260,8 +260,8 @@ class _NewPostScreenState extends State<NewPostScreen> {
               const SizedBox(height: 8),
               TextButton(onPressed: () async {
                 Navigator.pop(c);
-                // Wait 0.5 seconds then navigate to feed and share
-                await Future.delayed(const Duration(milliseconds: 500));
+                // Wait 1 second then navigate to feed and share
+                await Future.delayed(const Duration(milliseconds:1000));
                 await _addPostToFeed();
                 mainNavKey.currentState?.changeTab(0);
               }, child: const Text('No thanks', style: TextStyle(color: Colors.blue))),
@@ -307,8 +307,8 @@ class _NewPostScreenState extends State<NewPostScreen> {
 
     // Show the transient "Posted" banner in the feed with a thumbnail.
     FeedScreen.postedBannerNotifier.value = {'image': addedPath, 'message': 'Posted! Way to go.'};
-    // Auto-clear the banner after a short delay (if the user hasn't dismissed it).
-    Future.delayed(const Duration(seconds: 6), () {
+    // Auto-clear the banner after 5 seconds
+    Future.delayed(const Duration(seconds: 5), () {
       if (FeedScreen.postedBannerNotifier.value != null && FeedScreen.postedBannerNotifier.value!['image'] == addedPath) {
         FeedScreen.postedBannerNotifier.value = null;
       }

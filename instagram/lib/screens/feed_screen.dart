@@ -177,25 +177,20 @@ class FeedScreen extends StatelessWidget {
           return ListView(
             children: [
               _buildStoryBar(),
-              const SizedBox(height: 8),
               // Posted banner (transient) — shows when a new post was just created
               ValueListenableBuilder<Map<String, String?>?>(
                 valueListenable: postedBannerNotifier,
                 builder: (c, banner, __) {
                   if (banner == null) return const SizedBox.shrink();
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                    child: PostedBanner(
-                      imagePath: banner['image'] ?? '',
-                      message: banner['message'] ?? 'Posted! Way to go.',
-                      onSend: () {
-                        postedBannerNotifier.value = null;
-                      },
-                    ),
+                  return PostedBanner(
+                    imagePath: banner['image'] ?? '',
+                    message: banner['message'] ?? 'Posted! Way to go.',
+                    onSend: () {
+                      postedBannerNotifier.value = null;
+                    },
                   );
                 },
               ),
-              const Divider(height: 1, color: Color(0xFFDBDBDB)),
               // build posts from feed notifier
               ...feed.map((post) => PostCardWidget(
                 key: ValueKey(post['id']),
