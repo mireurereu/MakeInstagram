@@ -264,6 +264,16 @@ class _CommentsModalContentState extends State<CommentsModalContent> {
     
     // 이 댓글에 대한 대댓글이 있는지 확인 (Posting 상태가 아닌 것만)
     bool hasReplies = widget.comments.any((c) => c.replyToUsername == comment.username && !c.isPosting);
+    
+    // "Reply to username" 표시 조건:
+    // 1. 대댓글이 아니고
+    // 2. 대댓글이 달리지 않았고
+    // 3. 내 게시물이고 (postOwnerName == UserState.myId)
+    // 4. 댓글 작성자를 내가 팔로우하고 있을 때
+    bool shouldShowReplyTo = comment.replyToUsername == null && 
+                             !hasReplies && 
+                             widget.postOwnerName == UserState.myId &&
+                             UserState.amIFollowing(comment.username);
 
     return ValueListenableBuilder<String?>(
       valueListenable: _highlightedCommentIdNotifier,
@@ -395,7 +405,8 @@ class _CommentsModalContentState extends State<CommentsModalContent> {
                   ),
                   
                   // 대댓글이 아니고, 대댓글이 달리지 않은 일반 댓글에만 "Reply to username" 표시
-                  if (comment.replyToUsername == null && !hasReplies) ...[
+                  // + 내 게시물이고, 내가 팔로우하는 사람의 댓글일 때만
+                  if (shouldShowReplyTo) ...[
                     const SizedBox(height: 8),
                     GestureDetector(
                       onTap: () => _startReplyTo(comment.username),

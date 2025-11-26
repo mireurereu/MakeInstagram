@@ -23,6 +23,11 @@ class FeedScreen extends StatelessWidget {
       'timestamp': 'September 19',
       'isVideo': true,
       'isVerified': true,
+      'comments': [
+        Comment(id: 'c1_1', username: 'imwinter', avatarUrl: 'https://picsum.photos/seed/winter/100/100', text: '😍😍😍'),
+        Comment(id: 'c1_2', username: 'katarinabluu', avatarUrl: 'https://picsum.photos/seed/karina/100/100', text: 'Amazing!!'),
+        Comment(id: 'c1_3', username: 'newjeans_official', avatarUrl: 'https://picsum.photos/seed/newjeans/100/100', text: 'Love this 💕'),
+      ],
     },
     {
       'id': 'seed2',
@@ -32,7 +37,11 @@ class FeedScreen extends StatelessWidget {
       'likeCount': '3,120',
       'caption': '적을 물리치고 1%가 되어라!',
       'timestamp': '5 days ago',
-      'isVideo': false
+      'isVideo': false,
+      'comments': [
+        Comment(id: 'c2_1', username: 'gamer_pro', avatarUrl: 'https://picsum.photos/seed/gamer/100/100', text: '이 게임 완전 재밌어요!'),
+        Comment(id: 'c2_2', username: 'mobile_master', avatarUrl: 'https://picsum.photos/seed/mobile/100/100', text: 'ㄹㅇ 꿀잼'),
+      ],
     },
     {
       'id': 'seed3',
@@ -42,7 +51,13 @@ class FeedScreen extends StatelessWidget {
       'likeCount': '1,367,684',
       'caption': ' ',
       'timestamp': '5 days ago',
-      'isVideo': false
+      'isVideo': false,
+      'comments': [
+        Comment(id: 'c3_1', username: 'imwinter', avatarUrl: 'https://picsum.photos/seed/winter/100/100', text: 'Gorgeous! 😻'),
+        Comment(id: 'c3_2', username: 'aespa_official', avatarUrl: 'https://picsum.photos/seed/aespa/100/100', text: 'Beautiful 💖'),
+        Comment(id: 'c3_3', username: 'fashion_lover', avatarUrl: 'https://picsum.photos/seed/fashion/100/100', text: 'Where did you get that outfit?'),
+        Comment(id: 'c3_4', username: 'katarinabluu', avatarUrl: 'https://picsum.photos/seed/karina/100/100', text: 'Thank you all! 🥰', replyToUsername: 'fashion_lover'),
+      ],
     },
     {
       'id': 'seed4',
@@ -52,7 +67,12 @@ class FeedScreen extends StatelessWidget {
       'likeCount': '58,918',
       'caption': '두번재 순례길\n햇빛도 그늘도 바람도 오르막도 내리막도 친구들도 \n전부 다 사랑해 정말로!!',
       'timestamp': '17 hours ago',
-      'isVideo': false
+      'isVideo': false,
+      'comments': [
+        Comment(id: 'c4_1', username: 'hiker_life', avatarUrl: 'https://picsum.photos/seed/hiker/100/100', text: '너무 멋져요!'),
+        Comment(id: 'c4_2', username: 'travel_buddy', avatarUrl: 'https://picsum.photos/seed/travel/100/100', text: '순례길 어디인가요?'),
+        Comment(id: 'c4_3', username: 'beom_jun__k', avatarUrl: 'https://picsum.photos/seed/beom/100/100', text: '제주 올레길이에요!', replyToUsername: 'travel_buddy'),
+      ],
     },
     {
       'id': 'seed_akmu',
@@ -64,6 +84,11 @@ class FeedScreen extends StatelessWidget {
       'timestamp': '2 days ago',
       'isVideo': false,
       'isVerified': true,
+      'comments': [
+        Comment(id: 'c5_1', username: 'music_fan', avatarUrl: 'https://picsum.photos/seed/musicfan/100/100', text: '노래 너무 좋아요 💙'),
+        Comment(id: 'c5_2', username: 'kpop_lover', avatarUrl: 'https://picsum.photos/seed/kpop/100/100', text: '목소리 천사예요'),
+        Comment(id: 'c5_3', username: 'akmu_fan', avatarUrl: 'https://picsum.photos/seed/akmufan/100/100', text: '수현님 최고!! 👏'),
+      ],
     },
     
     {
@@ -74,7 +99,10 @@ class FeedScreen extends StatelessWidget {
       'likeCount': '548',
       'caption': 'ad',
       'timestamp': '3 days ago',
-      'isVideo': true
+      'isVideo': true,
+      'comments': [
+        Comment(id: 'c6_1', username: 'traveler_123', avatarUrl: 'https://picsum.photos/seed/traveler/100/100', text: '할인 코드 있나요?'),
+      ],
     },
     {
       'id': 'seed6',
@@ -84,7 +112,13 @@ class FeedScreen extends StatelessWidget {
       'likeCount': '886,981',
       'caption': '사랑스러운 🗿🤍',
       'timestamp': '3 days ago',
-      'isVideo': false
+      'isVideo': false,
+      'comments': [
+        Comment(id: 'c7_1', username: 'aespa_official', avatarUrl: 'https://picsum.photos/seed/aespa/100/100', text: '우리 윈터 💕'),
+        Comment(id: 'c7_2', username: 'katarinabluu', avatarUrl: 'https://picsum.photos/seed/karina/100/100', text: 'So cute 😊'),
+        Comment(id: 'c7_3', username: 'winter_fan', avatarUrl: 'https://picsum.photos/seed/winterfan/100/100', text: '완전 사랑스러워요 ㅠㅠ'),
+        Comment(id: 'c7_4', username: 'my_love', avatarUrl: 'https://picsum.photos/seed/mylove/100/100', text: '여신이다...'),
+      ],
     }
   ]);
 

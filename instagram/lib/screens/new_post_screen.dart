@@ -188,120 +188,217 @@ class _NewPostScreenState extends State<NewPostScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('New Post', style: TextStyle(fontWeight: FontWeight.bold)),
-        actions: [
-          TextButton(
-            onPressed: _isSharing ? null : _onSharePressed,
-            child: Text('Share', style: TextStyle(color: _isSharing ? Colors.grey : _instaBlue, fontWeight: FontWeight.bold, fontSize: 16)),
-          )
-        ],
+        backgroundColor: Colors.white,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: const Text('New post', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black)),
+        centerTitle: false,
       ),
       body: SafeArea(
-        child: Column(
-          children: [
-            Expanded(
-              child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 20),
+              // 이미지 미리보기
+              Center(
+                child: Container(
+                  width: 200,
+                  height: 200,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[100],
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image(image: imageProvider, fit: BoxFit.cover),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 20),
+              // Caption 입력
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: TextField(
+                  controller: _captionController,
+                  decoration: const InputDecoration(
+                    hintText: 'Add a caption...',
+                    hintStyle: TextStyle(color: Colors.grey),
+                    border: InputBorder.none,
+                    isDense: true,
+                  ),
+                  maxLines: null,
+                  minLines: 1,
+                  style: const TextStyle(fontSize: 15),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+              // Poll / Prompt 버튼
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Row(
                   children: [
-                    const SizedBox(height: 12),
-                    Center(
-                      child: Container(
-                        width: 300,
-                        height: 300,
-                        color: Colors.grey[100],
-                            child: Image(image: imageProvider, fit: BoxFit.contain),
+                    OutlinedButton.icon(
+                      onPressed: () {},
+                      icon: const Icon(Icons.poll_outlined, size: 16, color: Colors.black),
+                      label: const Text('Poll', style: TextStyle(color: Colors.black, fontSize: 14)),
+                      style: OutlinedButton.styleFrom(
+                        backgroundColor: const Color(0xFFEFEFEF),
+                        side: BorderSide.none,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        minimumSize: const Size(0, 36),
                       ),
                     ),
-
-                    const SizedBox(height: 12),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                      child: TextField(
-                        controller: _captionController,
-                        decoration: const InputDecoration(
-                          hintText: 'Add a caption...',
-                          border: InputBorder.none,
-                          isDense: true,
-                        ),
-                        maxLines: null,
-                        minLines: 1,
+                    const SizedBox(width: 10),
+                    OutlinedButton.icon(
+                      onPressed: () {},
+                      icon: const Icon(Icons.auto_awesome_outlined, size: 16, color: Colors.black),
+                      label: const Text('Prompt', style: TextStyle(color: Colors.black, fontSize: 14)),
+                      style: OutlinedButton.styleFrom(
+                        backgroundColor: const Color(0xFFEFEFEF),
+                        side: BorderSide.none,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        minimumSize: const Size(0, 36),
                       ),
                     ),
-
-                    const SizedBox(height: 8),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                      child: Wrap(
-                        spacing: 8,
-                        children: [
-                          OutlinedButton.icon(onPressed: () {}, icon: const Icon(Icons.poll_outlined, size: 16), label: const Text('Poll')), 
-                          OutlinedButton.icon(onPressed: () {}, icon: const Icon(Icons.lightbulb_outline, size: 16), label: const Text('Prompt')),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 12),
-                    const Divider(height: 1),
-                    ListTile(
-                      leading: const Icon(Icons.person_outline),
-                      title: const Text('Tag people'),
-                      trailing: const Icon(Icons.chevron_right),
-                      onTap: () {},
-                    ),
-                    const Divider(height: 1),
-                    ListTile(
-                      leading: const Icon(Icons.location_on_outlined),
-                      title: const Text('Add location'),
-                      subtitle: const Text('People you share this content with can see the location you tag and view this content on the map.'),
-                      trailing: const Icon(Icons.chevron_right),
-                      onTap: () {},
-                    ),
-                    const Divider(height: 1),
-
-                    const SizedBox(height: 8),
-                    const Divider(height: 1),
-                    ListTile(
-                      leading: const Icon(Icons.visibility_outlined),
-                      title: const Text('Audience'),
-                      trailing: Text('Everyone', style: TextStyle(color: Colors.grey[700])),
-                      onTap: () {},
-                    ),
-                    const Divider(height: 1),
-                    ListTile(
-                      leading: const Icon(Icons.share_outlined),
-                      title: const Text('Also share on...'),
-                      trailing: Row(mainAxisSize: MainAxisSize.min, children: const [Text('Off', style: TextStyle(color: Colors.grey)), SizedBox(width: 8), Icon(Icons.new_releases, color: Colors.blue, size: 18)]),
-                      onTap: () {},
-                    ),
-                    const Divider(height: 1),
-                    ListTile(
-                      leading: const Icon(Icons.more_horiz),
-                      title: const Text('More options'),
-                      trailing: const Icon(Icons.chevron_right),
-                      onTap: () {},
-                    ),
-                    const Divider(height: 1),
-                    const SizedBox(height: 80),
                   ],
                 ),
               ),
-            ),
 
-            if (_isSharing) Container(color: Colors.black54, height: 4),
-          ],
+              const SizedBox(height: 20),
+              const Divider(height: 1, thickness: 1, color: Color(0xFFDBDBDB)),
+              
+              // Tag people
+              ListTile(
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                leading: const Icon(Icons.person_outline, color: Colors.black),
+                title: const Text('Tag people', style: TextStyle(fontSize: 15)),
+                trailing: const Icon(Icons.chevron_right, color: Colors.grey),
+                onTap: () {},
+              ),
+              
+              // Add location (선 없이 바로 이어짐)
+              ListTile(
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                leading: const Icon(Icons.location_on_outlined, color: Colors.black),
+                title: const Text('Add location', style: TextStyle(fontSize: 15)),
+                trailing: const Icon(Icons.chevron_right, color: Colors.grey),
+                onTap: () {},
+              ),
+              // Add location의 서브타이틀을 별도로 배치
+              Padding(
+                padding: const EdgeInsets.only(left: 16, right: 16, bottom: 12),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(width: 24), // 아이콘과 정확히 맞추기
+                    Expanded(
+                      child: Text(
+                        'People you share this content with can see the location you tag and view this content on the map.',
+                        style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(height: 1, thickness: 8, color: Color(0xFFF0F0F0)),
+
+              // Audience
+              ListTile(
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                leading: const Icon(Icons.visibility_outlined, color: Colors.black),
+                title: const Text('Audience', style: TextStyle(fontSize: 15)),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text('Everyone', style: TextStyle(color: Colors.grey[700], fontSize: 15)),
+                    const SizedBox(width: 4),
+                    const Icon(Icons.chevron_right, color: Colors.grey),
+                  ],
+                ),
+                onTap: () {},
+              ),
+              
+              // Also share on...
+              ListTile(
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                leading: const Icon(Icons.share_outlined, color: Colors.black),
+                title: const Text('Also share on...', style: TextStyle(fontSize: 15)),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text('Off', style: TextStyle(color: Colors.grey[700], fontSize: 15)),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: _instaBlue,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Text('New', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+                    ),
+                    const SizedBox(width: 4),
+                    const Icon(Icons.chevron_right, color: Colors.grey),
+                  ],
+                ),
+                onTap: () {},
+              ),
+              const Divider(height: 1, thickness: 8, color: Color(0xFFF0F0F0)),
+              
+              // More options
+              ListTile(
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                leading: const Icon(Icons.more_horiz, color: Colors.black),
+                title: const Text('More options', style: TextStyle(fontSize: 15)),
+                trailing: const Icon(Icons.chevron_right, color: Colors.grey),
+                onTap: () {},
+              ),
+              const Divider(height: 1, thickness: 1, color: Color(0xFFDBDBDB)),
+              
+              const SizedBox(height: 80),
+            ],
+          ),
         ),
       ),
-      bottomNavigationBar: SafeArea(
-        child: Container(
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
           color: Colors.white,
-          padding: const EdgeInsets.all(12),
-          child: SizedBox(
-            height: 50,
-            child: ElevatedButton(
-              onPressed: _isSharing ? null : _onSharePressed,
-              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF3797EF)),
-              child: const Text('Share', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, -2),
+            ),
+          ],
+        ),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: SizedBox(
+              height: 50,
+              child: ElevatedButton(
+                onPressed: _isSharing ? null : _onSharePressed,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _isSharing ? Colors.grey : const Color(0xFF3797EF),
+                  disabledBackgroundColor: Colors.grey[300],
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  elevation: 0,
+                ),
+                child: _isSharing
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                      )
+                    : const Text('Share', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+              ),
             ),
           ),
         ),
