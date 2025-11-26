@@ -32,12 +32,6 @@ class CreateBottomSheet extends StatelessWidget {
           Divider(color: Colors.grey[200]),
           _buildOption(
             context,
-            icon: Icons.movie_outlined,
-            title: 'Reel',
-            onTap: () {},
-          ),
-          _buildOption(
-            context,
             icon: Icons.grid_on,
             title: 'Post',
             onTap: () {
@@ -51,10 +45,15 @@ class CreateBottomSheet extends StatelessWidget {
           ),
           _buildOption(
             context,
-            icon: Icons.person_pin_outlined,
-            title: 'Share only to profile',
+            icon: Icons.movie_outlined,
+            title: 'Reel',
             onTap: () {},
-            showBadge: true,
+          ),
+          _buildOption(
+            context,
+            icon: Icons.history_outlined,
+            title: 'Story',
+            onTap: () {},
           ),
           const SizedBox(height: 20),
         ],
@@ -67,19 +66,19 @@ class CreateBottomSheet extends StatelessWidget {
     required IconData icon,
     required String title,
     required VoidCallback onTap,
-    bool showBadge = false,
+    bool showNew = false,
   }) {
     return ListTile(
       leading: Icon(icon, size: 28, color: Colors.black),
       title: Text(title, style: const TextStyle(fontSize: 16, color: Colors.black)),
-      trailing: showBadge
+      trailing: showNew
           ? Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: Colors.blue, // New 뱃지는 파란색 유지
-                borderRadius: BorderRadius.circular(4),
+                color: const Color(0xFF3797EF),
+                borderRadius: BorderRadius.circular(12),
               ),
-              child: const Text('New', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+              child: const Text('New', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600)),
             )
           : null,
       onTap: onTap,

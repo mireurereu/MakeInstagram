@@ -66,7 +66,6 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
   ];
   String? _selectedImage;
   // (single image selection for DM)
-  bool _isImageSheetOpen = false;
   // ensure typing/loading is shown for at least this duration
   final Duration _minTypingDuration = const Duration(milliseconds: 1500);
   DateTime? _loadingStartTime;
@@ -98,14 +97,6 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
     final String text = _textController.text;
     if (text.isEmpty && _selectedImage == null) return;
 
-    // If the image picker sheet is currently open, close it first so the UI flows
-    if (_isImageSheetOpen) {
-      Navigator.of(context).pop();
-      // small delay to let the sheet visually close
-      await Future.delayed(const Duration(milliseconds: 200));
-      _isImageSheetOpen = false;
-    }
-
     // Show send icon briefly
     setState(() => _showSendIcon = true);
     
@@ -126,8 +117,8 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
     });
     _scrollToBottom();
 
-    // 1s: show Seen
-    final t1 = Timer(const Duration(seconds: 1), () {
+    // 0.5s: show Seen
+    final t1 = Timer(const Duration(milliseconds: 500), () {
       if (!mounted) return;
       setState(() {
         if (sentIndex < _messages.length) _messages[sentIndex].seen = true;
@@ -136,8 +127,8 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
     });
     _activeTimers.add(t1);
 
-    // 2s: hide Seen and show typing
-    final t2 = Timer(const Duration(seconds: 2), () {
+    // 1s: hide Seen and show typing
+    final t2 = Timer(const Duration(seconds: 1), () {
       if (!mounted) return;
       setState(() {
         if (sentIndex < _messages.length) _messages[sentIndex].seen = false;
@@ -366,28 +357,6 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
         ),
           _buildTextInputArea(),
         ]),
-
-        // Selected image preview overlay (bottom-left)
-        if (_selectedImage != null)
-          Positioned(
-            left: 12,
-            bottom: 88,
-            child: Row(children: [
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 6)]),
-                child: Row(children: [
-                  ClipRRect(borderRadius: BorderRadius.circular(16), child: Image.asset(_selectedImage!, width: 36, height: 36, fit: BoxFit.cover)),
-                ]),
-              ),
-              const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18), boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 6)]),
-                child: const Text('Tap to preview and edit', style: TextStyle(color: Colors.black87)),
-              ),
-            ]),
-          ),
       ]),
     );
   }
@@ -409,10 +378,26 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
             child: Column(crossAxisAlignment: isSender ? CrossAxisAlignment.end : CrossAxisAlignment.start, children: [
               // If message contains image, show image first
               if (message.imageAsset != null)
-                Container(
-                  clipBehavior: Clip.hardEdge,
-                  decoration: BoxDecoration(color: isSender ? _senderPurple : const Color(0xFFEFEFEF), borderRadius: BorderRadius.circular(12.0)),
-                  child: Image.asset(message.imageAsset!, fit: BoxFit.cover, width: MediaQuery.of(context).size.width * 0.6, height: 160),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFEFEFEF),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.send, color: Colors.black, size: 16),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.3),
+                      clipBehavior: Clip.hardEdge,
+                      decoration: BoxDecoration(borderRadius: BorderRadius.circular(12.0)),
+                      child: Image.asset(message.imageAsset!, fit: BoxFit.contain),
+                    ),
+                  ],
                 ),
               if (message.imageAsset != null && message.text.isNotEmpty) const SizedBox(height: 8.0),
               if (message.text.isNotEmpty)
@@ -496,13 +481,12 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
   }
 
   Future<void> _openImagePickerSheet() async {
-    _isImageSheetOpen = true;
     String? tempSelectedImage = _selectedImage;
     bool showTooltip = false;
     bool showBottomBar = _selectedImage != null;
     Timer? tooltipTimer;
     
-    final result = await showModalBottomSheet<String>(
+    await showModalBottomSheet<String>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.white,
@@ -643,7 +627,11 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                               ),
                               const Spacer(),
                               GestureDetector(
-                                onTap: () => Navigator.pop(context, tempSelectedImage),
+                                onTap: () async {
+                                  Navigator.pop(context);
+                                  setState(() => _selectedImage = tempSelectedImage);
+                                  await _sendMessage();
+                                },
                                 child: Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                                   decoration: BoxDecoration(
@@ -666,10 +654,6 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
     );
 
     tooltipTimer?.cancel();
-    if (result != null) {
-      setState(() => _selectedImage = result);
-    }
-    _isImageSheetOpen = false;
   }
 }
 
