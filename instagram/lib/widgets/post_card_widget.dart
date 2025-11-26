@@ -340,13 +340,13 @@ class _PostCardWidgetState extends State<PostCardWidget> {
                       return url.startsWith('http') || url.startsWith('https')
                           ? Image.network(
                               url,
-                              fit: BoxFit.cover,
+                              fit: BoxFit.fitWidth,
                               width: double.infinity,
                               errorBuilder: (c, o, s) => Container(color: Colors.grey[300]),
                             )
                           : Image.asset(
                               url, // 로컬 파일 경로 또는 에셋 경로
-                              fit: BoxFit.cover,
+                              fit: BoxFit.fitWidth,
                               width: double.infinity,
                               errorBuilder: (c, o, s) => Container(color: Colors.grey[300], child: const Center(child: Icon(Icons.broken_image))),
                             );
@@ -354,7 +354,7 @@ class _PostCardWidgetState extends State<PostCardWidget> {
                   );
                 }).toList(),
                 options: CarouselOptions(
-                  height: 400,
+                  aspectRatio: 1.0,
                   viewportFraction: 1.0,
                   enableInfiniteScroll: false,
                   onPageChanged: (index, reason) => setState(() => _currentCarouselIndex = index),
