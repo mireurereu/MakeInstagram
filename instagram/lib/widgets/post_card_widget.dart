@@ -7,6 +7,7 @@ import 'package:instagram/widgets/comments_modal_content.dart';
 import 'package:instagram/screens/notifications_screen.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/gestures.dart'; // 제스처 인식을 위해 필요
+import 'package:video_player/video_player.dart';
 
 class PostCardWidget extends StatefulWidget {
   final String username;
@@ -58,6 +59,10 @@ class _PostCardWidgetState extends State<PostCardWidget> {
   // 댓글 리스트 (late로 선언하여 initState에서 초기화)
   late List<Comment> _comments;
   late bool _isFollowing;
+  
+  // 비디오 플레이어 컨트롤러
+  VideoPlayerController? _videoController;
+  bool _isVideoInitialized = false;
 
   @override
   void initState() {
@@ -75,11 +80,33 @@ class _PostCardWidgetState extends State<PostCardWidget> {
     } else {
       _comments = []; // Initialize with an empty list instead of hardcoded comments
     }
+    
+    // 3. 비디오 초기화
+    if (widget.isVideo && widget.postImageUrls.isNotEmpty) {
+      _initializeVideo(widget.postImageUrls[0]);
+    }
 
     // initialize liked state from incoming prop (persisted in feed model)
     _isLiked = widget.isLiked ?? false;
     // initialize following state for header (so Follow button can reflect current state)
     _isFollowing = UserState.amIFollowing(widget.username);
+  }
+  
+  void _initializeVideo(String videoUrl) async {
+    _videoController = VideoPlayerController.networkUrl(Uri.parse(videoUrl));
+    await _videoController!.initialize();
+    _videoController!.setLooping(true);
+    if (mounted) {
+      setState(() {
+        _isVideoInitialized = true;
+      });
+    }
+  }
+  
+  @override
+  void dispose() {
+    _videoController?.dispose();
+    super.dispose();
   }
 
   void _showCommentsModal() {
@@ -332,35 +359,54 @@ class _PostCardWidgetState extends State<PostCardWidget> {
           child: Stack(
             alignment: Alignment.center,
             children: [
-              CarouselSlider(
-                items: widget.postImageUrls.map((url) {
-                  return Builder(
-                    builder: (BuildContext context) {
-                      // URL이 http로 시작하면 네트워크 이미지, 아니면 로컬 에셋 (새 게시물은 로컬 경로일 수 있음)
-                      return url.startsWith('http') || url.startsWith('https')
-                          ? Image.network(
-                              url,
-                              fit: BoxFit.fitWidth,
-                              width: double.infinity,
-                              errorBuilder: (c, o, s) => Container(color: Colors.grey[300]),
-                            )
-                          : Image.asset(
-                              url, // 로컬 파일 경로 또는 에셋 경로
-                              fit: BoxFit.fitWidth,
-                              width: double.infinity,
-                              errorBuilder: (c, o, s) => Container(color: Colors.grey[300], child: const Center(child: Icon(Icons.broken_image))),
-                            );
-                    },
-                  );
-                }).toList(),
-                options: CarouselOptions(
-                  aspectRatio: 1.0,
-                  viewportFraction: 1.0,
-                  enableInfiniteScroll: false,
-                  onPageChanged: (index, reason) => setState(() => _currentCarouselIndex = index),
-                ),
-              ),
-              if (widget.isVideo) const Icon(Icons.play_circle_fill, color: Colors.white, size: 60),
+              // 비디오일 경우 VideoPlayer, 아니면 CarouselSlider
+              widget.isVideo && _isVideoInitialized
+                  ? GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          if (_videoController!.value.isPlaying) {
+                            _videoController!.pause();
+                          } else {
+                            _videoController!.play();
+                          }
+                        });
+                      },
+                      child: AspectRatio(
+                        aspectRatio: _videoController!.value.aspectRatio,
+                        child: VideoPlayer(_videoController!),
+                      ),
+                    )
+                  : CarouselSlider(
+                      items: widget.postImageUrls.map((url) {
+                        return Builder(
+                          builder: (BuildContext context) {
+                            // URL이 http로 시작하면 네트워크 이미지, 아니면 로컬 에셋 (새 게시물은 로컬 경로일 수 있음)
+                            return url.startsWith('http') || url.startsWith('https')
+                                ? Image.network(
+                                    url,
+                                    fit: BoxFit.fitWidth,
+                                    width: double.infinity,
+                                    errorBuilder: (c, o, s) => Container(color: Colors.grey[300]),
+                                  )
+                                : Image.asset(
+                                    url, // 로컬 파일 경로 또는 에셋 경로
+                                    fit: BoxFit.fitWidth,
+                                    width: double.infinity,
+                                    errorBuilder: (c, o, s) => Container(color: Colors.grey[300], child: const Center(child: Icon(Icons.broken_image))),
+                                  );
+                          },
+                        );
+                      }).toList(),
+                      options: CarouselOptions(
+                        aspectRatio: 1.0,
+                        viewportFraction: 1.0,
+                        enableInfiniteScroll: false,
+                        onPageChanged: (index, reason) => setState(() => _currentCarouselIndex = index),
+                      ),
+                    ),
+              // 비디오가 아직 초기화 중일 때 또는 일시정지 상태일 때 플레이 아이콘 표시
+              if (widget.isVideo && (!_isVideoInitialized || !_videoController!.value.isPlaying))
+                const Icon(Icons.play_circle_fill, color: Colors.white, size: 60),
               if (_showHeartAnimation) const Icon(Icons.favorite, color: Colors.white, size: 100),
               if (widget.postImageUrls.length > 1)
                 Positioned(

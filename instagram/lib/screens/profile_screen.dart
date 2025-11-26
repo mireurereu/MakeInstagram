@@ -7,6 +7,7 @@ import 'package:instagram/screens/create_post_screen.dart';
 import 'package:instagram/screens/post_viewer_screen.dart';
 import 'package:instagram/widgets/create_bottom_sheet.dart';
 import 'package:instagram/screens/main_navigation_screen.dart';
+import 'package:instagram/screens/feed_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   final String? username;
@@ -160,9 +161,12 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                 children: [
                   // 프로필 헤더
                   _isCurrentUser
-                      ? ValueListenableBuilder<List<String>>(
-                          valueListenable: ProfileScreen.myPostsNotifier,
-                          builder: (context, posts, _) => _buildProfileHeader(posts.length),
+                      ? ValueListenableBuilder<List<Map<String, dynamic>>>(
+                          valueListenable: FeedScreen.feedNotifier,
+                          builder: (context, allPosts, _) {
+                            final myPosts = allPosts.where((post) => post['username'] == UserState.myId).toList();
+                            return _buildProfileHeader(myPosts.length);
+                          },
                         )
                       : _buildProfileHeader(_otherUserPosts.length),
                   
@@ -399,37 +403,36 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
   }
 
   Widget _buildMyPostGrid() {
-    return ValueListenableBuilder<List<String>>(
-      valueListenable: ProfileScreen.myPostsNotifier,
-      builder: (context, posts, _) {
+    return ValueListenableBuilder<List<Map<String, dynamic>>>(
+      valueListenable: FeedScreen.feedNotifier,
+      builder: (context, allPosts, _) {
+        // feed에서 내 게시물만 필터링 (feedNotifier에 이미 최신순이므로 역순 제거)
+        final myPosts = allPosts
+            .where((post) => post['username'] == UserState.myId)
+            .toList();
+        
         return GridView.builder(
           padding: EdgeInsets.zero,
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 3, crossAxisSpacing: 1, mainAxisSpacing: 1,
           ),
-          itemCount: posts.length + 1,
+          itemCount: myPosts.length + 1,
             itemBuilder: (context, index) {
-            if (index == posts.length) {
+            if (index == myPosts.length) {
                return GestureDetector(
                  onTap: _showCreateModal,
                  child: Container(color: Colors.white, child: Icon(Icons.add, color: Colors.grey[400], size: 40)),
                );
             }
-            final url = posts[index];
+            final post = myPosts[index];
+            final thumbnailUrl = (post['postImageUrls'] as List).first;
+            
             return GestureDetector(
               onTap: () {
-                final built = posts.map((p) => {
-                  'username': _currentUsername,
-                  'userAvatarUrl': _avatarUrl,
-                  'postImageUrls': [p],
-                  'likeCount': '0',
-                  'caption': '',
-                  'timestamp': '',
-                  'isVideo': false,
-                }).toList();
-                Navigator.push(context, MaterialPageRoute(builder: (_) => PostViewerScreen(posts: built, initialIndex: index)));
+                // feed의 실제 데이터를 PostViewerScreen에 전달
+                Navigator.push(context, MaterialPageRoute(builder: (_) => PostViewerScreen(posts: myPosts, initialIndex: index)));
               },
-              child: ZoomableGridImage(imageUrl: url),
+              child: ZoomableGridImage(imageUrl: thumbnailUrl),
             );
           },
         );

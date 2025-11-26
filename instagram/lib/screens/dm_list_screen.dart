@@ -403,8 +403,9 @@ class _DmListScreenState extends State<DmListScreen> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8.0),
               ),
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              minimumSize: const Size(0, 32), // 높이 줄임
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 0),
+              minimumSize: const Size(100, 32), // 최소 너비와 높이 고정
+              maximumSize: const Size(100, 32), // 최대 너비와 높이 고정
             ),
             child: Text(buttonText, style: const TextStyle(fontSize: 13.0, fontWeight: FontWeight.bold)),
           ),

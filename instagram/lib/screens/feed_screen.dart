@@ -14,10 +14,81 @@ class FeedScreen extends StatelessWidget {
   // Global feed notifier so other screens can prepend new posts
   static final ValueNotifier<List<Map<String, dynamic>>> feedNotifier = ValueNotifier<List<Map<String, dynamic>>>([
     {
+      'id': 'my_post_1',
+      'username': 'ta_junhyuk',
+      'userAvatarUrl': 'assets/images/profile3.jpg',
+      'postImageUrls': ['https://picsum.photos/seed/myphoto1/600/600'],
+      'likeCount': '2,543',
+      'caption': '오늘 날씨 정말 좋네요 ☀️',
+      'timestamp': '2 hours ago',
+      'isVideo': false,
+      'comments': [
+        Comment(id: 'my_c1_1', username: 'imwinter', avatarUrl: 'https://picsum.photos/seed/winter/100/100', text: '날씨 좋아보여요! 😊'),
+        Comment(id: 'my_c1_2', username: 'junehxuk', avatarUrl: 'https://picsum.photos/seed/june/100/100', text: '어디야?'),
+      ],
+    },
+    {
+      'id': 'my_post_2',
+      'username': 'ta_junhyuk',
+      'userAvatarUrl': 'assets/images/profile3.jpg',
+      'postImageUrls': ['https://picsum.photos/seed/myphoto2/600/600', 'https://picsum.photos/seed/myphoto3/600/600'],
+      'likeCount': '1,892',
+      'caption': '카페에서 작업 중 ☕️',
+      'timestamp': '1 day ago',
+      'isVideo': false,
+      'comments': [
+        Comment(id: 'my_c2_1', username: 'katarinabluu', avatarUrl: 'https://picsum.photos/seed/karina/100/100', text: '분위기 좋다!'),
+      ],
+    },
+    {
+      'id': 'my_post_3',
+      'username': 'ta_junhyuk',
+      'userAvatarUrl': 'assets/images/profile3.jpg',
+      'postImageUrls': ['https://picsum.photos/seed/myphoto4/600/600'],
+      'likeCount': '3,421',
+      'caption': '오랜만에 운동 🏃‍♂️💪',
+      'timestamp': '3 days ago',
+      'isVideo': false,
+      'comments': [
+        Comment(id: 'my_c3_1', username: 'yonghyeon5670', avatarUrl: 'https://picsum.photos/seed/yong/100/100', text: '나도 가고싶다'),
+        Comment(id: 'my_c3_2', username: 'cch991112', avatarUrl: 'https://picsum.photos/seed/cch/100/100', text: '같이 가자!'),
+        Comment(id: 'my_c3_3', username: 'ta_junhyuk', avatarUrl: 'assets/images/profile3.jpg', text: 'ㄱㄱ', replyToUsername: 'cch991112'),
+      ],
+    },
+    {
+      'id': 'my_post_4',
+      'username': 'ta_junhyuk',
+      'userAvatarUrl': 'assets/images/profile3.jpg',
+      'postImageUrls': ['https://picsum.photos/seed/myphoto5/600/600', 'https://picsum.photos/seed/myphoto6/600/600', 'https://picsum.photos/seed/myphoto7/600/600'],
+      'likeCount': '5,127',
+      'caption': '주말 나들이 🌳🌿',
+      'timestamp': '5 days ago',
+      'isVideo': false,
+      'comments': [
+        Comment(id: 'my_c4_1', username: 'haetbaaan', avatarUrl: 'https://picsum.photos/seed/haet/100/100', text: '예쁘다 ✨'),
+        Comment(id: 'my_c4_2', username: 'cau_ai_', avatarUrl: 'https://picsum.photos/seed/cau/100/100', text: '여기 어디에요?'),
+        Comment(id: 'my_c4_3', username: 'ta_junhyuk', avatarUrl: 'assets/images/profile3.jpg', text: '남산이에요!', replyToUsername: 'cau_ai_'),
+      ],
+    },
+    {
+      'id': 'my_post_5',
+      'username': 'ta_junhyuk',
+      'userAvatarUrl': 'assets/images/profile3.jpg',
+      'postImageUrls': ['https://picsum.photos/seed/myphoto8/600/600'],
+      'likeCount': '4,238',
+      'caption': '맛집 발견! 🍜🔥',
+      'timestamp': '1 week ago',
+      'isVideo': false,
+      'comments': [
+        Comment(id: 'my_c5_1', username: 'chunganguniv', avatarUrl: 'https://picsum.photos/seed/chungang/100/100', text: '맛있겠다!'),
+        Comment(id: 'my_c5_2', username: 'imwinter', avatarUrl: 'https://picsum.photos/seed/winter/100/100', text: 'omg looks delicious 😋'),
+      ],
+    },
+    {
       'id': 'seed1',
       'username': 'aespa_official',
       'userAvatarUrl': 'https://picsum.photos/seed/aespa/100/100',
-      'postImageUrls': ['https://picsum.photos/seed/video_thumb/600/600'],
+      'postImageUrls': ['https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'],
       'likeCount': '918,471',
       'caption': 'Ouch!',
       'timestamp': 'September 19',
@@ -95,7 +166,7 @@ class FeedScreen extends StatelessWidget {
       'id': 'seed5',
       'username': 'hotelsdotcom',
       'userAvatarUrl': 'https://picsum.photos/seed/hotels/100/100',
-      'postImageUrls': ['https://picsum.photos/seed/video_thumb/600/600'],
+      'postImageUrls': ['https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4'],
       'likeCount': '548',
       'caption': 'ad',
       'timestamp': '3 days ago',
@@ -203,6 +274,10 @@ class FeedScreen extends StatelessWidget {
       body: ValueListenableBuilder<List<Map<String, dynamic>>>(
         valueListenable: feedNotifier,
         builder: (context, feed, _) {
+          // 더미 게시물만 feed에서 제외 (실제로 업로드한 게시물은 표시)
+          final dummyPostIds = {'my_post_1', 'my_post_2', 'my_post_3', 'my_post_4', 'my_post_5'};
+          final displayFeed = feed.where((post) => !dummyPostIds.contains(post['id'])).toList();
+          
           return ListView(
             children: [
               _buildStoryBar(),
@@ -221,7 +296,7 @@ class FeedScreen extends StatelessWidget {
                 },
               ),
               // build posts from feed notifier
-              ...feed.map((post) => PostCardWidget(
+              ...displayFeed.map((post) => PostCardWidget(
                 key: ValueKey(post['id']),
                 username: post['username'],
                 userAvatarUrl: post['userAvatarUrl'],
@@ -300,34 +375,58 @@ class FeedScreen extends StatelessWidget {
                 child: Column(
                   children: [
                     // 그라데이션 링 + 프로필 사진
-                    Container(
-                      padding: const EdgeInsets.all(3.5), // 링 두께
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        // 내 스토리는 링 없음 (또는 회색), 팔로잉은 무지개 링
-                        gradient: isMe
-                            ? null
-                            : const LinearGradient(
-                                colors: [
-                                  Color(0xFFFBAA47), // 노랑
-                                  Color(0xFFD91A46), // 빨강
-                                  Color(0xFFA60F93), // 보라
-                                ],
-                                begin: Alignment.bottomLeft,
-                                end: Alignment.topRight,
+                    Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(3.5), // 링 두께
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            // 내 스토리는 링 없음 (또는 회색), 팔로잉은 무지개 링
+                            gradient: isMe
+                                ? null
+                                : const LinearGradient(
+                                    colors: [
+                                      Color(0xFFFBAA47), // 노랑
+                                      Color(0xFFD91A46), // 빨강
+                                      Color(0xFFA60F93), // 보라
+                                    ],
+                                    begin: Alignment.bottomLeft,
+                                    end: Alignment.topRight,
+                                  ),
+                          ),
+                          child: Container(
+                            padding: const EdgeInsets.all(2.5), // 사진과 링 사이 흰색 테두리
+                            decoration: const BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.white,
+                            ),
+                            child: CircleAvatar(
+                              radius: 34,
+                              backgroundImage: _getStoryImageProvider(story['img'] as String),
+                            ),
+                          ),
+                        ),
+                        // 내 스토리일 때만 + 아이콘 표시
+                        if (isMe)
+                          Positioned(
+                            bottom: 0,
+                            right: 0,
+                            child: Container(
+                              padding: const EdgeInsets.all(2),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                shape: BoxShape.circle,
+                                border: Border.all(color: Colors.white, width: 2),
                               ),
-                      ),
-                      child: Container(
-                        padding: const EdgeInsets.all(2.5), // 사진과 링 사이 흰색 테두리
-                        decoration: const BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.white,
-                        ),
-                        child: CircleAvatar(
-                          radius: 34,
-                          backgroundImage: _getStoryImageProvider(story['img'] as String),
-                        ),
-                      ),
+                              child: const Icon(
+                                Icons.add_circle,
+                                color: Colors.black,
+                                size: 24,
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
                     const SizedBox(height: 6.0),
                     // 이름
