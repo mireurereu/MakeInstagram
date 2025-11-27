@@ -828,7 +828,7 @@ class _PostPreviewOverlay extends StatelessWidget {
             ),
           ),
         ),
-      ),
+      )
     );
   }
 }
