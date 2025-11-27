@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:instagram/data/user_state.dart'; // 상태 관리 파일 임포트
 import 'package:instagram/screens/edit_profile_screen.dart';
@@ -78,6 +79,33 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
     });
   }
 
+  // Edit Profile에서 돌아왔을 때 호출되는 함수
+  void _navigateToEditProfile() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EditProfileScreen(
+          initialName: _name,
+          initialBio: _bio,
+          initialAvatarUrl: _avatarUrl,
+        ),
+      ),
+    );
+    if (result != null && result is Map<String, dynamic>) {
+      setState(() {
+        _name = result['name'] ?? _name;
+        _bio = result['bio'] ?? _bio;
+        _avatarUrl = result['avatarUrl'] ?? _avatarUrl;
+        
+        // 프로필 사진이 변경되었는지 확인하고 UserState에 저장
+        if (result['avatarUrl'] != null && result['avatarUrl'] != UserState.getMyAvatarUrl()) {
+          UserState.setMyAvatarUrl(result['avatarUrl']);
+          UserState.setProfilePictureChanged(true); // 프로필 사진 변경 플래그 설정
+        }
+      });
+    }
+  }
+
   void _loadOtherUserData(String username) {
     setState(() {
       // 기본 더미 데이터
@@ -120,31 +148,6 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
       return AssetImage(url);
     } else {
       return FileImage(File(url));
-    }
-  }
-
-  void _navigateToEditProfile() async {
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => EditProfileScreen(
-          initialName: _name,
-          initialBio: _bio,
-          initialAvatarUrl: _avatarUrl,
-        ),
-      ),
-    );
-
-    if (result != null && result is Map) {
-      setState(() {
-        _name = result['name'];
-        _bio = result['bio'];
-        if (result['avatarUrl'] != null) {
-          _avatarUrl = result['avatarUrl'];
-          // UserState에도 업데이트
-          UserState.updateMyAvatarUrl(_avatarUrl);
-        }
-      });
     }
   }
 
@@ -357,41 +360,126 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              CircleAvatar(
-                radius: 44,
-                backgroundImage: _getAvatarImageProvider(_avatarUrl),
-              ),
-              Expanded(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    _buildStatItem('$postCount', 'Posts'),
-                    _buildStatItem(_followerCount, 'Followers'),
-                    // [수정] Following 클릭 시 리스트 화면으로 이동
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context, 
-                          MaterialPageRoute(
-                            builder: (_) => FollowingListScreen(username: _currentUsername)
-                          )
-                        ).then((_) => _refresh()); // 돌아왔을 때 숫자 갱신
-                      },
-                      child: _buildStatItem('$realFollowingCount', 'Following'),
+              // 프로필 사진
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  CircleAvatar(
+                    radius: 44,
+                    backgroundImage: _getAvatarImageProvider(_avatarUrl),
+                  ),
+                  // What's new 말풍선
+                  Positioned(
+                    top: -12,
+                    left: 0,
+                    right: 0,
+                    child: Center(
+                      child: Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          Container(
+                            width: 80,
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Colors.grey[300]!, width: 1),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.1),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: const Text(
+                              "What's\nnew?",
+                              style: TextStyle(fontSize: 10, height: 1.2),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                          // 말풍선 꼬리
+                          Positioned(
+                            bottom: -4,
+                            left: 20,
+                            child: CustomPaint(
+                              size: const Size(8, 5),
+                              painter: _BubbleTailPainter(),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ],
+                  ),
+                  // + 아이콘
+                  Positioned(
+                    bottom: 0,
+                    right: 0,
+                    child: Container(
+                      width: 24,
+                      height: 24,
+                      decoration: BoxDecoration(
+                        color: Colors.black,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 2),
+                      ),
+                      child: const Icon(
+                        Icons.add,
+                        color: Colors.white,
+                        size: 16,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(width: 28),
+              // 이름과 통계를 세로로 배치
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.only(right: 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // 이름
+                      Text(_name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                      const SizedBox(height: 10),
+                      // 통계를 가로로 배치
+                      Row(
+                        children: [
+                          _buildStatItem('$postCount', 'posts'),
+                          const Spacer(flex: 2),
+                          _buildStatItem(_followerCount, 'followers'),
+                          const Spacer(flex: 2),
+                          // [수정] Following 클릭 시 리스트 화면으로 이동
+                          GestureDetector(
+                            onTap: () {
+                              Navigator.push(
+                                context, 
+                                MaterialPageRoute(
+                                  builder: (_) => FollowingListScreen(username: _currentUsername)
+                                )
+                              ).then((_) => _refresh()); // 돌아왔을 때 숫자 갱신
+                            },
+                            child: _buildStatItem('$realFollowingCount', 'following'),
+                          ),
+                          const Spacer(flex: 1),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 12),
-          Text(_name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+          // Bio
           Text(_bio, style: const TextStyle(fontSize: 14)),
           
           if (!_isCurrentUser && _mutualFollowers.isNotEmpty)
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8.0),
+              padding: const EdgeInsets.only(top: 8.0),
               child: Text('Followed by ${_mutualFollowers[0]} and others', style: const TextStyle(fontSize: 13)),
             ),
           
@@ -432,7 +520,13 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                 // feed의 실제 데이터를 PostViewerScreen에 전달
                 Navigator.push(context, MaterialPageRoute(builder: (_) => PostViewerScreen(posts: myPosts, initialIndex: index)));
               },
-              child: ZoomableGridImage(imageUrl: thumbnailUrl),
+              onLongPressStart: (_) {
+                _showPostPreview(context, thumbnailUrl);
+              },
+              onLongPressEnd: (_) {
+                Navigator.of(context, rootNavigator: true).pop();
+              },
+              child: Image.network(thumbnailUrl, fit: BoxFit.cover),
             );
           },
         );
@@ -469,7 +563,14 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
   }
 
   Widget _buildStatItem(String count, String label) {
-    return Column(children: [Text(count, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)), Text(label, style: const TextStyle(fontSize: 14))]);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(count, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+        const SizedBox(height: 2),
+        Text(label, style: const TextStyle(fontSize: 13)),
+      ],
+    );
   }
 
   Widget _buildMyButtons() {
@@ -615,6 +716,18 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
       builder: (context) => const CreateBottomSheet(),
     );
   }
+
+  void _showPostPreview(BuildContext context, String imageUrl) {
+    showDialog(
+      context: context,
+      barrierColor: Colors.transparent,
+      builder: (context) => _PostPreviewOverlay(
+        avatarUrl: _avatarUrl,
+        username: _currentUsername,
+        postImageUrl: imageUrl,
+      ),
+    );
+  }
 }
 
 class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
@@ -624,11 +737,136 @@ class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
   @override bool shouldRebuild(old) => false;
 }
 
+class _PostPreviewOverlay extends StatelessWidget {
+  final String avatarUrl;
+  final String username;
+  final String postImageUrl;
+
+  const _PostPreviewOverlay({
+    required this.avatarUrl,
+    required this.username,
+    required this.postImageUrl,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return BackdropFilter(
+      filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+      child: Container(
+        color: Colors.black.withOpacity(0.3),
+        child: Center(
+          child: Container(
+            width: MediaQuery.of(context).size.width * 0.92,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+            ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // 헤더 (프로필 사진 + ID)
+                  Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 16,
+                          backgroundImage: avatarUrl.startsWith('http')
+                              ? NetworkImage(avatarUrl)
+                              : avatarUrl.startsWith('assets/')
+                                  ? AssetImage(avatarUrl) as ImageProvider
+                                  : FileImage(File(avatarUrl)),
+                        ),
+                        const SizedBox(width: 10),
+                        Text(
+                          username,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  // 게시물 이미지
+                  ClipRRect(
+                    borderRadius: const BorderRadius.vertical(top: Radius.circular(0)),
+                    child: Image.network(
+                      postImageUrl,
+                      width: double.infinity,
+                      height: 400,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                  // 하단 아이콘 4개
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.favorite_border, size: 28),
+                          onPressed: () {},
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.chat_bubble_outline, size: 28),
+                          onPressed: () {},
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.send_outlined, size: 28),
+                          onPressed: () {},
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.more_horiz, size: 28),
+                          onPressed: () {},
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class ZoomableGridImage extends StatefulWidget {
   final String imageUrl;
   const ZoomableGridImage({super.key, required this.imageUrl});
   @override State<ZoomableGridImage> createState() => _ZoomableGridImageState();
 }
+
+class _BubbleTailPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.fill;
+    
+    final path = Path()
+      ..moveTo(0, 0)
+      ..lineTo(size.width / 2, size.height)
+      ..lineTo(size.width, 0)
+      ..close();
+    
+    canvas.drawPath(path, paint);
+    
+    // 테두리
+    final borderPaint = Paint()
+      ..color = Colors.grey[300]!
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1;
+    
+    canvas.drawPath(path, borderPaint);
+  }
+  
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
 class _ZoomableGridImageState extends State<ZoomableGridImage> {
   OverlayEntry? _overlayEntry;
   void _showOverlay(BuildContext context) {

@@ -7,6 +7,9 @@ class UserState {
   // [데이터] 내 프로필 사진 URL - ValueNotifier로 변경하여 실시간 업데이트
   static final ValueNotifier<String> _myAvatarUrlNotifier = ValueNotifier('assets/images/profile3.jpg');
   
+  // 프로필 사진 변경 여부 플래그
+  static bool _hasChangedProfilePicture = false;
+  
   // 내 프로필 사진 Notifier 가져오기 (리스닝용)
   static ValueNotifier<String> get myAvatarUrlNotifier => _myAvatarUrlNotifier;
   
@@ -16,6 +19,21 @@ class UserState {
   // 내 프로필 사진 업데이트 - 모든 리스너에게 즉시 알림
   static void updateMyAvatarUrl(String newUrl) {
     _myAvatarUrlNotifier.value = newUrl;
+  }
+
+  // 프로필 사진 설정 (Edit Profile에서 사용)
+  static void setMyAvatarUrl(String newUrl) {
+    _myAvatarUrlNotifier.value = newUrl;
+  }
+
+  // 프로필 사진 변경 플래그 설정
+  static void setProfilePictureChanged(bool value) {
+    _hasChangedProfilePicture = value;
+  }
+
+  // 프로필 사진 변경 여부 확인
+  static bool hasChangedProfilePicture() {
+    return _hasChangedProfilePicture;
   }
 
   // [데이터] 내가 팔로우한 사람 목록 (Set으로 중복 방지)
