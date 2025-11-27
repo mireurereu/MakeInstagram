@@ -57,36 +57,36 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 commentId: notif['commentId'] as String?,
               )),
 
-              // 댓글 알림 (haetbaaan)
+              // 댓글 알림 (pompom)
               _buildNotificationItem(
                 type: NotificationType.comment,
-                username: 'haetbaaan',
+                username: 'pompom',
                 content: 'commented: so cute!!',
                 time: '6s',
-                avatarUrl: 'https://picsum.photos/seed/haetbaaan/100/100',
+                avatarUrl: 'assets/images/profiles/pompom.jpg',
                 postUrl: 'https://picsum.photos/seed/dragon/100/100',
                 showReplyButton: true,
-                notificationId: 'notif_haetbaaan_comment',
+                notificationId: 'notif_pompom_comment',
                 postId: 'post_dragon',
               ),
 
               // 2. Last 30 days 섹션
               _buildSectionHeader('Last 30 days'),
               
-              // 좋아요 알림 (haetbaaan)
+              // 좋아요 알림 (pompom)
               _buildNotificationItem(
                 type: NotificationType.like,
-                username: 'haetbaaan',
+                username: 'pompom',
                 content: 'liked your photo.',
                 time: '2w',
-                avatarUrl: 'https://picsum.photos/seed/haetbaaan/100/100',
+                avatarUrl: 'assets/images/profiles/pompom.jpg',
                 postUrl: 'https://picsum.photos/seed/code/100/100',
               ),
 
-              // 팔로우 알림 (haetbaaan - 이미 팔로잉 중)
+              // 팔로우 알림 (pompom - 이미 팔로잉 중)
               _buildNotificationItem(
                 type: NotificationType.follow,
-                username: 'haetbaaan',
+                username: 'pompom',
                 content: 'started following you.',
                 time: '2w',
                 avatarUrl: 'https://picsum.photos/seed/haetbaaan/100/100',
@@ -103,13 +103,13 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 isFollowing: true,
               ),
 
-              // 팔로우 알림 (junehxuk - 팔로우 안 함)
+              // 팔로우 알림 (mymelody - 팔로우 안 함)
               _buildNotificationItem(
                 type: NotificationType.follow,
-                username: 'junehxuk',
+                username: 'mymelody',
                 content: 'started following you.',
                 time: '2w',
-                avatarUrl: 'https://picsum.photos/seed/junhyuk/100/100',
+                avatarUrl: 'assets/images/profiles/mymelody.jpg',
                 isFollowing: true, // 영상에선 Following 상태
               ),
 

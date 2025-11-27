@@ -24,7 +24,7 @@ class FeedScreen extends StatelessWidget {
       'isVideo': false,
       'comments': [
         Comment(id: 'my_c1_1', username: 'imwinter', avatarUrl: 'https://picsum.photos/seed/winter/100/100', text: '날씨 좋아보여요! 😊'),
-        Comment(id: 'my_c1_2', username: 'junehxuk', avatarUrl: 'https://picsum.photos/seed/june/100/100', text: '어디야?'),
+        Comment(id: 'my_c1_2', username: 'mymelody', avatarUrl: 'assets/images/profiles/mymelody.jpg', text: '어디야?'),
       ],
     },
     {
@@ -37,7 +37,7 @@ class FeedScreen extends StatelessWidget {
       'timestamp': '1 day ago',
       'isVideo': false,
       'comments': [
-        Comment(id: 'my_c2_1', username: 'katarinabluu', avatarUrl: 'https://picsum.photos/seed/karina/100/100', text: '분위기 좋다!'),
+        Comment(id: 'my_c2_1', username: 'hangyo', avatarUrl: 'assets/images/profiles/hangyo.jpg', text: '분위기 좋다!'),
       ],
     },
     {
@@ -51,8 +51,8 @@ class FeedScreen extends StatelessWidget {
       'isVideo': false,
       'comments': [
         Comment(id: 'my_c3_1', username: 'yonghyeon5670', avatarUrl: 'https://picsum.photos/seed/yong/100/100', text: '나도 가고싶다'),
-        Comment(id: 'my_c3_2', username: 'cch991112', avatarUrl: 'https://picsum.photos/seed/cch/100/100', text: '같이 가자!'),
-        Comment(id: 'my_c3_3', username: 'ta_junhyuk', avatarUrl: 'assets/images/profile3.jpg', text: 'ㄱㄱ', replyToUsername: 'cch991112'),
+        Comment(id: 'my_c3_2', username: 'pochacco', avatarUrl: 'assets/images/profiles/pochacco.jpg', text: '같이 가자!'),
+        Comment(id: 'my_c3_3', username: 'ta_junhyuk', avatarUrl: 'assets/images/profile3.jpg', text: 'ㄱㄱ', replyToUsername: 'pochacco'),
       ],
     },
     {
@@ -65,9 +65,9 @@ class FeedScreen extends StatelessWidget {
       'timestamp': '5 days ago',
       'isVideo': false,
       'comments': [
-        Comment(id: 'my_c4_1', username: 'haetbaaan', avatarUrl: 'https://picsum.photos/seed/haet/100/100', text: '예쁘다 ✨'),
-        Comment(id: 'my_c4_2', username: 'cau_ai_', avatarUrl: 'https://picsum.photos/seed/cau/100/100', text: '여기 어디에요?'),
-        Comment(id: 'my_c4_3', username: 'ta_junhyuk', avatarUrl: 'assets/images/profile3.jpg', text: '남산이에요!', replyToUsername: 'cau_ai_'),
+        Comment(id: 'my_c4_1', username: 'pompom', avatarUrl: 'assets/images/profiles/pompom.jpg', text: '예쁘다 ✨'),
+        Comment(id: 'my_c4_2', username: 'keroppi', avatarUrl: 'assets/images/profiles/keroppi.jpg', text: '여기 어디에요?'),
+        Comment(id: 'my_c4_3', username: 'ta_junhyuk', avatarUrl: 'assets/images/profile3.jpg', text: '남산이에요!', replyToUsername: 'keroppi'),
       ],
     },
     {
@@ -80,14 +80,14 @@ class FeedScreen extends StatelessWidget {
       'timestamp': '1 week ago',
       'isVideo': false,
       'comments': [
-        Comment(id: 'my_c5_1', username: 'chunganguniv', avatarUrl: 'https://picsum.photos/seed/chungang/100/100', text: '맛있겠다!'),
+        Comment(id: 'my_c5_1', username: 'cinnamo', avatarUrl: 'assets/images/profiles/cinnamo.jpg', text: '맛있겠다!'),
         Comment(id: 'my_c5_2', username: 'imwinter', avatarUrl: 'https://picsum.photos/seed/winter/100/100', text: 'omg looks delicious 😋'),
       ],
     },
     {
       'id': 'seed1',
-      'username': 'aespa_official',
-      'userAvatarUrl': 'https://picsum.photos/seed/aespa/100/100',
+      'username': 'sanrio_official',
+      'userAvatarUrl': 'assets/images/profiles/sanrio.jpg',
       'postImageUrls': ['https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'],
       'likeCount': '918,471',
       'caption': 'Ouch!',
@@ -96,7 +96,7 @@ class FeedScreen extends StatelessWidget {
       'isVerified': true,
       'comments': [
         Comment(id: 'c1_1', username: 'imwinter', avatarUrl: 'https://picsum.photos/seed/winter/100/100', text: '😍😍😍'),
-        Comment(id: 'c1_2', username: 'katarinabluu', avatarUrl: 'https://picsum.photos/seed/karina/100/100', text: 'Amazing!!'),
+        Comment(id: 'c1_2', username: 'hangyo', avatarUrl: 'assets/images/profiles/hangyo.jpg', text: 'Amazing!!'),
         Comment(id: 'c1_3', username: 'newjeans_official', avatarUrl: 'https://picsum.photos/seed/newjeans/100/100', text: 'Love this 💕'),
       ],
     },
@@ -116,8 +116,8 @@ class FeedScreen extends StatelessWidget {
     },
     {
       'id': 'seed3',
-      'username': 'katarinabluu',
-      'userAvatarUrl': 'https://picsum.photos/seed/karina/100/100',
+      'username': 'hangyo',
+      'userAvatarUrl': 'assets/images/profiles/hangyo.jpg',
       'postImageUrls': ['https://picsum.photos/seed/post1/600/600','https://picsum.photos/seed/post2/600/600','https://picsum.photos/seed/post2/600/600','https://picsum.photos/seed/post2/600/600','https://picsum.photos/seed/post2/600/600','https://picsum.photos/seed/post2/600/600','https://picsum.photos/seed/post2/600/600','https://picsum.photos/seed/post2/600/600','https://picsum.photos/seed/post2/600/600','https://picsum.photos/seed/post2/600/600','https://picsum.photos/seed/post2/600/600','https://picsum.photos/seed/post2/600/600'],
       'likeCount': '1,367,684',
       'caption': ' ',
@@ -185,8 +185,8 @@ class FeedScreen extends StatelessWidget {
       'timestamp': '3 days ago',
       'isVideo': false,
       'comments': [
-        Comment(id: 'c7_1', username: 'aespa_official', avatarUrl: 'https://picsum.photos/seed/aespa/100/100', text: '우리 윈터 💕'),
-        Comment(id: 'c7_2', username: 'katarinabluu', avatarUrl: 'https://picsum.photos/seed/karina/100/100', text: 'So cute 😊'),
+        Comment(id: 'c7_1', username: 'sanrio_official', avatarUrl: 'assets/images/profiles/sanrio.jpg', text: '우리 윈터 💕'),
+        Comment(id: 'c7_2', username: 'hangyo', avatarUrl: 'assets/images/profiles/hangyo.jpg', text: 'So cute 😊'),
         Comment(id: 'c7_3', username: 'winter_fan', avatarUrl: 'https://picsum.photos/seed/winterfan/100/100', text: '완전 사랑스러워요 ㅠㅠ'),
         Comment(id: 'c7_4', username: 'my_love', avatarUrl: 'https://picsum.photos/seed/mylove/100/100', text: '여신이다...'),
       ],
@@ -355,8 +355,8 @@ class FeedScreen extends StatelessWidget {
         final stories = [
           {'name': 'Your story', 'img': myAvatarUrl, 'isMe': true},
           {'name': 'newjeans', 'img': 'https://picsum.photos/seed/newjeans/100/100', 'isMe': false},
-          {'name': 'katarinabluu', 'img': 'https://picsum.photos/seed/katarina/100/100', 'isMe': false},
-          {'name': 'aespa_official', 'img': 'https://picsum.photos/seed/aespa/100/100', 'isMe': false},
+          {'name': 'hangyo', 'img': 'assets/images/profiles/hangyo.jpg', 'isMe': false},
+          {'name': 'sanrio_official', 'img': 'assets/images/profiles/sanrio.jpg', 'isMe': false},
           {'name': 'winter', 'img': 'https://picsum.photos/seed/winter/100/100', 'isMe': false},
         ];
 

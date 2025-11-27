@@ -285,11 +285,34 @@ class _FollowingListScreenState extends State<FollowingListScreen>
     // imwinter의 following 화면인지 확인
     final bool isImwinterFollowing = (widget.username ?? UserState.myId) == 'imwinter';
     
+    // 프로필 이미지 경로 결정
+    String imgPath = user['img'] ?? 'default';
+    ImageProvider avatarImage;
+    if (imgPath.startsWith('assets/')) {
+      avatarImage = AssetImage(imgPath);
+    } else if (imgPath == 'hangyo') {
+      avatarImage = const AssetImage('assets/images/profiles/hangyo.jpg');
+    } else if (imgPath == 'sanrio_official') {
+      avatarImage = const AssetImage('assets/images/profiles/sanrio.jpg');
+    } else if (imgPath == 'mymelody') {
+      avatarImage = const AssetImage('assets/images/profiles/mymelody.jpg');
+    } else if (imgPath == 'pochacco') {
+      avatarImage = const AssetImage('assets/images/profiles/pochacco.jpg');
+    } else if (imgPath == 'pompom') {
+      avatarImage = const AssetImage('assets/images/profiles/pompom.jpg');
+    } else if (imgPath == 'keroppi') {
+      avatarImage = const AssetImage('assets/images/profiles/kerropi.jpg');
+    } else if (imgPath == 'cinnamo') {
+      avatarImage = const AssetImage('assets/images/profiles/cinnamo.jpg');
+    } else {
+      avatarImage = NetworkImage('https://picsum.photos/seed/$imgPath/100/100');
+    }
+    
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       leading: CircleAvatar(
         radius: 26,
-        backgroundImage: NetworkImage('https://picsum.photos/seed/${user['img'] ?? 'default'}/100/100'),
+        backgroundImage: avatarImage,
       ),
       title: Row(children: [
         Text(user['username'] ?? '', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),

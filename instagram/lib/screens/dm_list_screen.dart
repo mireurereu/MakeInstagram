@@ -113,15 +113,6 @@ class _DmListScreenState extends State<DmListScreen> {
         ],
       ),
       
-      // [수정] 하단 카메라 FAB 추가 (영상 01:00)
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // 카메라 기능 (구현 생략)
-        },
-        backgroundColor: _instaBlue,
-        elevation: 4,
-        child: const Icon(Icons.camera_alt, color: Colors.white),
-      ),
       
       body: ListView(
         children: [
@@ -199,43 +190,47 @@ class _DmListScreenState extends State<DmListScreen> {
                   ),
               // 말풍선
               Positioned(
-                top: -10,
-                left: 10,
-                right: 10,
-                child: Container(
-                  alignment: Alignment.center,
-                  padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12.0),
-                    border: Border.all(color: Colors.grey[300]!, width: 1.0),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
-                        blurRadius: 4,
-                        offset: const Offset(0, 2),
+                top: -12,
+                left: 0,
+                right: 0,
+                child: Center(
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      Container(
+                        width: 150,
+                        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12.0),
+                          border: Border.all(color: Colors.grey[300]!, width: 1.0),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Text(
+                          "What's on your playlist?",
+                          style: TextStyle(color: Colors.grey[600], fontSize: 9.5, height: 1.2),
+                          textAlign: TextAlign.center,
+                          maxLines: 1,
+                          overflow: TextOverflow.visible,
+                        ),
+                      ),
+                      // 말풍선 꼬리
+                      Positioned(
+                        bottom: -4,
+                        left: 20,
+                        child: CustomPaint(
+                          size: const Size(8, 5),
+                          painter: _BubbleTailPainter(),
+                        ),
                       ),
                     ],
                   ),
-                  child: Text(
-                    "What's on your playlist",
-                    style: TextStyle(color: Colors.grey[600], fontSize: 11.0),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ),
-              // 플러스 버튼
-              Positioned(
-                top: 0,
-                right: 0,
-                child: Container(
-                  padding: const EdgeInsets.all(2),
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.add_circle, color: Colors.grey, size: 24),
                 ),
               )
             ],
@@ -267,7 +262,7 @@ class _DmListScreenState extends State<DmListScreen> {
             ),
           ),
           Text(
-            'Requests',
+            'Requests (1)',
             style: TextStyle(
               color: Color(0xFF3797EF), // 인스타 블루
               fontSize: 16.0,
@@ -415,4 +410,33 @@ class _DmListScreenState extends State<DmListScreen> {
       ),
     );
   }
+}
+
+// 말풍선 꼬리 그리기
+class _BubbleTailPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.fill;
+
+    final path = Path()
+      ..moveTo(0, 0)
+      ..lineTo(size.width / 2, size.height)
+      ..lineTo(size.width, 0)
+      ..close();
+
+    canvas.drawPath(path, paint);
+
+    // 테두리
+    final borderPaint = Paint()
+      ..color = Colors.grey[300]!
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1;
+
+    canvas.drawPath(path, borderPaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

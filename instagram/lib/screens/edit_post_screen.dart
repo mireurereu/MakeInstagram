@@ -19,11 +19,11 @@ class EditPostScreen extends StatefulWidget {
 
 class _EditPostScreenState extends State<EditPostScreen> {
   final List<Map<String, String>> _songs = [
-    {'title': 'Blue Moon', 'artist': 'Aurora', 'art': 'assets/images/music1.jpg'},
-    {'title': 'Sunset Ride', 'artist': 'Kaito', 'art': 'assets/images/music2.jpg'},
-    {'title': 'City Lights', 'artist': 'Nova', 'art': 'assets/images/music3.jpg'},
-    {'title': 'Warm Breeze', 'artist': 'Maya', 'art': 'assets/images/music4.jpg'},
-    {'title': 'Nightfall', 'artist': 'Rin', 'art': 'assets/images/music5.jpg'},
+    {'title': 'Blue Moon', 'artist': 'Aurora', 'art': 'assets/images/musics/music1.jpg'},
+    {'title': 'Sunset Ride', 'artist': 'Kaito', 'art': 'assets/images/musics/music2.jpg'},
+    {'title': 'City Lights', 'artist': 'Nova', 'art': 'assets/images/musics/music3.jpg'},
+    {'title': 'Warm Breeze', 'artist': 'Maya', 'art': 'assets/images/musics/music4.jpg'},
+    {'title': 'Nightfall', 'artist': 'Rin', 'art': 'assets/images/musics/music5.jpg'},
   ];
   int _selectedSongIndex = -1;
   bool _showTooltip = false;

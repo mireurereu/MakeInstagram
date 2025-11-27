@@ -38,15 +38,15 @@ class UserState {
 
   // [데이터] 내가 팔로우한 사람 목록 (Set으로 중복 방지)
   static final Set<String> _myFollowingList = {
+    'hangyo', 
+    'sanrio_official',
+    'mymelody',
+    'kuromi',
+    'pochacco',
     'imwinter', 
-    'katarinabluu', 
-    'aespa_official',
-    'junehxuk',
-    'yonghyeon5670',
-    'cch991112',
-    'haetbaaan',
-    'cau_ai_',
-    'chunganguniv'
+    'pompom',
+    'keroppi',
+    'cinnamo'
   };
 
   // [데이터] 다른 사용자의 팔로잉 목록 (시나리오용 하드코딩)
@@ -54,14 +54,14 @@ class UserState {
     'imwinter': [
       {'username': 'aerichandesu', 'name': 'GISELLE', 'img': 'aerichandesu'},
       {'username': 'imnotningning', 'name': 'NINGNING', 'img': 'imnotningning'},
-      {'username': 'katarinabluu', 'name': 'KARINA', 'img': 'katarinabluu'},
-      {'username': 'aespa_official', 'name': 'aespa 에스파', 'img': 'aespa_official'},
+      {'username': 'hangyo', 'name': 'KARINA', 'img': 'hangyo'},
+      {'username': 'sanrio_official', 'name': 'aespa 에스파', 'img': 'sanrio_official'},
     ],
   };
 
   // 간단한 인증(verified) 시뮬레이션
   static final Set<String> _verified = {
-    'imwinter', 'imnotningning', 'katarinabluu', 'aespa_official', 'aerichandesu'
+    'imwinter', 'imnotningning', 'hangyo', 'sanrio_official', 'aerichandesu'
   };
 
   static bool isVerified(String username) => _verified.contains(username);

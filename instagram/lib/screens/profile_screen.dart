@@ -129,7 +129,7 @@ class _ProfileScreenState extends State<ProfileScreen>
         _name = 'WINTER';
         _bio = 'aespa';
         _followerCount = '13M';
-        _mutualFollowers = ['junehxuk', 'katarinabluu'];
+        _mutualFollowers = ['mymelody', 'hangyo'];
       }
 
       // 특정 유저(imnotningning) 데이터 하드코딩 (요청: 4탭, NINGNING, aespa)
@@ -137,7 +137,7 @@ class _ProfileScreenState extends State<ProfileScreen>
         _name = 'NINGNING';
         _bio = 'aespa';
         _followerCount = '10.7M';
-        _mutualFollowers = ['imwinter', 'katarinabluu', 'aespa_official'];
+        _mutualFollowers = ['imwinter', 'hangyo', 'sanrio_official'];
         // 다른 사용자 게시물 수는 이미 9로 세팅되어 있음
       }
     });
@@ -617,8 +617,8 @@ class _ProfileScreenState extends State<ProfileScreen>
               return GestureDetector(
                 onTap: _showCreateModal,
                 child: Container(
-                  color: Colors.white,
-                  child: Icon(Icons.add, color: Colors.grey[400], size: 40),
+                  color: Colors.grey[300],
+                  child: const Icon(Icons.add, color: Colors.black, size: 40),
                 ),
               );
             }
