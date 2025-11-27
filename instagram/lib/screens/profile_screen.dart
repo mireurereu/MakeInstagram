@@ -16,19 +16,21 @@ class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key, this.username});
 
   // 내 게시물 목록 (상태 유지)
-  static final ValueNotifier<List<String>> myPostsNotifier = ValueNotifier<List<String>>([
-    'https://picsum.photos/seed/post1/300/300',
-    'https://picsum.photos/seed/post2/300/300',
-    'https://picsum.photos/seed/post3/300/300',
-  ]);
+  static final ValueNotifier<List<String>> myPostsNotifier =
+      ValueNotifier<List<String>>([
+        'https://picsum.photos/seed/post1/300/300',
+        'https://picsum.photos/seed/post2/300/300',
+        'https://picsum.photos/seed/post3/300/300',
+      ]);
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProviderStateMixin {
+class _ProfileScreenState extends State<ProfileScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  
+
   bool _isCurrentUser = false;
   String _currentUsername = '';
   bool _isSuggestedVisible = false; // 추천 친구 창 열림 여부
@@ -39,7 +41,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
   String _avatarUrl = 'https://picsum.photos/seed/default/200/200';
   String _followerCount = '0';
   // _followingCount는 UserState에서 실시간으로 가져옵니다.
-  
+
   List<String> _mutualFollowers = [];
   List<String> _otherUserPosts = []; // 타인 게시물
 
@@ -61,7 +63,9 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
 
     // TabController 길이는 현재 사용자일 때 2, 타인 프로필일 때 기본 3.
     // 그러나 특정 사용자(imnotningning)는 4탭을 사용합니다.
-    final int tabCount = _isCurrentUser ? 2 : (_currentUsername == 'imnotningning' ? 4 : 3);
+    final int tabCount = _isCurrentUser
+        ? 2
+        : (_currentUsername == 'imnotningning' ? 4 : 3);
     _tabController = TabController(length: tabCount, vsync: this);
   }
 
@@ -96,9 +100,10 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
         _name = result['name'] ?? _name;
         _bio = result['bio'] ?? _bio;
         _avatarUrl = result['avatarUrl'] ?? _avatarUrl;
-        
+
         // 프로필 사진이 변경되었는지 확인하고 UserState에 저장
-        if (result['avatarUrl'] != null && result['avatarUrl'] != UserState.getMyAvatarUrl()) {
+        if (result['avatarUrl'] != null &&
+            result['avatarUrl'] != UserState.getMyAvatarUrl()) {
           UserState.setMyAvatarUrl(result['avatarUrl']);
           UserState.setProfilePictureChanged(true); // 프로필 사진 변경 플래그 설정
         }
@@ -114,7 +119,10 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
       _avatarUrl = 'https://picsum.photos/seed/$username/200/200';
       _followerCount = '120';
       _mutualFollowers = [];
-      _otherUserPosts = List.generate(9, (i) => 'https://picsum.photos/seed/${username}_$i/300/300');
+      _otherUserPosts = List.generate(
+        9,
+        (i) => 'https://picsum.photos/seed/${username}_$i/300/300',
+      );
 
       // 특정 유저(imwinter) 데이터 하드코딩
       if (username == 'imwinter') {
@@ -140,7 +148,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
     _tabController.dispose();
     super.dispose();
   }
-  
+
   ImageProvider _getAvatarImageProvider(String url) {
     if (url.startsWith('http')) {
       return NetworkImage(url);
@@ -167,14 +175,18 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                       ? ValueListenableBuilder<List<Map<String, dynamic>>>(
                           valueListenable: FeedScreen.feedNotifier,
                           builder: (context, allPosts, _) {
-                            final myPosts = allPosts.where((post) => post['username'] == UserState.myId).toList();
+                            final myPosts = allPosts
+                                .where(
+                                  (post) => post['username'] == UserState.myId,
+                                )
+                                .toList();
                             return _buildProfileHeader(myPosts.length);
                           },
                         )
                       : _buildProfileHeader(_otherUserPosts.length),
-                  
+
                   // [추가] 추천 친구 섹션 (다른 사람 프로필이고, 팔로우 중이며, 펼쳐졌을 때)
-                  if (!_isCurrentUser && _isSuggestedVisible) 
+                  if (!_isCurrentUser && _isSuggestedVisible)
                     _buildSuggestedSection(),
                 ],
               ),
@@ -194,17 +206,17 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                           Tab(icon: Icon(Icons.person_pin_outlined)),
                         ]
                       : (_currentUsername == 'imnotningning'
-                          ? const [
-                              Tab(icon: Icon(Icons.grid_on)),
-                              Tab(icon: Icon(Icons.ondemand_video)),
-                              Tab(icon: Icon(Icons.loop)),
-                              Tab(icon: Icon(Icons.person_pin_outlined)),
-                            ]
-                          : const [
-                              Tab(icon: Icon(Icons.grid_on)),
-                              Tab(icon: Icon(Icons.ondemand_video)),
-                              Tab(icon: Icon(Icons.person_pin_outlined)),
-                            ]),
+                            ? const [
+                                Tab(icon: Icon(Icons.grid_on)),
+                                Tab(icon: Icon(Icons.ondemand_video)),
+                                Tab(icon: Icon(Icons.loop)),
+                                Tab(icon: Icon(Icons.person_pin_outlined)),
+                              ]
+                            : const [
+                                Tab(icon: Icon(Icons.grid_on)),
+                                Tab(icon: Icon(Icons.ondemand_video)),
+                                Tab(icon: Icon(Icons.person_pin_outlined)),
+                              ]),
                 ),
               ),
               pinned: true,
@@ -216,20 +228,79 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
           children: _isCurrentUser
               ? [
                   _buildMyPostGrid(),
-                  const Center(child: Text('Tagged Posts', style: TextStyle(color: Colors.grey))),
+                  const Center(
+                    child: Text(
+                      'Tagged Posts',
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                  ),
                 ]
               : (_currentUsername == 'imnotningning'
-                  ? [
-                      _buildOtherPostGrid(),
-                      const Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(Icons.ondemand_video, size: 48, color: Colors.grey), SizedBox(height: 8), Text('Reels', style: TextStyle(color: Colors.grey))])),
-                      const Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(Icons.loop, size: 48, color: Colors.grey), SizedBox(height: 8), Text('Reposts', style: TextStyle(color: Colors.grey))])),
-                      const Center(child: Text('Tagged Posts', style: TextStyle(color: Colors.grey))),
-                    ]
-                  : [
-                      _buildOtherPostGrid(),
-                      const Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(Icons.ondemand_video, size: 48, color: Colors.grey), SizedBox(height: 8), Text('Reels', style: TextStyle(color: Colors.grey))])),
-                      const Center(child: Text('Tagged Posts', style: TextStyle(color: Colors.grey))),
-                    ]),
+                    ? [
+                        _buildOtherPostGrid(),
+                        const Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.ondemand_video,
+                                size: 48,
+                                color: Colors.grey,
+                              ),
+                              SizedBox(height: 8),
+                              Text(
+                                'Reels',
+                                style: TextStyle(color: Colors.grey),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.loop, size: 48, color: Colors.grey),
+                              SizedBox(height: 8),
+                              Text(
+                                'Reposts',
+                                style: TextStyle(color: Colors.grey),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const Center(
+                          child: Text(
+                            'Tagged Posts',
+                            style: TextStyle(color: Colors.grey),
+                          ),
+                        ),
+                      ]
+                    : [
+                        _buildOtherPostGrid(),
+                        const Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.ondemand_video,
+                                size: 48,
+                                color: Colors.grey,
+                              ),
+                              SizedBox(height: 8),
+                              Text(
+                                'Reels',
+                                style: TextStyle(color: Colors.grey),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const Center(
+                          child: Text(
+                            'Tagged Posts',
+                            style: TextStyle(color: Colors.grey),
+                          ),
+                        ),
+                      ]),
         ),
       ),
       bottomNavigationBar: !_isCurrentUser ? _buildBottomNavBar() : null,
@@ -239,9 +310,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
   Widget _buildBottomNavBar() {
     return Container(
       decoration: const BoxDecoration(
-        border: Border(
-          top: BorderSide(color: Color(0xFFDBDBDB), width: 0.5),
-        ),
+        border: Border(top: BorderSide(color: Color(0xFFDBDBDB), width: 0.5)),
       ),
       child: BottomNavigationBar(
         currentIndex: 4,
@@ -320,12 +389,18 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
         children: [
           const Icon(Icons.lock_outline, size: 18),
           const SizedBox(width: 6),
-          Text(_currentUsername, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 22)),
+          Text(
+            _currentUsername,
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 22),
+          ),
           const Icon(Icons.keyboard_arrow_down),
         ],
       ),
       actions: [
-        IconButton(icon: const Icon(Icons.add_box_outlined, size: 28), onPressed: _showCreateModal),
+        IconButton(
+          icon: const Icon(Icons.add_box_outlined, size: 28),
+          onPressed: _showCreateModal,
+        ),
         IconButton(icon: const Icon(Icons.menu, size: 28), onPressed: () {}),
       ],
     );
@@ -338,13 +413,22 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
       foregroundColor: Colors.black,
       title: Row(
         children: [
-          Text(_currentUsername, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 22)),
+          Text(
+            _currentUsername,
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 22),
+          ),
           if (_currentUsername == 'imwinter')
-             Padding(padding: const EdgeInsets.only(left: 4), child: Icon(Icons.verified, color: _instaBlue, size: 18)),
+            Padding(
+              padding: const EdgeInsets.only(left: 4),
+              child: Icon(Icons.verified, color: _instaBlue, size: 18),
+            ),
         ],
       ),
       actions: [
-        IconButton(icon: const Icon(Icons.notifications_none), onPressed: () {}),
+        IconButton(
+          icon: const Icon(Icons.notifications_none),
+          onPressed: () {},
+        ),
         IconButton(icon: const Icon(Icons.more_horiz), onPressed: () {}),
       ],
     );
@@ -381,11 +465,17 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                         children: [
                           Container(
                             width: 80,
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
                             decoration: BoxDecoration(
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: Colors.grey[300]!, width: 1),
+                              border: Border.all(
+                                color: Colors.grey[300]!,
+                                width: 1,
+                              ),
                               boxShadow: [
                                 BoxShadow(
                                   color: Colors.black.withOpacity(0.1),
@@ -443,7 +533,13 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // 이름
-                      Text(_name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                      Text(
+                        _name,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
                       const SizedBox(height: 10),
                       // 통계를 가로로 배치
                       Row(
@@ -456,13 +552,18 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                           GestureDetector(
                             onTap: () {
                               Navigator.push(
-                                context, 
+                                context,
                                 MaterialPageRoute(
-                                  builder: (_) => FollowingListScreen(username: _currentUsername)
-                                )
+                                  builder: (_) => FollowingListScreen(
+                                    username: _currentUsername,
+                                  ),
+                                ),
                               ).then((_) => _refresh()); // 돌아왔을 때 숫자 갱신
                             },
-                            child: _buildStatItem('$realFollowingCount', 'following'),
+                            child: _buildStatItem(
+                              '$realFollowingCount',
+                              'following',
+                            ),
                           ),
                           const Spacer(flex: 1),
                         ],
@@ -476,13 +577,16 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
           const SizedBox(height: 12),
           // Bio
           Text(_bio, style: const TextStyle(fontSize: 14)),
-          
+
           if (!_isCurrentUser && _mutualFollowers.isNotEmpty)
             Padding(
               padding: const EdgeInsets.only(top: 8.0),
-              child: Text('Followed by ${_mutualFollowers[0]} and others', style: const TextStyle(fontSize: 13)),
+              child: Text(
+                'Followed by ${_mutualFollowers[0]} and others',
+                style: const TextStyle(fontSize: 13),
+              ),
             ),
-          
+
           const SizedBox(height: 16),
           _isCurrentUser ? _buildMyButtons() : _buildOtherButtons(),
         ],
@@ -498,27 +602,39 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
         final myPosts = allPosts
             .where((post) => post['username'] == UserState.myId)
             .toList();
-        
+
         return GridView.builder(
           padding: EdgeInsets.zero,
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 3, crossAxisSpacing: 1, mainAxisSpacing: 1,
+            crossAxisCount: 3,
+            crossAxisSpacing: 1,
+            mainAxisSpacing: 1,
+            childAspectRatio: 3 / 4,
           ),
           itemCount: myPosts.length + 1,
-            itemBuilder: (context, index) {
+          itemBuilder: (context, index) {
             if (index == myPosts.length) {
-               return GestureDetector(
-                 onTap: _showCreateModal,
-                 child: Container(color: Colors.white, child: Icon(Icons.add, color: Colors.grey[400], size: 40)),
-               );
+              return GestureDetector(
+                onTap: _showCreateModal,
+                child: Container(
+                  color: Colors.white,
+                  child: Icon(Icons.add, color: Colors.grey[400], size: 40),
+                ),
+              );
             }
             final post = myPosts[index];
             final thumbnailUrl = (post['postImageUrls'] as List).first;
-            
+
             return GestureDetector(
               onTap: () {
                 // feed의 실제 데이터를 PostViewerScreen에 전달
-                Navigator.push(context, MaterialPageRoute(builder: (_) => PostViewerScreen(posts: myPosts, initialIndex: index)));
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) =>
+                        PostViewerScreen(posts: myPosts, initialIndex: index),
+                  ),
+                );
               },
               onLongPressStart: (_) {
                 _showPostPreview(context, thumbnailUrl);
@@ -538,23 +654,36 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
     return GridView.builder(
       padding: EdgeInsets.zero,
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3, crossAxisSpacing: 1, mainAxisSpacing: 1,
+        crossAxisCount: 3,
+        crossAxisSpacing: 1,
+        mainAxisSpacing: 1,
+        childAspectRatio: 3 / 4,
       ),
       itemCount: _otherUserPosts.length,
       itemBuilder: (context, index) {
         final url = _otherUserPosts[index];
         return GestureDetector(
           onTap: () {
-            final built = _otherUserPosts.map((p) => {
-              'username': _currentUsername,
-              'userAvatarUrl': _avatarUrl,
-              'postImageUrls': [p],
-              'likeCount': '0',
-              'caption': '',
-              'timestamp': '',
-              'isVideo': false,
-            }).toList();
-            Navigator.push(context, MaterialPageRoute(builder: (_) => PostViewerScreen(posts: built, initialIndex: index)));
+            final built = _otherUserPosts
+                .map(
+                  (p) => {
+                    'username': _currentUsername,
+                    'userAvatarUrl': _avatarUrl,
+                    'postImageUrls': [p],
+                    'likeCount': '0',
+                    'caption': '',
+                    'timestamp': '',
+                    'isVideo': false,
+                  },
+                )
+                .toList();
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) =>
+                    PostViewerScreen(posts: built, initialIndex: index),
+              ),
+            );
           },
           child: ZoomableGridImage(imageUrl: url),
         );
@@ -566,7 +695,10 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(count, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+        Text(
+          count,
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+        ),
         const SizedBox(height: 2),
         Text(label, style: const TextStyle(fontSize: 13)),
       ],
@@ -574,74 +706,92 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
   }
 
   Widget _buildMyButtons() {
-    return Row(children: [
-      Expanded(child: _grayBtn('Edit profile', _navigateToEditProfile)), const SizedBox(width: 6),
-      Expanded(child: _grayBtn('Share profile', () {})), const SizedBox(width: 6),
-      _iconBtn(Icons.person_add_outlined, () {}),
-    ]);
+    return Row(
+      children: [
+        Expanded(child: _grayBtn('Edit profile', _navigateToEditProfile)),
+        const SizedBox(width: 6),
+        Expanded(child: _grayBtn('Share profile', () {})),
+        const SizedBox(width: 6),
+        _iconBtn(Icons.person_add_outlined, () {}),
+      ],
+    );
   }
 
   // [수정] 타인 프로필 버튼 (팔로우/팔로잉 상태 반영)
   Widget _buildOtherButtons() {
     final bool isFollowing = UserState.amIFollowing(_currentUsername);
 
-    return Row(children: [
-      Expanded(
-        child: isFollowing
-            ? _grayBtn('Following', () {
-                setState(() {
-                  UserState.toggleFollow(_currentUsername);
-                });
-              })
-            : ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _instaBlue, 
-                  elevation: 0, 
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))
-                ),
-                onPressed: () {
+    return Row(
+      children: [
+        Expanded(
+          child: isFollowing
+              ? _grayBtn('Following', () {
                   setState(() {
                     UserState.toggleFollow(_currentUsername);
-                    // 팔로우하면 추천 친구창 열기
-                    _isSuggestedVisible = true;
                   });
-                }, 
-                child: const Text('Follow', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white))
-              ),
-      ), 
-      const SizedBox(width: 6),
-      Expanded(child: _grayBtn('Message', () {})), const SizedBox(width: 6),
-      // 추천 친구 토글 버튼
-      _iconBtn(
-        _isSuggestedVisible ? Icons.person_add : Icons.person_add_outlined,
-        () {
-          setState(() {
-            _isSuggestedVisible = !_isSuggestedVisible;
-          });
-        }
-      ),
-    ]);
+                })
+              : ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _instaBlue,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      UserState.toggleFollow(_currentUsername);
+                      // 팔로우하면 추천 친구창 열기
+                      _isSuggestedVisible = true;
+                    });
+                  },
+                  child: const Text(
+                    'Follow',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+        ),
+        const SizedBox(width: 6),
+        Expanded(child: _grayBtn('Message', () {})), const SizedBox(width: 6),
+        // 추천 친구 토글 버튼
+        _iconBtn(
+          _isSuggestedVisible ? Icons.person_add : Icons.person_add_outlined,
+          () {
+            setState(() {
+              _isSuggestedVisible = !_isSuggestedVisible;
+            });
+          },
+        ),
+      ],
+    );
   }
 
   Widget _grayBtn(String text, VoidCallback onPressed) {
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
-        backgroundColor: const Color(0xFFEFEFEF), 
-        foregroundColor: Colors.black, 
-        elevation: 0, 
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))
-      ), 
-      onPressed: onPressed, 
-      child: Text(text, style: const TextStyle(fontWeight: FontWeight.w600))
+        backgroundColor: const Color(0xFFEFEFEF),
+        foregroundColor: Colors.black,
+        elevation: 0,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+      onPressed: onPressed,
+      child: Text(text, style: const TextStyle(fontWeight: FontWeight.w600)),
     );
   }
-  
+
   Widget _iconBtn(IconData icon, VoidCallback onPressed) => GestureDetector(
     onTap: onPressed,
     child: Container(
-      width: 36, height: 36, 
-      decoration: BoxDecoration(color: const Color(0xFFEFEFEF), borderRadius: BorderRadius.circular(8)), 
-      child: Icon(icon, size: 20)
+      width: 36,
+      height: 36,
+      decoration: BoxDecoration(
+        color: const Color(0xFFEFEFEF),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Icon(icon, size: 20),
     ),
   );
 
@@ -658,8 +808,17 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: const [
-                Text('Suggested for you', style: TextStyle(fontWeight: FontWeight.bold)),
-                Text('See All', style: TextStyle(color: Color(0xFF3797EF), fontWeight: FontWeight.w600)),
+                Text(
+                  'Suggested for you',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  'See All',
+                  style: TextStyle(
+                    color: Color(0xFF3797EF),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ],
             ),
           ),
@@ -679,15 +838,27 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.close, size: 16, color: Colors.grey), // 닫기 버튼 흉내
+                      const Icon(
+                        Icons.close,
+                        size: 16,
+                        color: Colors.grey,
+                      ), // 닫기 버튼 흉내
                       const SizedBox(height: 4),
                       CircleAvatar(
-                        radius: 34, 
-                        backgroundImage: NetworkImage('https://picsum.photos/seed/suggest$index/100/100')
+                        radius: 34,
+                        backgroundImage: NetworkImage(
+                          'https://picsum.photos/seed/suggest$index/100/100',
+                        ),
                       ),
                       const SizedBox(height: 10),
-                      Text('User $index', style: const TextStyle(fontWeight: FontWeight.bold)),
-                      const Text('Suggested for you', style: TextStyle(color: Colors.grey, fontSize: 11)),
+                      Text(
+                        'User $index',
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      const Text(
+                        'Suggested for you',
+                        style: TextStyle(color: Colors.grey, fontSize: 11),
+                      ),
                       const SizedBox(height: 16),
                       ElevatedButton(
                         onPressed: () {},
@@ -696,7 +867,10 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                           minimumSize: const Size(120, 30),
                           elevation: 0,
                         ),
-                        child: const Text('Follow', style: TextStyle(color: Colors.white)),
+                        child: const Text(
+                          'Follow',
+                          style: TextStyle(color: Colors.white),
+                        ),
                       ),
                     ],
                   ),
@@ -731,10 +905,17 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
 }
 
 class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
-  final TabBar _tabBar; _SliverAppBarDelegate(this._tabBar);
-  @override double get minExtent => _tabBar.preferredSize.height; @override double get maxExtent => _tabBar.preferredSize.height;
-  @override Widget build(context, offset, overlaps) => Container(color: Colors.white, child: _tabBar);
-  @override bool shouldRebuild(old) => false;
+  final TabBar _tabBar;
+  _SliverAppBarDelegate(this._tabBar);
+  @override
+  double get minExtent => _tabBar.preferredSize.height;
+  @override
+  double get maxExtent => _tabBar.preferredSize.height;
+  @override
+  Widget build(context, offset, overlaps) =>
+      Container(color: Colors.white, child: _tabBar);
+  @override
+  bool shouldRebuild(old) => false;
 }
 
 class _PostPreviewOverlay extends StatelessWidget {
@@ -761,74 +942,75 @@ class _PostPreviewOverlay extends StatelessWidget {
               color: Colors.white,
               borderRadius: BorderRadius.circular(16),
             ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // 헤더 (프로필 사진 + ID)
-                  Padding(
-                    padding: const EdgeInsets.all(12.0),
-                    child: Row(
-                      children: [
-                        CircleAvatar(
-                          radius: 16,
-                          backgroundImage: avatarUrl.startsWith('http')
-                              ? NetworkImage(avatarUrl)
-                              : avatarUrl.startsWith('assets/')
-                                  ? AssetImage(avatarUrl) as ImageProvider
-                                  : FileImage(File(avatarUrl)),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // 헤더 (프로필 사진 + ID)
+                Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 16,
+                        backgroundImage: avatarUrl.startsWith('http')
+                            ? NetworkImage(avatarUrl)
+                            : avatarUrl.startsWith('assets/')
+                            ? AssetImage(avatarUrl) as ImageProvider
+                            : FileImage(File(avatarUrl)),
+                      ),
+                      const SizedBox(width: 10),
+                      Text(
+                        username,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
                         ),
-                        const SizedBox(width: 10),
-                        Text(
-                          username,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                  // 게시물 이미지
-                  ClipRRect(
-                    borderRadius: const BorderRadius.vertical(top: Radius.circular(0)),
-                    child: Image.network(
-                      postImageUrl,
-                      width: double.infinity,
-                      height: 400,
-                      fit: BoxFit.cover,
-                    ),
+                ),
+                // 게시물 이미지
+                ClipRRect(
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(0),
                   ),
-                  // 하단 아이콘 4개
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.favorite_border, size: 28),
-                          onPressed: () {},
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.chat_bubble_outline, size: 28),
-                          onPressed: () {},
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.send_outlined, size: 28),
-                          onPressed: () {},
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.more_horiz, size: 28),
-                          onPressed: () {},
-                        ),
-                      ],
-                    ),
+                  child: Image.network(
+                    postImageUrl,
+                    width: double.infinity,
+                    height: 400,
+                    fit: BoxFit.cover,
                   ),
-                ],
-              ),
+                ),
+                // 하단 아이콘 4개
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.favorite_border, size: 28),
+                        onPressed: () {},
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.chat_bubble_outline, size: 28),
+                        onPressed: () {},
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.send_outlined, size: 28),
+                        onPressed: () {},
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.more_horiz, size: 28),
+                        onPressed: () {},
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
         ),
-      )
+      ),
     );
   }
 }
@@ -836,7 +1018,8 @@ class _PostPreviewOverlay extends StatelessWidget {
 class ZoomableGridImage extends StatefulWidget {
   final String imageUrl;
   const ZoomableGridImage({super.key, required this.imageUrl});
-  @override State<ZoomableGridImage> createState() => _ZoomableGridImageState();
+  @override
+  State<ZoomableGridImage> createState() => _ZoomableGridImageState();
 }
 
 class _BubbleTailPainter extends CustomPainter {
@@ -845,24 +1028,24 @@ class _BubbleTailPainter extends CustomPainter {
     final paint = Paint()
       ..color = Colors.white
       ..style = PaintingStyle.fill;
-    
+
     final path = Path()
       ..moveTo(0, 0)
       ..lineTo(size.width / 2, size.height)
       ..lineTo(size.width, 0)
       ..close();
-    
+
     canvas.drawPath(path, paint);
-    
+
     // 테두리
     final borderPaint = Paint()
       ..color = Colors.grey[300]!
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1;
-    
+
     canvas.drawPath(path, borderPaint);
   }
-  
+
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
@@ -873,62 +1056,104 @@ class _ZoomableGridImageState extends State<ZoomableGridImage> {
     final overlay = Overlay.of(context);
     final screenW = MediaQuery.of(context).size.width;
     final imageWidth = screenW * 0.9;
-    _overlayEntry = OverlayEntry(builder: (context) {
-      return Stack(
-        children: [
-          Container(color: Colors.black54),
-          // Centered column with enlarged image and action bar immediately beneath it
-          Center(
-            child: Material(
-              color: Colors.transparent,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: Image.network(
-                      widget.imageUrl,
-                      width: imageWidth,
-                      fit: BoxFit.cover,
-                      errorBuilder: (c, e, s) => Container(width: imageWidth, height: imageWidth, color: Colors.grey[300]),
-                    ),
-                  ),
-                  // action bar directly attached under image
-                  Container(
-                    width: imageWidth,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: const BorderRadius.only(
-                        bottomLeft: Radius.circular(12),
-                        bottomRight: Radius.circular(12),
+    _overlayEntry = OverlayEntry(
+      builder: (context) {
+        return Stack(
+          children: [
+            Container(color: Colors.black54),
+            // Centered column with enlarged image and action bar immediately beneath it
+            Center(
+              child: Material(
+                color: Colors.transparent,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.network(
+                        widget.imageUrl,
+                        width: imageWidth,
+                        fit: BoxFit.cover,
+                        errorBuilder: (c, e, s) => Container(
+                          width: imageWidth,
+                          height: imageWidth,
+                          color: Colors.grey[300],
+                        ),
                       ),
-                      border: Border(top: BorderSide(color: const Color(0xFFECECEC))),
                     ),
-                    padding: const EdgeInsets.symmetric(vertical: 6),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        IconButton(onPressed: () {}, icon: const Icon(Icons.favorite, color: Colors.black)),
-                        IconButton(onPressed: () {}, icon: const Icon(Icons.search, color: Colors.black)),
-                        IconButton(onPressed: () {}, icon: const Icon(Icons.send_outlined, color: Colors.black)),
-                        IconButton(onPressed: () {}, icon: const Icon(Icons.more_horiz, color: Colors.black)),
-                      ],
+                    // action bar directly attached under image
+                    Container(
+                      width: imageWidth,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: const BorderRadius.only(
+                          bottomLeft: Radius.circular(12),
+                          bottomRight: Radius.circular(12),
+                        ),
+                        border: Border(
+                          top: BorderSide(color: const Color(0xFFECECEC)),
+                        ),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 6),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          IconButton(
+                            onPressed: () {},
+                            icon: const Icon(
+                              Icons.favorite,
+                              color: Colors.black,
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: () {},
+                            icon: const Icon(Icons.search, color: Colors.black),
+                          ),
+                          IconButton(
+                            onPressed: () {},
+                            icon: const Icon(
+                              Icons.send_outlined,
+                              color: Colors.black,
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: () {},
+                            icon: const Icon(
+                              Icons.more_horiz,
+                              color: Colors.black,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
-      );
-    });
+          ],
+        );
+      },
+    );
     overlay.insert(_overlayEntry!);
   }
-  void _removeOverlay() { _overlayEntry?.remove(); _overlayEntry = null; }
-  @override Widget build(BuildContext context) {
+
+  void _removeOverlay() {
+    _overlayEntry?.remove();
+    _overlayEntry = null;
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return GestureDetector(
-      onLongPressStart: (_) => _showOverlay(context), onLongPressEnd: (_) => _removeOverlay(), onLongPressCancel: () => _removeOverlay(),
-      child: Image.network(widget.imageUrl, fit: BoxFit.cover, loadingBuilder: (c, child, l) => l==null?child:Container(color: Colors.grey[200])),
+      onLongPressStart: (_) => _showOverlay(context),
+      onLongPressEnd: (_) => _removeOverlay(),
+      onLongPressCancel: () => _removeOverlay(),
+      child: Image.network(
+        widget.imageUrl,
+        fit: BoxFit.cover,
+        loadingBuilder: (c, child, l) =>
+            l == null ? child : Container(color: Colors.grey[200]),
+      ),
     );
   }
 }
