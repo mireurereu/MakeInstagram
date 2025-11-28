@@ -336,6 +336,7 @@ class FeedScreen extends StatelessWidget {
                 isSponsored: post['isSponsored'] ?? false,
                 sponsoredText: post['sponsoredText'],
                 isVerified: post['isVerified'] ?? false,
+                isLiked: post['isLiked'] ?? false,
                 initialComments: post['comments'] != null ? List<Comment>.from(post['comments']) : null,
                 onLikeChanged: (postId, likeCount, isLiked) {
                   final current = feedNotifier.value;

@@ -673,6 +673,7 @@ class _ProfileScreenState extends State<ProfileScreen>
             }
             final post = myPosts[index];
             final thumbnailUrl = (post['postImageUrls'] as List).first;
+            final bool isLiked = post['isLiked'] ?? false;
 
             return GestureDetector(
               behavior: HitTestBehavior.opaque,
@@ -689,7 +690,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                 );
               },
               onLongPressStart: (_) {
-                Future.microtask(() => _showPostPreview(context, thumbnailUrl));
+                Future.microtask(() => _showPostPreview(context, thumbnailUrl, isLiked));
               },
               onLongPressEnd: (_) {
                 Future.microtask(() {
@@ -952,7 +953,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
-  void _showPostPreview(BuildContext context, String imageUrl) {
+  void _showPostPreview(BuildContext context, String imageUrl, bool isLiked) {
     showDialog(
       context: context,
       barrierColor: Colors.black.withOpacity(0.5),
@@ -961,6 +962,7 @@ class _ProfileScreenState extends State<ProfileScreen>
         avatarUrl: _avatarUrl,
         username: _currentUsername,
         postImageUrl: imageUrl,
+        isLiked: isLiked,
       ),
     );
   }
@@ -984,11 +986,13 @@ class _PostPreviewOverlay extends StatelessWidget {
   final String avatarUrl;
   final String username;
   final String postImageUrl;
+  final bool isLiked;
 
   const _PostPreviewOverlay({
     required this.avatarUrl,
     required this.username,
     required this.postImageUrl,
+    this.isLiked = false,
   });
 
   @override
@@ -1049,22 +1053,18 @@ class _PostPreviewOverlay extends StatelessWidget {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
+                      // [핵심 수정] isLiked에 따라 아이콘 변경
                       IconButton(
-                        icon: const Icon(Icons.favorite_border, size: 28),
+                        icon: Icon(
+                          isLiked ? Icons.favorite : Icons.favorite_border,
+                          color: isLiked ? Colors.red : Colors.black,
+                          size: 28,
+                        ),
                         onPressed: () {},
                       ),
-                      IconButton(
-                        icon: const Icon(Icons.chat_bubble_outline, size: 28),
-                        onPressed: () {},
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.send_outlined, size: 28),
-                        onPressed: () {},
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.more_horiz, size: 28),
-                        onPressed: () {},
-                      ),
+                      IconButton(icon: const Icon(Icons.chat_bubble_outline, size: 28), onPressed: () {}),
+                      IconButton(icon: const Icon(Icons.send_outlined, size: 28), onPressed: () {}),
+                      IconButton(icon: const Icon(Icons.more_horiz, size: 28), onPressed: () {}),
                     ],
                   ),
                 ),
@@ -1075,13 +1075,6 @@ class _PostPreviewOverlay extends StatelessWidget {
       ),
     );
   }
-}
-
-class ZoomableGridImage extends StatefulWidget {
-  final String imageUrl;
-  const ZoomableGridImage({super.key, required this.imageUrl});
-  @override
-  State<ZoomableGridImage> createState() => _ZoomableGridImageState();
 }
 
 class _BubbleTailPainter extends CustomPainter {
@@ -1112,18 +1105,38 @@ class _BubbleTailPainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
+// [수정된 ZoomableGridImage] Listener와 중복 방지 로직 적용
+class ZoomableGridImage extends StatefulWidget {
+  final String imageUrl;
+  final bool isLiked;
+
+  const ZoomableGridImage({
+    super.key,
+    required this.imageUrl,
+    this.isLiked = false, // 기본값은 false (안 눌림)
+  });
+  @override
+  State<ZoomableGridImage> createState() => _ZoomableGridImageState();
+}
+
 class _ZoomableGridImageState extends State<ZoomableGridImage> {
   OverlayEntry? _overlayEntry;
+
   void _showOverlay(BuildContext context) {
+    // 중복 실행 방지
+    if (_overlayEntry != null) return;
+
     final overlay = Overlay.of(context);
     final screenW = MediaQuery.of(context).size.width;
     final imageWidth = screenW * 0.9;
+
     _overlayEntry = OverlayEntry(
       builder: (context) {
         return Stack(
           children: [
+            // 배경을 어둡게 처리
             Container(color: Colors.black54),
-            // Centered column with enlarged image and action bar immediately beneath it
+            // 중앙 정렬된 확대 이미지와 액션 바
             Center(
               child: Material(
                 color: Colors.transparent,
@@ -1131,7 +1144,9 @@ class _ZoomableGridImageState extends State<ZoomableGridImage> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(12),
+                      ),
                       child: Image.network(
                         widget.imageUrl,
                         width: imageWidth,
@@ -1143,48 +1158,27 @@ class _ZoomableGridImageState extends State<ZoomableGridImage> {
                         ),
                       ),
                     ),
-                    // action bar directly attached under image
+                    // 이미지 바로 아래 붙는 액션 바
                     Container(
                       width: imageWidth,
-                      decoration: BoxDecoration(
+                      decoration: const BoxDecoration(
                         color: Colors.white,
-                        borderRadius: const BorderRadius.only(
-                          bottomLeft: Radius.circular(12),
-                          bottomRight: Radius.circular(12),
-                        ),
-                        border: Border(
-                          top: BorderSide(color: const Color(0xFFECECEC)),
+                        borderRadius: BorderRadius.vertical(
+                          bottom: Radius.circular(12),
                         ),
                       ),
-                      padding: const EdgeInsets.symmetric(vertical: 6),
+                      padding: const EdgeInsets.symmetric(vertical: 10),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
-                          IconButton(
-                            onPressed: () {},
-                            icon: const Icon(
-                              Icons.favorite,
-                              color: Colors.black,
-                            ),
+                          Icon(
+                            widget.isLiked ? Icons.favorite : Icons.favorite_border,
+                            color: widget.isLiked ? Colors.red : Colors.black,
+                            size: 28,
                           ),
-                          IconButton(
-                            onPressed: () {},
-                            icon: const Icon(Icons.search, color: Colors.black),
-                          ),
-                          IconButton(
-                            onPressed: () {},
-                            icon: const Icon(
-                              Icons.send_outlined,
-                              color: Colors.black,
-                            ),
-                          ),
-                          IconButton(
-                            onPressed: () {},
-                            icon: const Icon(
-                              Icons.more_horiz,
-                              color: Colors.black,
-                            ),
-                          ),
+                          const Icon(Icons.person_outline, color: Colors.black, size: 28),
+                          const Icon(Icons.send_outlined, color: Colors.black, size: 28),
+                          const Icon(Icons.more_horiz, color: Colors.black, size: 28),
                         ],
                       ),
                     ),
@@ -1205,16 +1199,29 @@ class _ZoomableGridImageState extends State<ZoomableGridImage> {
   }
 
   @override
+  void dispose() {
+    // 화면이 사라질 때 오버레이가 남아있다면 제거
+    _removeOverlay();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onLongPressStart: (_) => _showOverlay(context),
-      onLongPressEnd: (_) => _removeOverlay(),
-      onLongPressCancel: () => _removeOverlay(),
-      child: Image.network(
-        widget.imageUrl,
-        fit: BoxFit.cover,
-        loadingBuilder: (c, child, l) =>
-            l == null ? child : Container(color: Colors.grey[200]),
+    // [핵심 수정] Listener를 사용하여 터치가 끝나는 시점(PointerUp)을 명시적으로 감지합니다.
+    return Listener(
+      onPointerUp: (_) => _removeOverlay(),
+      onPointerCancel: (_) => _removeOverlay(),
+      child: GestureDetector(
+        onLongPressStart: (_) => _showOverlay(context),
+        // Listener가 처리하므로 여기선 생략해도 되지만 안전장치로 둡니다.
+        onLongPressEnd: (_) => _removeOverlay(),
+        child: Image.network(
+          widget.imageUrl,
+          fit: BoxFit.cover,
+          loadingBuilder: (c, child, l) =>
+              l == null ? child : Container(color: Colors.grey[200]),
+          errorBuilder: (c, e, s) => Container(color: Colors.grey[200]),
+        ),
       ),
     );
   }
@@ -1292,6 +1299,22 @@ class _ProfilePostFeedScreenState extends State<_ProfilePostFeedScreen> {
             isVideo: post['isVideo'] as bool? ?? false,
             initialComments: (post['comments'] as List<Comment>?) ?? [],
             isVerified: post['isVerified'] as bool? ?? false,
+            isLiked: post['isLiked'] ?? false,
+            onLikeChanged: (postId, likeCount, isLiked) {
+              // FeedScreen의 전체 데이터 가져오기
+              final current = FeedScreen.feedNotifier.value;
+              // ID로 해당 게시물 찾기
+              final idx = current.indexWhere((p) => p['id'] == postId);
+              
+              if (idx != -1) {
+                // 데이터 업데이트
+                current[idx]['likeCount'] = likeCount.toString();
+                current[idx]['isLiked'] = isLiked;
+                
+                // 변경 사항 알림 (ProfileScreen, FeedScreen 모두 반영됨)
+                FeedScreen.feedNotifier.value = List<Map<String, dynamic>>.from(current);
+              }
+            },
           );
         },
       ),
