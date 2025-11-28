@@ -8,6 +8,7 @@ class Comment {
   int likeCount;
   final String? replyToUsername; // 대댓글일 경우 대상 유저명
   final bool isPosting; // Posting... 상태 표시용
+  final DateTime? timestamp; // 댓글 작성 시간
 
   Comment({
     required this.id,
@@ -18,5 +19,6 @@ class Comment {
     this.likeCount = 0,
     this.replyToUsername,
     this.isPosting = false,
+    this.timestamp,
   });
 }

@@ -4,11 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:instagram/data/user_state.dart'; // 상태 관리 파일 임포트
 import 'package:instagram/screens/edit_profile_screen.dart';
 import 'package:instagram/screens/following_list_screen.dart';
-import 'package:instagram/screens/create_post_screen.dart';
-import 'package:instagram/screens/post_viewer_screen.dart';
 import 'package:instagram/widgets/create_bottom_sheet.dart';
 import 'package:instagram/screens/main_navigation_screen.dart';
 import 'package:instagram/screens/feed_screen.dart';
+import 'package:instagram/widgets/post_card_widget.dart';
+import 'package:instagram/widgets/comment_model.dart';
 
 class ProfileScreen extends StatefulWidget {
   final String? username;
@@ -34,6 +34,7 @@ class _ProfileScreenState extends State<ProfileScreen>
   bool _isCurrentUser = false;
   String _currentUsername = '';
   bool _isSuggestedVisible = false; // 추천 친구 창 열림 여부
+  bool _isFollowingPressed = false; // Following 버튼 눌림 상태
 
   // 프로필 정보
   String _name = '';
@@ -563,8 +564,23 @@ class _ProfileScreenState extends State<ProfileScreen>
                           const Spacer(flex: 2),
                           _buildStatItem(_followerCount, 'followers'),
                           const Spacer(flex: 2),
-                          // [수정] Following 클릭 시 리스트 화면으로 이동
+                          // [수정] Following 클릭 시 리스트 화면으로 이동 + 눌렀을 때만 그라데이션 효과
                           GestureDetector(
+                            onTapDown: (_) {
+                              setState(() {
+                                _isFollowingPressed = true;
+                              });
+                            },
+                            onTapUp: (_) {
+                              setState(() {
+                                _isFollowingPressed = false;
+                              });
+                            },
+                            onTapCancel: () {
+                              setState(() {
+                                _isFollowingPressed = false;
+                              });
+                            },
                             onTap: () {
                               Navigator.push(
                                 context,
@@ -575,9 +591,27 @@ class _ProfileScreenState extends State<ProfileScreen>
                                 ),
                               ).then((_) => _refresh()); // 돌아왔을 때 숫자 갱신
                             },
-                            child: _buildStatItem(
-                              '$realFollowingCount',
-                              'following',
+                            child: Container(
+                              decoration: _isFollowingPressed
+                                  ? BoxDecoration(
+                                      gradient: const LinearGradient(
+                                        begin: Alignment.centerLeft,
+                                        end: Alignment.centerRight,
+                                        colors: [
+                                          Color(0xFFE8E8E8), // 왼쪽 진한 회색
+                                          Color(0xFFF8F8F8), // 오른쪽 연한 회색
+                                        ],
+                                      ),
+                                      borderRadius: BorderRadius.circular(6),
+                                    )
+                                  : null,
+                              padding: _isFollowingPressed
+                                  ? const EdgeInsets.symmetric(horizontal: 12, vertical: 6)
+                                  : null,
+                              child: _buildStatItem(
+                                '$realFollowingCount',
+                                'following',
+                              ),
                             ),
                           ),
                           const Spacer(flex: 1),
@@ -642,12 +676,14 @@ class _ProfileScreenState extends State<ProfileScreen>
 
             return GestureDetector(
               onTap: () {
-                // feed의 실제 데이터를 PostViewerScreen에 전달
+                // 클릭한 게시물부터 시작하는 피드 화면 열기
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) =>
-                        PostViewerScreen(posts: myPosts, initialIndex: index),
+                    builder: (_) => _ProfilePostFeedScreen(
+                      posts: myPosts,
+                      initialIndex: index,
+                    ),
                   ),
                 );
               },
@@ -695,8 +731,10 @@ class _ProfileScreenState extends State<ProfileScreen>
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (_) =>
-                    PostViewerScreen(posts: built, initialIndex: index),
+                builder: (_) => _ProfilePostFeedScreen(
+                  posts: built,
+                  initialIndex: index,
+                ),
               ),
             );
           },
@@ -1170,5 +1208,176 @@ class _ZoomableGridImageState extends State<ZoomableGridImage> {
             l == null ? child : Container(color: Colors.grey[200]),
       ),
     );
+  }
+}
+
+// 프로필 게시물 피드 화면 (세로 스크롤)
+class _ProfilePostFeedScreen extends StatefulWidget {
+  final List<Map<String, dynamic>> posts;
+  final int initialIndex;
+
+  const _ProfilePostFeedScreen({
+    required this.posts,
+    required this.initialIndex,
+  });
+
+  @override
+  State<_ProfilePostFeedScreen> createState() => _ProfilePostFeedScreenState();
+}
+
+class _ProfilePostFeedScreenState extends State<_ProfilePostFeedScreen> {
+  late ScrollController _scrollController;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController();
+    
+    // 초기 위치로 스크롤
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients && widget.initialIndex > 0) {
+        // 각 포스트의 대략적인 높이를 계산하여 스크롤
+        _scrollController.jumpTo(widget.initialIndex * 600.0);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.black),
+        title: const Text(
+          'Posts',
+          style: TextStyle(
+            color: Colors.black,
+            fontWeight: FontWeight.w600,
+            fontSize: 18,
+          ),
+        ),
+      ),
+      body: ListView.builder(
+        controller: _scrollController,
+        itemCount: widget.posts.length,
+        itemBuilder: (context, index) {
+          final post = widget.posts[index];
+          return PostCardWidget(
+            key: ValueKey(post['id'] ?? 'post_$index'),
+            username: post['username'] as String? ?? 'user',
+            userAvatarUrl: post['userAvatarUrl'] as String? ?? '',
+            postImageUrls: List<String>.from(
+              post['postImageUrls'] ?? [post['image'] ?? ''],
+            ),
+            likeCount: post['likeCount']?.toString() ?? '0',
+            caption: post['caption'] as String? ?? '',
+            timestamp: post['timestamp'] as String? ?? '',
+            isVideo: post['isVideo'] as bool? ?? false,
+            initialComments: (post['comments'] as List<Comment>?) ?? [],
+            isVerified: post['isVerified'] as bool? ?? false,
+          );
+        },
+      ),
+      bottomNavigationBar: _buildBottomNavBar(),
+    );
+  }
+
+  Widget _buildBottomNavBar() {
+    return Container(
+      decoration: const BoxDecoration(
+        border: Border(
+          top: BorderSide(color: Color(0xFFDBDBDB), width: 0.5),
+        ),
+      ),
+      child: BottomNavigationBar(
+        currentIndex: 4, // Profile tab
+        onTap: (index) {
+          if (index == 0) {
+            // Home: Navigate back and switch to Home tab
+            Navigator.popUntil(context, (route) => route.isFirst);
+            mainNavKey.currentState?.changeTab(0);
+          } else if (index == 1) {
+            // Search
+            Navigator.popUntil(context, (route) => route.isFirst);
+            mainNavKey.currentState?.changeTab(1);
+          } else if (index == 2) {
+            // Add post
+            Navigator.popUntil(context, (route) => route.isFirst);
+            Navigator.pushNamed(context, '/create_post');
+          } else if (index == 3) {
+            // Reels
+            Navigator.popUntil(context, (route) => route.isFirst);
+            mainNavKey.currentState?.changeTab(3);
+          } else if (index == 4) {
+            // Profile: Go back
+            Navigator.pop(context);
+          }
+        },
+        backgroundColor: Colors.white,
+        type: BottomNavigationBarType.fixed,
+        showSelectedLabels: false,
+        showUnselectedLabels: false,
+        selectedItemColor: Colors.black,
+        unselectedItemColor: Colors.black,
+        elevation: 0,
+        items: [
+          const BottomNavigationBarItem(
+            icon: Icon(Icons.home_outlined, size: 28),
+            label: 'Home',
+          ),
+          const BottomNavigationBarItem(
+            icon: Icon(Icons.search, size: 28),
+            label: 'Search',
+          ),
+          const BottomNavigationBarItem(
+            icon: Icon(Icons.add_box_outlined, size: 28),
+            label: 'Add',
+          ),
+          const BottomNavigationBarItem(
+            icon: Icon(Icons.movie_outlined, size: 28),
+            label: 'Reels',
+          ),
+          BottomNavigationBarItem(
+            icon: ValueListenableBuilder<String>(
+              valueListenable: UserState.myAvatarUrlNotifier,
+              builder: (context, avatarUrl, child) {
+                return Container(
+                  width: 28,
+                  height: 28,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.grey[300],
+                    border: Border.all(color: Colors.black, width: 1.5),
+                    image: DecorationImage(
+                      image: _getImageProvider(avatarUrl),
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                );
+              },
+            ),
+            label: 'Profile',
+          ),
+        ],
+      ),
+    );
+  }
+
+  ImageProvider _getImageProvider(String path) {
+    if (path.startsWith('http')) {
+      return NetworkImage(path);
+    } else if (path.startsWith('assets/')) {
+      return AssetImage(path);
+    } else {
+      return FileImage(File(path));
+    }
   }
 }

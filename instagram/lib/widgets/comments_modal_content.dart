@@ -124,6 +124,7 @@ class _CommentsModalContentState extends State<CommentsModalContent> {
       text: text,
       replyToUsername: _replyingToUsername,
       isPosting: true, // Posting 상태
+      timestamp: DateTime.now(), // 현재 시간 추가
     );
     
     setState(() {
@@ -376,10 +377,8 @@ class _CommentsModalContentState extends State<CommentsModalContent> {
                       ),
                     ],
                     const SizedBox(width: 6),
-                    const Text(
-                      '1s', // 시간은 임시 고정 (모델에 timestamp 추가 시 연동 가능)
-                      style: TextStyle(color: Colors.grey, fontSize: 12),
-                    ),
+                    // 59초까지만 시간 표시
+                    if (comment.timestamp != null) ..._buildTimestamp(comment.timestamp!),
                     if (isAuthor) ...[
                       const SizedBox(width: 6),
                       const Text(
@@ -743,4 +742,27 @@ class _TooltipTailPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+// 확장: 시간 계산 함수
+extension on _CommentsModalContentState {
+  List<Widget> _buildTimestamp(DateTime timestamp) {
+    final now = DateTime.now();
+    final difference = now.difference(timestamp);
+    final seconds = difference.inSeconds;
+    
+    // 1초부터 59초까지만 표시
+    if (seconds >= 1 && seconds <= 59) {
+      return [
+        Text(
+          '${seconds}s',
+          style: const TextStyle(color: Colors.grey, fontSize: 12),
+        ),
+        const SizedBox(width: 6),
+      ];
+    }
+    
+    // 0초 또는 60초 이상일 때 빈 리스트 반환
+    return [];
+  }
 }

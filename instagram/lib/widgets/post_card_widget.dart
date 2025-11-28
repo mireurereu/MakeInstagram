@@ -128,6 +128,7 @@ class _PostCardWidgetState extends State<PostCardWidget> {
                 avatarUrl: UserState.getMyAvatarUrl(), // UserState에서 프로필 사진 가져오기
                 text: text,
                 replyToUsername: replyToUsername,
+                timestamp: DateTime.now().subtract(const Duration(seconds: 1)), // 1초 전으로 설정하여 바로 1s 표시
               ));
               // propagate comment changes upstream if handler provided
               final keyId = widget.key is ValueKey ? (widget.key as ValueKey).value : null;
