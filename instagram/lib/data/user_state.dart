@@ -52,16 +52,16 @@ class UserState {
   // [데이터] 다른 사용자의 팔로잉 목록 (시나리오용 하드코딩)
   static final Map<String, List<Map<String, String>>> _otherUsersFollowing = {
     'hellokitty': [
-      {'username': 'aerichandesu', 'name': 'GISELLE', 'img': 'aerichandesu'},
+      {'username': 'npochamu', 'name': 'chamuu', 'img': 'npochamu'},
       {'username': 'imnotningning', 'name': 'NINGNING', 'img': 'imnotningning'},
-      {'username': 'hangyo', 'name': 'KARINA', 'img': 'hangyo'},
-      {'username': 'sanrio_official', 'name': 'aespa 에스파', 'img': 'sanrio_official'},
+      {'username': 'hangyo', 'name': 'blue', 'img': 'hangyo'},
+      {'username': 'sanrio_official', 'name': 'we are one', 'img': 'sanrio_official'},
     ],
   };
 
   // 간단한 인증(verified) 시뮬레이션
   static final Set<String> _verified = {
-    'hellokitty', 'imnotningning', 'hangyo', 'sanrio_official', 'aerichandesu'
+    'hellokitty', 'imnotningning', 'hangyo', 'sanrio_official', 'npochamu'
   };
 
   static bool isVerified(String username) => _verified.contains(username);

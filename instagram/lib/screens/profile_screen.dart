@@ -35,6 +35,7 @@ class _ProfileScreenState extends State<ProfileScreen>
   String _currentUsername = '';
   bool _isSuggestedVisible = false; // 추천 친구 창 열림 여부
   bool _isFollowingPressed = false; // Following 버튼 눌림 상태
+  bool _isSuggestionLoading = false;
 
   // 프로필 정보
   String _name = '';
@@ -689,19 +690,11 @@ class _ProfileScreenState extends State<ProfileScreen>
                   ),
                 );
               },
-              onLongPressStart: (_) {
-                Future.microtask(() => _showPostPreview(context, thumbnailUrl, isLiked));
-              },
-              onLongPressEnd: (_) {
-                Future.microtask(() {
-                  if (Navigator.of(context).canPop()) {
-                    Navigator.of(context).pop();
-                  }
-                });
-              },
-              child: Container(
-                color: Colors.grey[300],
-                child: Image.network(thumbnailUrl, fit: BoxFit.cover),
+              child: ZoomableGridImage(
+                imageUrl: thumbnailUrl,
+                isLiked: isLiked,
+                username: post['username'],
+                userAvatarUrl: post['userAvatarUrl'],
               ),
             );
           },
@@ -722,6 +715,7 @@ class _ProfileScreenState extends State<ProfileScreen>
       itemCount: _otherUserPosts.length,
       itemBuilder: (context, index) {
         final url = _otherUserPosts[index];
+        final bool isLiked = index % 2 == 0;
         return GestureDetector(
           onTap: () {
             final built = _otherUserPosts
@@ -734,6 +728,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                     'caption': '',
                     'timestamp': '',
                     'isVideo': false,
+                    'isLiked': isLiked,
                   },
                 )
                 .toList();
@@ -747,7 +742,13 @@ class _ProfileScreenState extends State<ProfileScreen>
               ),
             );
           },
-          child: ZoomableGridImage(imageUrl: url),
+          child: ZoomableGridImage(
+            imageUrl: url,
+            isLiked: isLiked,
+            // [추가됨] 오버레이 헤더에 표시할 정보 전달
+            username: _currentUsername,
+            userAvatarUrl: _avatarUrl,
+          ),
         );
       },
     );
@@ -800,12 +801,21 @@ class _ProfileScreenState extends State<ProfileScreen>
                       borderRadius: BorderRadius.circular(8),
                     ),
                   ),
-                  onPressed: () {
+                  onPressed: () async{
                     setState(() {
                       UserState.toggleFollow(_currentUsername);
                       // 팔로우하면 추천 친구창 열기
-                      _isSuggestedVisible = true;
+                      _isSuggestionLoading = true;
                     });
+                    await Future.delayed(const Duration(milliseconds: 1000));
+
+                    // 3. 로딩 종료 & 추천 친구 창 열기
+                    if (mounted) {
+                      setState(() {
+                        _isSuggestionLoading = false;
+                        _isSuggestedVisible = true;
+                      });
+                    }
                   },
                   child: const Text(
                     'Follow',
@@ -819,13 +829,39 @@ class _ProfileScreenState extends State<ProfileScreen>
         const SizedBox(width: 6),
         Expanded(child: _grayBtn('Message', () {})), const SizedBox(width: 6),
         // 추천 친구 토글 버튼
-        _iconBtn(
-          _isSuggestedVisible ? Icons.person_add : Icons.person_add_outlined,
-          () {
+        GestureDetector(
+          onTap: () {
             setState(() {
               _isSuggestedVisible = !_isSuggestedVisible;
             });
           },
+          child: Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: const Color(0xFFEFEFEF),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            // 로딩 중이면 인디케이터, 아니면 아이콘 표시
+            child: _isSuggestionLoading
+                ? const Center(
+                    child: SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.black, // 로딩 색상
+                      ),
+                    ),
+                  )
+                : Icon(
+                    _isSuggestedVisible
+                        ? Icons.person_add
+                        : Icons.person_add_outlined,
+                    size: 20,
+                    color: Colors.black,
+                  ),
+          ),
         ),
       ],
     );
@@ -1109,11 +1145,15 @@ class _BubbleTailPainter extends CustomPainter {
 class ZoomableGridImage extends StatefulWidget {
   final String imageUrl;
   final bool isLiked;
+  final String? username;      // [추가] 사용자 이름
+  final String? userAvatarUrl;
 
   const ZoomableGridImage({
     super.key,
     required this.imageUrl,
     this.isLiked = false, // 기본값은 false (안 눌림)
+    this.username,
+    this.userAvatarUrl,
   });
   @override
   State<ZoomableGridImage> createState() => _ZoomableGridImageState();
@@ -1132,70 +1172,102 @@ class _ZoomableGridImageState extends State<ZoomableGridImage> {
 
     _overlayEntry = OverlayEntry(
       builder: (context) {
-        return Stack(
-          children: [
-            // 배경을 어둡게 처리
-            Container(color: Colors.black54),
-            // 중앙 정렬된 확대 이미지와 액션 바
-            Center(
-              child: Material(
-                color: Colors.transparent,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    ClipRRect(
-                      borderRadius: const BorderRadius.vertical(
-                        top: Radius.circular(12),
-                      ),
-                      child: Image.network(
-                        widget.imageUrl,
-                        width: imageWidth,
-                        fit: BoxFit.cover,
-                        errorBuilder: (c, e, s) => Container(
-                          width: imageWidth,
-                          height: imageWidth,
-                          color: Colors.grey[300],
-                        ),
-                      ),
+        return Listener(
+          onPointerUp: (_) => _removeOverlay(),
+          onPointerCancel: (_) => _removeOverlay(),
+          behavior: HitTestBehavior.translucent,
+          child: Stack(
+            children: [
+              // 1. 배경 (어둡게)
+              Container(color: Colors.black54),
+              
+              // 2. 카드 형태의 콘텐츠 (헤더 + 이미지 + 액션바)
+              Center(
+                child: Material(
+                  color: Colors.transparent,
+                  child: Container(
+                    width: imageWidth,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    // 이미지 바로 아래 붙는 액션 바
-                    Container(
-                      width: imageWidth,
-                      decoration: const BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.vertical(
-                          bottom: Radius.circular(12),
-                        ),
-                      ),
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          Icon(
-                            widget.isLiked ? Icons.favorite : Icons.favorite_border,
-                            color: widget.isLiked ? Colors.red : Colors.black,
-                            size: 28,
+                    clipBehavior: Clip.hardEdge, // 모서리 둥글게 잘라내기
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // [A] 헤더: 프로필 사진 + 이름
+                        if (widget.username != null && widget.userAvatarUrl != null)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 10.0),
+                            child: Row(
+                              children: [
+                                CircleAvatar(
+                                  radius: 16,
+                                  backgroundImage: _getImageProvider(widget.userAvatarUrl!),
+                                ),
+                                const SizedBox(width: 10),
+                                Text(
+                                  widget.username!,
+                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                                ),
+                              ],
+                            ),
                           ),
-                          const Icon(Icons.person_outline, color: Colors.black, size: 28),
-                          const Icon(Icons.send_outlined, color: Colors.black, size: 28),
-                          const Icon(Icons.more_horiz, color: Colors.black, size: 28),
-                        ],
-                      ),
+
+                        // [B] 이미지
+                        Image.network(
+                          widget.imageUrl,
+                          width: imageWidth,
+                          fit: BoxFit.cover,
+                          errorBuilder: (c, e, s) => Container(
+                            width: imageWidth,
+                            height: imageWidth,
+                            color: Colors.grey[300],
+                          ),
+                        ),
+
+                        // [C] 액션바 (하트 등)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              Icon(
+                                widget.isLiked ? Icons.favorite : Icons.favorite_border,
+                                color: widget.isLiked ? Colors.red : Colors.black,
+                                size: 28,
+                              ),
+                              const Icon(Icons.person_outline, color: Colors.black, size: 28),
+                              const Icon(Icons.send_outlined, color: Colors.black, size: 28),
+                              const Icon(Icons.more_horiz, color: Colors.black, size: 28),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         );
       },
     );
     overlay.insert(_overlayEntry!);
   }
-
   void _removeOverlay() {
     _overlayEntry?.remove();
     _overlayEntry = null;
+  }
+
+  ImageProvider _getImageProvider(String path) {
+    if (path.startsWith('http')) {
+      return NetworkImage(path);
+    } else if (path.startsWith('assets/')) {
+      return AssetImage(path);
+    } else {
+      return FileImage(File(path));
+    }
   }
 
   @override
