@@ -88,7 +88,7 @@ class FeedScreen extends StatelessWidget {
       'id': 'seed1',
       'username': 'sanrio_official',
       'userAvatarUrl': 'assets/images/profiles/sanrio.jpg',
-      'postImageUrls': ['https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'],
+      'postImageUrls': ['assets/images/rilakkuma/kkuma_video.mp4'],
       'likeCount': '918,471',
       'caption': 'Ouch!',
       'timestamp': 'September 19',
@@ -109,6 +109,8 @@ class FeedScreen extends StatelessWidget {
       'caption': '적을 물리치고 1%가 되어라!',
       'timestamp': '5 days ago',
       'isVideo': false,
+      'isSponsored': true,
+      'sponsoredText': 'Install now',
       'comments': [
         Comment(id: 'c2_1', username: 'gamer_pro', avatarUrl: 'https://picsum.photos/seed/gamer/100/100', text: '이 게임 완전 재밌어요!'),
         Comment(id: 'c2_2', username: 'mobile_master', avatarUrl: 'https://picsum.photos/seed/mobile/100/100', text: 'ㄹㅇ 꿀잼'),
@@ -171,6 +173,8 @@ class FeedScreen extends StatelessWidget {
       'caption': 'ad',
       'timestamp': '3 days ago',
       'isVideo': true,
+      'isSponsored': true,
+      'sponsoredText': 'Book now',
       'comments': [
         Comment(id: 'c6_1', username: 'traveler_123', avatarUrl: 'https://picsum.photos/seed/traveler/100/100', text: '할인 코드 있나요?'),
       ],
@@ -329,6 +333,8 @@ class FeedScreen extends StatelessWidget {
                 caption: post['caption'],
                 timestamp: post['timestamp'],
                 isVideo: post['isVideo'] ?? false,
+                isSponsored: post['isSponsored'] ?? false,
+                sponsoredText: post['sponsoredText'],
                 isVerified: post['isVerified'] ?? false,
                 initialComments: post['comments'] != null ? List<Comment>.from(post['comments']) : null,
                 onLikeChanged: (postId, likeCount, isLiked) {

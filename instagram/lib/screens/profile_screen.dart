@@ -675,6 +675,7 @@ class _ProfileScreenState extends State<ProfileScreen>
             final thumbnailUrl = (post['postImageUrls'] as List).first;
 
             return GestureDetector(
+              behavior: HitTestBehavior.opaque,
               onTap: () {
                 // 클릭한 게시물부터 시작하는 피드 화면 열기
                 Navigator.push(
@@ -688,12 +689,19 @@ class _ProfileScreenState extends State<ProfileScreen>
                 );
               },
               onLongPressStart: (_) {
-                _showPostPreview(context, thumbnailUrl);
+                Future.microtask(() => _showPostPreview(context, thumbnailUrl));
               },
               onLongPressEnd: (_) {
-                Navigator.of(context, rootNavigator: true).pop();
+                Future.microtask(() {
+                  if (Navigator.of(context).canPop()) {
+                    Navigator.of(context).pop();
+                  }
+                });
               },
-              child: Image.network(thumbnailUrl, fit: BoxFit.cover),
+              child: Container(
+                color: Colors.grey[300],
+                child: Image.network(thumbnailUrl, fit: BoxFit.cover),
+              ),
             );
           },
         );
@@ -947,7 +955,8 @@ class _ProfileScreenState extends State<ProfileScreen>
   void _showPostPreview(BuildContext context, String imageUrl) {
     showDialog(
       context: context,
-      barrierColor: Colors.transparent,
+      barrierColor: Colors.black.withOpacity(0.5),
+      barrierDismissible: false, // 바깥 터치로 닫히지 않도록
       builder: (context) => _PostPreviewOverlay(
         avatarUrl: _avatarUrl,
         username: _currentUsername,

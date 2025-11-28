@@ -308,8 +308,8 @@ class _FollowingListScreenState extends State<FollowingListScreen>
       avatarImage = const AssetImage('assets/images/profiles/hellokitty.jpg');
     } else if (username == 'aerichandesu') {
       avatarImage = const AssetImage('assets/images/dolyeonbyeonie/dolyeonbyeonie1.jpg');
-    } else if (username == 'imnotningning') {
-      avatarImage = const AssetImage('assets/images/rilakkuma/rilakkuma1.jpg');
+    } else if (username == 'kuromi') {
+      avatarImage = const AssetImage('assets/images/profiles/kuromi.jpg');
     } else {
       // 기본 이미지 또는 네트워크 이미지
       String imgPath = user['img'] ?? 'default';

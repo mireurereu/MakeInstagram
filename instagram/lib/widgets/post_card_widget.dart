@@ -18,6 +18,7 @@ class PostCardWidget extends StatefulWidget {
   final String timestamp;
   final bool isVideo;
   final bool isSponsored;
+  final String? sponsoredText; // 광고 문구
   final bool isVerified; // 인증 배지
   // [추가] 초기 댓글 리스트를 받을 수 있게 변경
   final List<Comment>? initialComments;
@@ -37,6 +38,7 @@ class PostCardWidget extends StatefulWidget {
     required this.timestamp,
     this.isVideo = false,
     this.isSponsored = false,
+    this.sponsoredText,
     this.isVerified = false,
     // [추가] 생성자에서 받음 (기본값 null)
     this.initialComments,
@@ -93,13 +95,26 @@ class _PostCardWidgetState extends State<PostCardWidget> {
   }
   
   void _initializeVideo(String videoUrl) async {
-    _videoController = VideoPlayerController.networkUrl(Uri.parse(videoUrl));
-    await _videoController!.initialize();
-    _videoController!.setLooping(true);
-    if (mounted) {
-      setState(() {
-        _isVideoInitialized = true;
-      });
+    try {
+      // 로컬 asset인지 네트워크 URL인지 구분
+      if (videoUrl.startsWith('assets/')) {
+        _videoController = VideoPlayerController.asset(videoUrl);
+      } else if (videoUrl.startsWith('http')) {
+        _videoController = VideoPlayerController.networkUrl(Uri.parse(videoUrl));
+      } else {
+        _videoController = VideoPlayerController.networkUrl(Uri.parse(videoUrl));
+      }
+      
+      await _videoController!.initialize();
+      _videoController!.setLooping(true);
+      if (mounted) {
+        setState(() {
+          _isVideoInitialized = true;
+        });
+      }
+    } catch (e) {
+      print('비디오 초기화 실패: $e');
+      print('비디오 URL: $videoUrl');
     }
   }
   
@@ -352,11 +367,11 @@ class _PostCardWidgetState extends State<PostCardWidget> {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    const Icon(Icons.more_horiz, color: Colors.black),
+                    const Icon(Icons.more_vert, color: Colors.black),
                   ],
                 )
               else
-                const Icon(Icons.more_horiz, color: Colors.black),
+                const Icon(Icons.more_vert, color: Colors.black),
             ],
           ),
         ),
@@ -368,20 +383,34 @@ class _PostCardWidgetState extends State<PostCardWidget> {
             alignment: Alignment.center,
             children: [
               // 비디오일 경우 VideoPlayer, 아니면 CarouselSlider
-              widget.isVideo && _isVideoInitialized
+              widget.isVideo
                   ? GestureDetector(
                       onTap: () {
-                        setState(() {
-                          if (_videoController!.value.isPlaying) {
-                            _videoController!.pause();
-                          } else {
-                            _videoController!.play();
-                          }
-                        });
+                        if (_isVideoInitialized) {
+                          setState(() {
+                            if (_videoController!.value.isPlaying) {
+                              _videoController!.pause();
+                            } else {
+                              _videoController!.play();
+                            }
+                          });
+                        }
                       },
                       child: AspectRatio(
-                        aspectRatio: _videoController!.value.aspectRatio,
-                        child: VideoPlayer(_videoController!),
+                        aspectRatio: 1.0,
+                        child: Container(
+                          color: Colors.black,
+                          child: _isVideoInitialized
+                              ? Center(
+                                  child: AspectRatio(
+                                    aspectRatio: _videoController!.value.aspectRatio,
+                                    child: VideoPlayer(_videoController!),
+                                  ),
+                                )
+                              : const Center(
+                                  child: CircularProgressIndicator(color: Colors.white),
+                                ),
+                        ),
                       ),
                     )
                   : CarouselSlider(
@@ -429,6 +458,32 @@ class _PostCardWidgetState extends State<PostCardWidget> {
           ),
         ),
 
+        // 광고 버튼 (이미지 바로 아래)
+        if (widget.isSponsored && widget.sponsoredText != null)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+            decoration: BoxDecoration(
+              color: widget.sponsoredText == 'Install now' 
+                ? const Color(0xFF4CAF50) // 초록색
+                : const Color(0xFF3797EF), // 파란색 (Book now)
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  widget.sponsoredText!,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const Icon(Icons.arrow_forward_ios, color: Colors.black, size: 16),
+              ],
+            ),
+          ),
+
         // 3. 액션바
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 10.0),
@@ -444,9 +499,12 @@ class _PostCardWidgetState extends State<PostCardWidget> {
                   const SizedBox(width: 12),
                   GestureDetector(onTap: _showCommentsModal, child: const Icon(Icons.chat_bubble_outline, color: Colors.black, size: 28)),
                   const SizedBox(width: 12),
-                  // extra action icon (share)
-                  GestureDetector(onTap: () {}, child: const Icon(Icons.ios_share, color: Colors.black, size: 26)),
-                  const SizedBox(width: 12),
+                  // 광고가 아닐 때만 repost 아이콘 표시
+                  if (!widget.isSponsored) ...[
+                    // extra action icon (share)
+                    GestureDetector(onTap: () {}, child: const Icon(Icons.ios_share, color: Colors.black, size: 26)),
+                    const SizedBox(width: 12),
+                  ],
                   const Icon(Icons.send_outlined, color: Colors.black, size: 28),
                   const Spacer(),
                   const Icon(Icons.bookmark_border, color: Colors.black, size: 28),
