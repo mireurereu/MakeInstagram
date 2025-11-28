@@ -45,10 +45,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _hasChangedProfilePicture = UserState.hasChangedProfilePicture();
 
     // 3. (핵심) 화면이 그려진 직후 '아바타 만들기' 팝업을 띄웁니다.
-    // (임시로 주석 처리 - avatar.jpg 파일이 없으면 오류 발생)
-    // WidgetsBinding.instance.addPostFrameCallback((_) {
-    //   _showAvatarDialog(context);
-    // });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _showAvatarDialog(context);
+    });
   }
 
   // 4. (신규) '아바타 만들기' 팝업 함수
@@ -61,7 +60,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           backgroundColor: Colors.white,
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.0)),
-          insetPadding: EdgeInsets.symmetric(horizontal: 80.0, vertical: 120.0), // 다이얼로그 폭 더 좁게, 세로 길게
+          insetPadding: EdgeInsets.symmetric(horizontal: 120.0, vertical: 40.0), // 다이얼로그 폭 더 좁게, 세로 길게
           child: Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
@@ -471,7 +470,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SizedBox(height: 16.0),
+                  const SizedBox(height: 8.0),
                   // (상단 아바타 섹션)
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -479,18 +478,18 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       GestureDetector(
                         onTap: () => _showPictureModal(context),
                         child: CircleAvatar(
-                          radius: 44,
+                          radius: 36,
                           backgroundImage: _getImageProvider(),
                         ),
                       ),
-                      const SizedBox(width: 16.0),
+                      const SizedBox(width: 12.0),
                       GestureDetector(
                         onTap: () { /* TODO: 아바타 설정 */ },
                         child: CircleAvatar(
-                          radius: 44,
+                          radius: 36,
                           backgroundColor: Colors.grey[200],
                           child: Icon(Icons.shield_outlined,
-                              color: Colors.black, size: 40.0),
+                              color: Colors.black, size: 32.0),
                         ),
                       ),
                     ],
@@ -502,7 +501,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           style: TextStyle(color: Colors.blue, fontSize: 14.0)),
                     ),
                   ),
-                  const SizedBox(height: 16.0),
+                  const SizedBox(height: 8.0),
 
                   // (수정된 필드 호출)
                   _buildTextRow('Name', _name, onTap: _navigateToNameEdit),
@@ -523,7 +522,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   
                   _buildNavigationRow('Music', 'Add music to your profile'),
 
-                  const SizedBox(height: 16.0),
+                  const SizedBox(height: 8.0),
                 ],
               ),
             ),
@@ -534,7 +533,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             if (_hasChangedProfilePicture)
               _buildLinkButton('Show your profile is verified'),
             
-            const SizedBox(height: 32.0),
+            const SizedBox(height: 16.0),
           ],
         ),
       ),
@@ -553,7 +552,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       onTap: onTap,
       child: Container(
         color: Colors.transparent,
-        padding: const EdgeInsets.symmetric(vertical: 8.0),
+        padding: const EdgeInsets.symmetric(vertical: 6.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -567,7 +566,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(label, style: TextStyle(color: Colors.grey[600], fontSize: 12.0)),
-                      const SizedBox(height: 4.0),
+                      const SizedBox(height: 2.0),
                       Text(
                         value.isEmpty ? ' ' : value,
                         style: TextStyle(color: Colors.black, fontSize: 16.0),
@@ -584,7 +583,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   ),
               ],
             ),
-            const SizedBox(height: 8.0),
+            const SizedBox(height: 4.0),
             // (신규) 구분선이 true일 때만 표시
             if (showDivider)
               Divider(color: Colors.grey[300], height: 1),

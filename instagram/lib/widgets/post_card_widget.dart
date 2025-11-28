@@ -118,6 +118,7 @@ class _PostCardWidgetState extends State<PostCardWidget> {
         return CommentsModalContent(
           comments: _comments,
           postOwnerName: widget.username,
+          isMyPost: widget.username == UserState.myId, // 내 게시물 여부 전달
           onCommentPosted: (text, replyToUsername) {
             setState(() {
               final commentId = 'comment_${DateTime.now().millisecondsSinceEpoch}';
@@ -167,6 +168,12 @@ class _PostCardWidgetState extends State<PostCardWidget> {
                 
                 // Set unread badge to true
                 NotificationsScreen.hasUnreadNotifications.value = true;
+                
+                // 댓글 알림 시 말풍선 표시 (3초 후 사라짐)
+                NotificationsScreen.showCommentBubble.value = true;
+                Future.delayed(const Duration(seconds: 3), () {
+                  NotificationsScreen.showCommentBubble.value = false;
+                });
               }
             });
           },

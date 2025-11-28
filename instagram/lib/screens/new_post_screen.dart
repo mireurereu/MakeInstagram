@@ -190,7 +190,7 @@ class _NewPostScreenState extends State<NewPostScreen> {
                   style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF2D5BFF)),
                   child: const Padding(
                     padding: EdgeInsets.symmetric(vertical: 14),
-                    child: Text('Share posts', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                    child: Text('Share posts', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
                   ),
                 ),
               ),
@@ -207,7 +207,7 @@ class _NewPostScreenState extends State<NewPostScreen> {
                     }
                   });
                 },
-                child: const Text('Not now', style: TextStyle(color: Colors.black54)),
+                child: const Text('Not now', style: TextStyle(color: Color.fromARGB(136, 47, 26, 181))),
               ),
               const SizedBox(height: 8),
             ],

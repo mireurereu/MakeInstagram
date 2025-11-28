@@ -11,6 +11,9 @@ class NotificationsScreen extends StatefulWidget {
   // Global notifier for unread notifications badge
   static final ValueNotifier<bool> hasUnreadNotifications = ValueNotifier<bool>(false);
   
+  // 말풍선 표시용 notifier (댓글 알림 시 잠시 표시)
+  static final ValueNotifier<bool> showCommentBubble = ValueNotifier<bool>(false);
+  
   // 하이라이팅된 알림 ID
   static final ValueNotifier<String?> highlightedNotificationId = ValueNotifier<String?>(null);
 

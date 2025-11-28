@@ -9,6 +9,7 @@ class CommentsModalContent extends StatefulWidget {
   final Function(String text, String? replyToUsername) onCommentPosted;
   final Function(Comment) onCommentLiked;
   final String? highlightedCommentId;
+  final bool isMyPost; // 내 게시물 여부
 
   const CommentsModalContent({
     super.key,
@@ -17,6 +18,7 @@ class CommentsModalContent extends StatefulWidget {
     required this.onCommentPosted,
     required this.onCommentLiked,
     this.highlightedCommentId,
+    this.isMyPost = false, // 기본값 false
   });
 
   @override
@@ -26,6 +28,7 @@ class CommentsModalContent extends StatefulWidget {
 class _CommentsModalContentState extends State<CommentsModalContent> {
   final ScrollController _scrollController = ScrollController();
   final TextEditingController _commentController = TextEditingController();
+  final FocusNode _commentFocusNode = FocusNode();
   
   // 인스타 블루
   final Color _instaBlue = const Color(0xFF3797EF);
@@ -43,15 +46,47 @@ class _CommentsModalContentState extends State<CommentsModalContent> {
   // 이모지 리스트
   final List<String> _emojis = ['❤️', '🙌', '🔥', '👏', '😢', '😍', '😮', '😂'];
   
+  // 입력창 말풍선 표시 여부
+  bool _showInputTooltip = false;
+  
   @override
   void initState() {
     super.initState();
     _highlightedCommentIdNotifier = ValueNotifier<String?>(widget.highlightedCommentId);
+    
+    // 댓글 창이 열릴 때 키보드 자동으로 올리기
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _commentFocusNode.requestFocus();
+      
+      // 내 게시물이고 댓글이 없을 때만 말풍선 표시
+      final shouldShowTooltip = widget.isMyPost && widget.comments.isEmpty;
+      
+      if (shouldShowTooltip) {
+        // 키보드가 올라오면 잠시 후 말풍선 표시
+        Future.delayed(const Duration(milliseconds: 300), () {
+          if (mounted) {
+            setState(() {
+              _showInputTooltip = true;
+            });
+            
+            // 3초 후 말풍선 숨기기
+            Future.delayed(const Duration(seconds: 3), () {
+              if (mounted) {
+                setState(() {
+                  _showInputTooltip = false;
+                });
+              }
+            });
+          }
+        });
+      }
+    });
   }
   
   @override
   void dispose() {
     _highlightedCommentIdNotifier.dispose();
+    _commentFocusNode.dispose();
     super.dispose();
   }
 
@@ -573,66 +608,139 @@ class _CommentsModalContentState extends State<CommentsModalContent> {
           ),
           
           // 입력창
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
-            child: Row(
-              children: [
-                ValueListenableBuilder<String>(
-                  valueListenable: UserState.myAvatarUrlNotifier,
-                  builder: (context, avatarUrl, child) {
-                    return CircleAvatar(
-                      radius: 18,
-                      backgroundImage: _getImageProvider(avatarUrl),
-                    );
-                  },
-                ),
-                const SizedBox(width: 12.0),
-                Expanded(
-                  child: TextField(
-                    controller: _commentController,
-                    style: const TextStyle(color: Colors.black),
-                    decoration: const InputDecoration(
-                      hintText: 'Add a comment...',
-                      hintStyle: TextStyle(color: Colors.grey),
-                      border: InputBorder.none,
-                      isDense: true,
+          Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+                child: Row(
+                  children: [
+                    ValueListenableBuilder<String>(
+                      valueListenable: UserState.myAvatarUrlNotifier,
+                      builder: (context, avatarUrl, child) {
+                        return CircleAvatar(
+                          radius: 18,
+                          backgroundImage: _getImageProvider(avatarUrl),
+                        );
+                      },
                     ),
-                    onSubmitted: (_) => _postComment(),
-                    onChanged: (_) => setState(() {}), // 텍스트 변경 감지
-                  ),
-                ),
-                // 텍스트가 있으면 Post 버튼, 없으면 Stickers 아이콘
-                if (_commentController.text.isNotEmpty)
-                  GestureDetector(
-                    onTap: _postComment,
-                    child: Container(
-                      width: 32,
-                      height: 32,
-                      decoration: BoxDecoration(
-                        color: _instaBlue,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.arrow_upward,
-                        color: Colors.white,
-                        size: 18,
+                    const SizedBox(width: 12.0),
+                    Expanded(
+                      child: TextField(
+                        controller: _commentController,
+                        focusNode: _commentFocusNode,
+                        style: const TextStyle(color: Colors.black),
+                        decoration: const InputDecoration(
+                          hintText: 'Add a comment...',
+                          hintStyle: TextStyle(color: Colors.grey),
+                          border: InputBorder.none,
+                          isDense: true,
+                        ),
+                        onSubmitted: (_) => _postComment(),
+                        onChanged: (_) => setState(() {}), // 텍스트 변경 감지
                       ),
                     ),
-                  )
-                else
-                  IconButton(
-                    onPressed: () {},
-                    icon: const Icon(
-                      Icons.insert_emoticon_outlined,
-                      color: Colors.black,
-                      size: 24,
+                    // 텍스트가 있으면 Post 버튼, 없으면 Stickers 아이콘
+                    if (_commentController.text.isNotEmpty)
+                      GestureDetector(
+                        onTap: _postComment,
+                        child: Container(
+                          width: 32,
+                          height: 32,
+                          decoration: BoxDecoration(
+                            color: _instaBlue,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.arrow_upward,
+                            color: Colors.white,
+                            size: 18,
+                          ),
+                        ),
+                      )
+                    else
+                      IconButton(
+                        onPressed: () {},
+                        icon: const Icon(
+                          Icons.insert_emoticon_outlined,
+                          color: Colors.black,
+                          size: 24,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              // 말풍선 (잠시 표시)
+              if (_showInputTooltip)
+                Positioned(
+                  bottom: 70,
+                  left: 0,
+                  right: 0,
+                  child: Center(
+                    child: Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        Container(
+                          width: 450,
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(8),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.1),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: const Text(
+                            'Comments on public content can now be\nshared by others in their stories and reels.',
+                            style: TextStyle(color: Colors.black, fontSize: 12),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                        // 말풍선 꼬리 (중앙 하단)
+                        Positioned(
+                          bottom: -6,
+                          left: 0,
+                          right: 0,
+                          child: Center(
+                            child: CustomPaint(
+                              size: const Size(12, 7),
+                              painter: _TooltipTailPainter(),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-              ],
-            ),
+                ),
+            ],
           ),
         ],
       ),
     );
   }
+}
+
+// 말풍선 꼬리 그리기
+class _TooltipTailPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.fill;
+
+    final path = Path()
+      ..moveTo(0, 0)
+      ..lineTo(size.width / 2, size.height)
+      ..lineTo(size.width, 0)
+      ..close();
+
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

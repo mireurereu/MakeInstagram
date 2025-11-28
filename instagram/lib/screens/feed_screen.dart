@@ -211,31 +211,55 @@ class FeedScreen extends StatelessWidget {
           ValueListenableBuilder<bool>(
             valueListenable: NotificationsScreen.hasUnreadNotifications,
             builder: (context, hasUnread, _) {
-              return Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.favorite_border, color: Colors.black, size: 28),
-                    onPressed: () {
-                      // Clear badge when opening notifications
-                      NotificationsScreen.hasUnreadNotifications.value = false;
-                      Navigator.push(context, MaterialPageRoute(builder: (c) => const NotificationsScreen()));
-                    },
-                  ),
-                  if (hasUnread)
-                    Positioned(
-                      right: 8,
-                      top: 8,
-                      child: Container(
-                        width: 8,
-                        height: 8,
-                        decoration: const BoxDecoration(
-                          color: Colors.red,
-                          shape: BoxShape.circle,
-                        ),
+              return ValueListenableBuilder<bool>(
+                valueListenable: NotificationsScreen.showCommentBubble,
+                builder: (context, showBubble, _) {
+                  return Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.favorite_border, color: Colors.black, size: 28),
+                        onPressed: () {
+                          // Clear badge when opening notifications
+                          NotificationsScreen.hasUnreadNotifications.value = false;
+                          NotificationsScreen.showCommentBubble.value = false;
+                          Navigator.push(context, MaterialPageRoute(builder: (c) => const NotificationsScreen()));
+                        },
                       ),
-                    ),
-                ],
+                      if (hasUnread)
+                        Positioned(
+                          right: 8,
+                          top: 8,
+                          child: Container(
+                            width: 8,
+                            height: 8,
+                            decoration: const BoxDecoration(
+                              color: Colors.red,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                        ),
+                      // 말풍선 (댓글 알림 시 잠시 표시)
+                      if (showBubble)
+                        Positioned(
+                          top: -6,
+                          right: 36,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.red,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(
+                              Icons.chat_bubble,
+                              size: 14,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                    ],
+                  );
+                },
               );
             },
           ),

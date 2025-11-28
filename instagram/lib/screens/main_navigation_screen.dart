@@ -5,6 +5,7 @@ import 'package:instagram/screens/create_post_screen.dart';
 import 'package:instagram/screens/profile_screen.dart';
 import 'package:instagram/screens/search_screen.dart'; 
 import 'package:instagram/screens/reels_screen.dart';
+import 'package:instagram/screens/notifications_screen.dart';
 import 'package:instagram/data/user_state.dart';
 
 // Global key so other screens can programmatically change tabs (e.g. after posting)
