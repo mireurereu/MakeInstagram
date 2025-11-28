@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 
 class UserState {
   // 현재 로그인한 사용자 ID
-  static const String myId = 'ta_junhyuk';
+  static const String myId = 'kkuma';
   
   // [데이터] 내 프로필 사진 URL - ValueNotifier로 변경하여 실시간 업데이트
-  static final ValueNotifier<String> _myAvatarUrlNotifier = ValueNotifier('assets/images/profile3.jpg');
+  static final ValueNotifier<String> _myAvatarUrlNotifier = ValueNotifier('assets/images/profiles/kkuma.jpg');
   
   // 프로필 사진 변경 여부 플래그
   static bool _hasChangedProfilePicture = false;

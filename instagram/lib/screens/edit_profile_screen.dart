@@ -505,7 +505,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
                   // (수정된 필드 호출)
                   _buildTextRow('Name', _name, onTap: _navigateToNameEdit),
-                  _buildTextRow('Username', 'ta_junhyuk'),
+                  _buildTextRow('Username', 'kkuma'),
                   _buildTextRow('Pronouns', ''),
                   _buildTextRow('Bio', _bio, onTap: _navigateToBioEdit),
                   

@@ -5,7 +5,7 @@ import 'package:instagram/data/user_state.dart'; // 데이터 파일 임포트
 class FollowingListScreen extends StatefulWidget {
   final String username; // [추가] 누구의 팔로잉 목록인지
 
-  const FollowingListScreen({super.key, this.username = 'ta_junhyuk'});
+  const FollowingListScreen({super.key, this.username = 'kkuma'});
 
   @override
   State<FollowingListScreen> createState() => _FollowingListScreenState();

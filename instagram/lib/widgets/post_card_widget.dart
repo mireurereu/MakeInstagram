@@ -124,7 +124,7 @@ class _PostCardWidgetState extends State<PostCardWidget> {
               final commentId = 'comment_${DateTime.now().millisecondsSinceEpoch}';
               _comments.add(Comment(
                 id: commentId,
-                username: 'ta_junhyuk', // 내 아이디
+                username: 'kkuma', // 내 아이디
                 avatarUrl: UserState.getMyAvatarUrl(), // UserState에서 프로필 사진 가져오기
                 text: text,
                 replyToUsername: replyToUsername,

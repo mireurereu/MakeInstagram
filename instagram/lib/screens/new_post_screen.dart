@@ -294,7 +294,7 @@ class _NewPostScreenState extends State<NewPostScreen> {
     // Add to home feed
     final newPostData = {
       'id': DateTime.now().microsecondsSinceEpoch.toString(),
-      'username': 'ta_junhyuk',
+      'username': 'kkuma',
       'userAvatarUrl': UserState.getMyAvatarUrl(),
       'postImageUrls': [addedPath],
       'likeCount': '0',

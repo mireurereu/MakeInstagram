@@ -97,7 +97,7 @@ class _DmListScreenState extends State<DmListScreen> {
         title: Row(
           children: const [
             Text(
-              'ta_junhyuk', 
+              'kkuma', 
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20.0),
             ),
             Icon(Icons.keyboard_arrow_down),

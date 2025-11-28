@@ -119,7 +119,7 @@ class _CommentsModalContentState extends State<CommentsModalContent> {
     // 1단계: Posting... 상태로 임시 댓글 추가
     final tempComment = Comment(
       id: 'temp_${DateTime.now().millisecondsSinceEpoch}',
-      username: 'ta_junhyuk',
+      username: 'kkuma',
       avatarUrl: UserState.myAvatarUrlNotifier.value,
       text: text,
       replyToUsername: _replyingToUsername,
@@ -428,7 +428,7 @@ class _CommentsModalContentState extends State<CommentsModalContent> {
                       ],
                       
                       // 다른 사람의 댓글이면 Hide 버튼 표시
-                      if (comment.username != 'ta_junhyuk') ...[
+                      if (comment.username != 'kkuma') ...[
                         const SizedBox(width: 12),
                         const Text(
                           'Hide',
