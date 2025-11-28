@@ -124,12 +124,27 @@ class _ProfileScreenState extends State<ProfileScreen>
         (i) => 'https://picsum.photos/seed/${username}_$i/300/300',
       );
 
-      // 특정 유저(imwinter) 데이터 하드코딩
-      if (username == 'imwinter') {
-        _name = 'WINTER';
-        _bio = 'aespa';
+      // 특정 유저(hellokitty) 데이터 하드코딩
+      if (username == 'hellokitty') {
+        _name = 'HELLO KITTY';
+        _bio = 'Sanrio Official';
+        _avatarUrl = 'assets/images/profiles/hellokitty.jpg';
         _followerCount = '13M';
         _mutualFollowers = ['mymelody', 'hangyo'];
+        _otherUserPosts = [
+          'assets/images/kitty/k1.jpg',
+          'assets/images/kitty/k2.jpg',
+          'assets/images/kitty/k3.jpg',
+          'assets/images/kitty/k4.jpg',
+          'assets/images/kitty/k5.jpg',
+          'assets/images/kitty/k6.jpg',
+          'assets/images/kitty/k7.jpg',
+          'assets/images/kitty/k8.jpg',
+          'assets/images/kitty/k9.jpg',
+          'assets/images/kitty/k10.jpg',
+          'assets/images/kitty/k11.jpg',
+          'assets/images/kitty/k12.jpg',
+        ];
       }
 
       // 특정 유저(imnotningning) 데이터 하드코딩 (요청: 4탭, NINGNING, aespa)
@@ -137,7 +152,7 @@ class _ProfileScreenState extends State<ProfileScreen>
         _name = 'NINGNING';
         _bio = 'aespa';
         _followerCount = '10.7M';
-        _mutualFollowers = ['imwinter', 'hangyo', 'sanrio_official'];
+        _mutualFollowers = ['hellokitty', 'hangyo', 'sanrio_official'];
         // 다른 사용자 게시물 수는 이미 9로 세팅되어 있음
       }
     });
@@ -417,7 +432,7 @@ class _ProfileScreenState extends State<ProfileScreen>
             _currentUsername,
             style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 22),
           ),
-          if (_currentUsername == 'imwinter')
+          if (_currentUsername == 'hellokitty')
             Padding(
               padding: const EdgeInsets.only(left: 4),
               child: Icon(Icons.verified, color: _instaBlue, size: 18),

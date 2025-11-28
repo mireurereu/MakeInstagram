@@ -23,8 +23,8 @@ class _FollowingListScreenState extends State<FollowingListScreen>
   @override
   void initState() {
     super.initState();
-    // If viewing imwinter, use custom 4-tab layout and default to '4 following' tab
-    final bool isImwinter = (widget.username ?? UserState.myId) == 'imwinter';
+    // If viewing hellokitty, use custom 4-tab layout and default to '4 following' tab
+    final bool isImwinter = (widget.username ?? UserState.myId) == 'hellokitty';
     final int tabCount = isImwinter ? 4 : 3;
     final int initial = isImwinter ? 2 : 1;
     _tabController = TabController(length: tabCount, vsync: this, initialIndex: initial);
@@ -56,7 +56,7 @@ class _FollowingListScreenState extends State<FollowingListScreen>
           unselectedLabelColor: Colors.grey,
           indicatorWeight: 1.0,
           labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-          tabs: (widget.username ?? UserState.myId) == 'imwinter'
+          tabs: (widget.username ?? UserState.myId) == 'hellokitty'
               ? const [
                   Tab(text: '3 mutual'),
                   Tab(text: '13M followers'),
@@ -74,8 +74,8 @@ class _FollowingListScreenState extends State<FollowingListScreen>
       body: TabBarView(
         controller: _tabController,
         children: [
-          // For imwinter show placeholders for custom tabs; otherwise default views
-          if ((widget.username ?? UserState.myId) == 'imwinter') ...[
+          // For hellokitty show placeholders for custom tabs; otherwise default views
+          if ((widget.username ?? UserState.myId) == 'hellokitty') ...[
             const Center(child: Text('3 mutual', style: TextStyle(color: Colors.grey))),
             const Center(child: Text('13M followers', style: TextStyle(color: Colors.grey))),
             _buildFollowingList(showSearch: true, showSync: false),
@@ -282,30 +282,42 @@ class _FollowingListScreenState extends State<FollowingListScreen>
   }
 
   Widget _buildUserTile(Map<String, String> user) {
-    // imwinter의 following 화면인지 확인
-    final bool isImwinterFollowing = (widget.username ?? UserState.myId) == 'imwinter';
+    // hellokitty의 following 화면인지 확인
+    final bool isImwinterFollowing = (widget.username ?? UserState.myId) == 'hellokitty';
     
     // 프로필 이미지 경로 결정
-    String imgPath = user['img'] ?? 'default';
+    String username = user['username'] ?? '';
     ImageProvider avatarImage;
-    if (imgPath.startsWith('assets/')) {
-      avatarImage = AssetImage(imgPath);
-    } else if (imgPath == 'hangyo') {
+    
+    // username 기반으로 프로필 이미지 매핑
+    if (username == 'hangyo') {
       avatarImage = const AssetImage('assets/images/profiles/hangyo.jpg');
-    } else if (imgPath == 'sanrio_official') {
+    } else if (username == 'sanrio_official') {
       avatarImage = const AssetImage('assets/images/profiles/sanrio.jpg');
-    } else if (imgPath == 'mymelody') {
+    } else if (username == 'mymelody') {
       avatarImage = const AssetImage('assets/images/profiles/mymelody.jpg');
-    } else if (imgPath == 'pochacco') {
+    } else if (username == 'pochacco') {
       avatarImage = const AssetImage('assets/images/profiles/pochacco.jpg');
-    } else if (imgPath == 'pompom') {
+    } else if (username == 'pompom') {
       avatarImage = const AssetImage('assets/images/profiles/pompom.jpg');
-    } else if (imgPath == 'keroppi') {
-      avatarImage = const AssetImage('assets/images/profiles/kerropi.jpg');
-    } else if (imgPath == 'cinnamo') {
+    } else if (username == 'keroppi') {
+      avatarImage = const AssetImage('assets/images/profiles/keroppi.jpg');
+    } else if (username == 'cinnamo') {
       avatarImage = const AssetImage('assets/images/profiles/cinnamo.jpg');
+    } else if (username == 'hellokitty') {
+      avatarImage = const AssetImage('assets/images/profiles/hellokitty.jpg');
+    } else if (username == 'aerichandesu') {
+      avatarImage = const AssetImage('assets/images/dolyeonbyeonie/dolyeonbyeonie1.jpg');
+    } else if (username == 'imnotningning') {
+      avatarImage = const AssetImage('assets/images/rilakkuma/rilakkuma1.jpg');
     } else {
-      avatarImage = NetworkImage('https://picsum.photos/seed/$imgPath/100/100');
+      // 기본 이미지 또는 네트워크 이미지
+      String imgPath = user['img'] ?? 'default';
+      if (imgPath.startsWith('assets/')) {
+        avatarImage = AssetImage(imgPath);
+      } else {
+        avatarImage = NetworkImage('https://picsum.photos/seed/$username/100/100');
+      }
     }
     
     return ListTile(

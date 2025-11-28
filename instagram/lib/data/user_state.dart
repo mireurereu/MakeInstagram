@@ -36,14 +36,14 @@ class UserState {
     return _hasChangedProfilePicture;
   }
 
-  // [데이터] 내가 팔로우한 사람 목록 (Set으로 중복 방지)
+  // [데이터] 내가 팔로잉하는 사용자 ID 목록
   static final Set<String> _myFollowingList = {
     'hangyo', 
     'sanrio_official',
     'mymelody',
     'kuromi',
     'pochacco',
-    'imwinter', 
+    'hellokitty', 
     'pompom',
     'keroppi',
     'cinnamo'
@@ -51,7 +51,7 @@ class UserState {
 
   // [데이터] 다른 사용자의 팔로잉 목록 (시나리오용 하드코딩)
   static final Map<String, List<Map<String, String>>> _otherUsersFollowing = {
-    'imwinter': [
+    'hellokitty': [
       {'username': 'aerichandesu', 'name': 'GISELLE', 'img': 'aerichandesu'},
       {'username': 'imnotningning', 'name': 'NINGNING', 'img': 'imnotningning'},
       {'username': 'hangyo', 'name': 'KARINA', 'img': 'hangyo'},
@@ -61,7 +61,7 @@ class UserState {
 
   // 간단한 인증(verified) 시뮬레이션
   static final Set<String> _verified = {
-    'imwinter', 'imnotningning', 'hangyo', 'sanrio_official', 'aerichandesu'
+    'hellokitty', 'imnotningning', 'hangyo', 'sanrio_official', 'aerichandesu'
   };
 
   static bool isVerified(String username) => _verified.contains(username);

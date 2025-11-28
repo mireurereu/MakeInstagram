@@ -23,7 +23,7 @@ class FeedScreen extends StatelessWidget {
       'timestamp': '2 hours ago',
       'isVideo': false,
       'comments': [
-        Comment(id: 'my_c1_1', username: 'imwinter', avatarUrl: 'https://picsum.photos/seed/winter/100/100', text: '날씨 좋아보여요! 😊'),
+        Comment(id: 'my_c1_1', username: 'hellokitty', avatarUrl: 'assets/images/profiles/hellokitty.jpg', text: '날씨 좋아보여요! 😊'),
         Comment(id: 'my_c1_2', username: 'mymelody', avatarUrl: 'assets/images/profiles/mymelody.jpg', text: '어디야?'),
       ],
     },
@@ -81,7 +81,7 @@ class FeedScreen extends StatelessWidget {
       'isVideo': false,
       'comments': [
         Comment(id: 'my_c5_1', username: 'cinnamo', avatarUrl: 'assets/images/profiles/cinnamo.jpg', text: '맛있겠다!'),
-        Comment(id: 'my_c5_2', username: 'imwinter', avatarUrl: 'https://picsum.photos/seed/winter/100/100', text: 'omg looks delicious 😋'),
+        Comment(id: 'my_c5_2', username: 'hellokitty', avatarUrl: 'assets/images/profiles/hellokitty.jpg', text: 'omg looks delicious 😋'),
       ],
     },
     {
@@ -95,7 +95,7 @@ class FeedScreen extends StatelessWidget {
       'isVideo': true,
       'isVerified': true,
       'comments': [
-        Comment(id: 'c1_1', username: 'imwinter', avatarUrl: 'https://picsum.photos/seed/winter/100/100', text: '😍😍😍'),
+        Comment(id: 'c1_1', username: 'hellokitty', avatarUrl: 'assets/images/profiles/hellokitty.jpg', text: '😍😍😍'),
         Comment(id: 'c1_2', username: 'hangyo', avatarUrl: 'assets/images/profiles/hangyo.jpg', text: 'Amazing!!'),
         Comment(id: 'c1_3', username: 'newjeans_official', avatarUrl: 'https://picsum.photos/seed/newjeans/100/100', text: 'Love this 💕'),
       ],
@@ -124,7 +124,7 @@ class FeedScreen extends StatelessWidget {
       'timestamp': '5 days ago',
       'isVideo': false,
       'comments': [
-        Comment(id: 'c3_1', username: 'imwinter', avatarUrl: 'https://picsum.photos/seed/winter/100/100', text: 'Gorgeous! 😻'),
+        Comment(id: 'c3_1', username: 'hellokitty', avatarUrl: 'assets/images/profiles/hellokitty.jpg', text: 'Gorgeous! 😻'),
         Comment(id: 'c3_2', username: 'aespa_official', avatarUrl: 'https://picsum.photos/seed/aespa/100/100', text: 'Beautiful 💖'),
         Comment(id: 'c3_3', username: 'fashion_lover', avatarUrl: 'https://picsum.photos/seed/fashion/100/100', text: 'Where did you get that outfit?'),
         Comment(id: 'c3_4', username: 'katarinabluu', avatarUrl: 'https://picsum.photos/seed/karina/100/100', text: 'Thank you all! 🥰', replyToUsername: 'fashion_lover'),
@@ -177,11 +177,11 @@ class FeedScreen extends StatelessWidget {
     },
     {
       'id': 'seed6',
-      'username': 'imwinter',
-      'userAvatarUrl': 'https://picsum.photos/seed/winter/100/100',
-      'postImageUrls': ['https://picsum.photos/seed/winter1/600/600','https://picsum.photos/seed/winter2/600/600'],
+      'username': 'hellokitty',
+      'userAvatarUrl': 'assets/images/profiles/hellokitty.jpg',
+      'postImageUrls': ['assets/images/kitty/k13.jpg','assets/images/kitty/k14.jpg','assets/images/kitty/k15.jpg','assets/images/kitty/k16.jpg','assets/images/kitty/k17.jpg','assets/images/kitty/k18.jpg'],
       'likeCount': '886,981',
-      'caption': '사랑스러운 🗿🤍',
+      'caption': '사랑스러운 �🤍',
       'timestamp': '3 days ago',
       'isVideo': false,
       'comments': [
@@ -378,10 +378,11 @@ class FeedScreen extends StatelessWidget {
         // 스토리 데이터 (영상 00:11 상단 참조)
         final stories = [
           {'name': 'Your story', 'img': myAvatarUrl, 'isMe': true},
-          {'name': 'newjeans', 'img': 'https://picsum.photos/seed/newjeans/100/100', 'isMe': false},
+          {'name': 'keroppi', 'img': 'assets/images/profiles/keroppi.jpg', 'isMe': false},
           {'name': 'hangyo', 'img': 'assets/images/profiles/hangyo.jpg', 'isMe': false},
           {'name': 'sanrio_official', 'img': 'assets/images/profiles/sanrio.jpg', 'isMe': false},
-          {'name': 'winter', 'img': 'https://picsum.photos/seed/winter/100/100', 'isMe': false},
+          {'name': 'hellokitty', 'img': 'assets/images/profiles/hellokitty.jpg', 'isMe': false},
+          {'name': 'pompom', 'img': 'assets/images/profiles/pompom.jpg', 'isMe': false},
         ];
 
         return SizedBox(
