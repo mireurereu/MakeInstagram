@@ -396,21 +396,23 @@ class _PostCardWidgetState extends State<PostCardWidget> {
                           });
                         }
                       },
-                      child: AspectRatio(
-                        aspectRatio: 1.0,
-                        child: Container(
-                          color: Colors.black,
-                          child: _isVideoInitialized
-                              ? Center(
-                                  child: AspectRatio(
-                                    aspectRatio: _videoController!.value.aspectRatio,
-                                    child: VideoPlayer(_videoController!),
-                                  ),
-                                )
-                              : const Center(
-                                  child: CircularProgressIndicator(color: Colors.white),
+                      child: Container(
+                        color: Colors.black,
+                        width: double.infinity, // 가로는 꽉 채움
+                        child: _isVideoInitialized
+                            ? AspectRatio(
+                                // 영상의 실제 비율 사용
+                                aspectRatio: _videoController!.value.aspectRatio,
+                                child: VideoPlayer(_videoController!),
+                              )
+                            : const AspectRatio(
+                                // 로딩 중일 때는 임시로 1:1 정사각형 유지 (혹은 16:9 등 원하는 비율)
+                                aspectRatio: 1.0,
+                                child: Center(
+                                  child: CircularProgressIndicator(
+                                      color: Colors.white),
                                 ),
-                        ),
+                              ),
                       ),
                     )
                   : CarouselSlider(
@@ -421,7 +423,7 @@ class _PostCardWidgetState extends State<PostCardWidget> {
                             return url.startsWith('http') || url.startsWith('https')
                                 ? Image.network(
                                     url,
-                                    fit: BoxFit.fitWidth,
+                                    fit: BoxFit.cover,
                                     width: double.infinity,
                                     errorBuilder: (c, o, s) => Container(color: Colors.grey[300]),
                                   )

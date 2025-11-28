@@ -319,12 +319,38 @@ class _FollowingListScreenState extends State<FollowingListScreen>
         avatarImage = NetworkImage('https://picsum.photos/seed/$username/100/100');
       }
     }
-    
+
+    final bool hasStory = UserState.hasStory(username);
+
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      leading: CircleAvatar(
-        radius: 26,
-        backgroundImage: avatarImage,
+      leading: Container(
+        padding: const EdgeInsets.all(2.5), // 링 두께
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: hasStory
+              ? const LinearGradient(
+                  colors: [
+                    Color(0xFFFBAA47), // 노랑
+                    Color(0xFFD91A46), // 빨강
+                    Color(0xFFA60F93), // 보라
+                  ],
+                  begin: Alignment.bottomLeft,
+                  end: Alignment.topRight,
+                )
+              : null, // 스토리가 없으면 링 없음
+        ),
+        child: Container(
+          padding: const EdgeInsets.all(2.5), // 사진과 링 사이 흰색 테두리
+          decoration: const BoxDecoration(
+            shape: BoxShape.circle,
+            color: Colors.white,
+          ),
+          child: CircleAvatar(
+            radius: 24, // 원래 사이즈 유지
+            backgroundImage: avatarImage,
+          ),
+        ),
       ),
       title: Row(children: [
         Text(user['username'] ?? '', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),

@@ -36,6 +36,8 @@ class UserState {
     return _hasChangedProfilePicture;
   }
 
+  static bool hasStory(String username) => storyUsers.contains(username);
+
   // [데이터] 내가 팔로잉하는 사용자 ID 목록
   static final Set<String> _myFollowingList = {
     'hangyo', 
@@ -57,6 +59,14 @@ class UserState {
       {'username': 'hangyo', 'name': 'blue', 'img': 'hangyo'},
       {'username': 'sanrio_official', 'name': 'we are one', 'img': 'sanrio_official'},
     ],
+  };
+
+  static const Set<String> storyUsers = {
+    'keroppi', 
+    'hangyo', 
+    'sanrio_official', 
+    'hellokitty', 
+    'pompom'
   };
 
   // 간단한 인증(verified) 시뮬레이션

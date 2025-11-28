@@ -454,6 +454,7 @@ class _ProfileScreenState extends State<ProfileScreen>
   Widget _buildProfileHeader(int postCount) {
     // [핵심] 팔로잉 숫자는 UserState에서 실시간으로 가져옴
     final realFollowingCount = UserState.getFollowingCount(_currentUsername);
+    final bool hasStory = UserState.hasStory(_currentUsername);
 
     return Padding(
       padding: const EdgeInsets.all(16.0),
@@ -467,78 +468,105 @@ class _ProfileScreenState extends State<ProfileScreen>
               Stack(
                 clipBehavior: Clip.none,
                 children: [
-                  CircleAvatar(
-                    radius: 44,
-                    backgroundImage: _getAvatarImageProvider(_avatarUrl),
+                  // [수정] 무지개 링 컨테이너 추가
+                  Container(
+                    padding: const EdgeInsets.all(3.5), // 링 두께
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: hasStory
+                          ? const LinearGradient(
+                              colors: [
+                                Color(0xFFFBAA47),
+                                Color(0xFFD91A46),
+                                Color(0xFFA60F93),
+                              ],
+                              begin: Alignment.bottomLeft,
+                              end: Alignment.topRight,
+                            )
+                          : null, // 스토리가 없으면 링 없음
+                    ),
+                    child: Container(
+                      padding: const EdgeInsets.all(3), // 흰색 테두리 간격
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white,
+                      ),
+                      child: CircleAvatar(
+                        radius: 44, // 프로필용 큰 사이즈
+                        backgroundImage: _getAvatarImageProvider(_avatarUrl),
+                      ),
+                    ),
                   ),
                   // What's new 말풍선
-                  Positioned(
-                    top: -12,
-                    left: 0,
-                    right: 0,
-                    child: Center(
-                      child: Stack(
-                        clipBehavior: Clip.none,
-                        children: [
-                          Container(
-                            width: 80,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: Colors.grey[300]!,
-                                width: 1,
+                  if (_isCurrentUser)
+                    Positioned(
+                      top: -12,
+                      left: 0,
+                      right: 0,
+                      child: Center(
+                        child: Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            Container(
+                              width: 80,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
                               ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.1),
-                                  blurRadius: 4,
-                                  offset: const Offset(0, 2),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: Colors.grey[300]!,
+                                  width: 1,
                                 ),
-                              ],
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.1),
+                                    blurRadius: 4,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: const Text(
+                                "What's\nnew?",
+                                style: TextStyle(fontSize: 10, height: 1.2),
+                                textAlign: TextAlign.center,
+                              ),
                             ),
-                            child: const Text(
-                              "What's\nnew?",
-                              style: TextStyle(fontSize: 10, height: 1.2),
-                              textAlign: TextAlign.center,
+                            // 말풍선 꼬리
+                            Positioned(
+                              bottom: -4,
+                              left: 20,
+                              child: CustomPaint(
+                                size: const Size(8, 5),
+                                painter: _BubbleTailPainter(),
+                              ),
                             ),
-                          ),
-                          // 말풍선 꼬리
-                          Positioned(
-                            bottom: -4,
-                            left: 20,
-                            child: CustomPaint(
-                              size: const Size(8, 5),
-                              painter: _BubbleTailPainter(),
-                            ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
-                  ),
                   // + 아이콘
-                  Positioned(
-                    bottom: 0,
-                    right: 0,
-                    child: Container(
-                      width: 24,
-                      height: 24,
-                      decoration: BoxDecoration(
-                        color: Colors.black,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white, width: 2),
-                      ),
-                      child: const Icon(
-                        Icons.add,
-                        color: Colors.white,
-                        size: 16,
+                  if (_isCurrentUser)
+                    Positioned(
+                      bottom: 0,
+                      right: 0,
+                      child: Container(
+                        width: 24,
+                        height: 24,
+                        decoration: BoxDecoration(
+                          color: Colors.black,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 2),
+                        ),
+                        child: const Icon(
+                          Icons.add,
+                          color: Colors.white,
+                          size: 16,
+                        ),
                       ),
                     ),
-                  ),
                 ],
               ),
               const SizedBox(width: 28),
@@ -686,6 +714,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                     builder: (_) => _ProfilePostFeedScreen(
                       posts: myPosts,
                       initialIndex: index,
+                      title: 'Photo',
                     ),
                   ),
                 );
@@ -738,6 +767,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                 builder: (_) => _ProfilePostFeedScreen(
                   posts: built,
                   initialIndex: index,
+                  title: 'Posts',
                 ),
               ),
             );
@@ -1303,10 +1333,12 @@ class _ZoomableGridImageState extends State<ZoomableGridImage> {
 class _ProfilePostFeedScreen extends StatefulWidget {
   final List<Map<String, dynamic>> posts;
   final int initialIndex;
+  final String title;
 
   const _ProfilePostFeedScreen({
     required this.posts,
     required this.initialIndex,
+    required this.title,
   });
 
   @override
@@ -1344,9 +1376,9 @@ class _ProfilePostFeedScreenState extends State<_ProfilePostFeedScreen> {
         backgroundColor: Colors.white,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.black),
-        title: const Text(
-          'Posts',
-          style: TextStyle(
+        title: Text(
+          widget.title, // 3. 전달받은 title 사용 ('Photo' or 'Posts')
+          style: const TextStyle(
             color: Colors.black,
             fontWeight: FontWeight.w600,
             fontSize: 18,
