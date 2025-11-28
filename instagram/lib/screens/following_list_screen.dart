@@ -308,6 +308,8 @@ class _FollowingListScreenState extends State<FollowingListScreen>
       avatarImage = const AssetImage('assets/images/profiles/hellokitty.jpg');
     } else if (username == 'npochamu') {
       avatarImage = const AssetImage('assets/images/profiles/npochamu.jpg');
+      } else if (username == 'dolyeonbyeonie') {
+      avatarImage = const AssetImage('assets/images/profiles/dol.jpg');
     } else if (username == 'kuromi') {
       avatarImage = const AssetImage('assets/images/profiles/kuromi.jpg');
     } else {

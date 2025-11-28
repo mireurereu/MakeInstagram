@@ -67,7 +67,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     // 그러나 특정 사용자(imnotningning)는 4탭을 사용합니다.
     final int tabCount = _isCurrentUser
         ? 2
-        : (_currentUsername == 'imnotningning' ? 4 : 3);
+        : (_currentUsername == 'dolyeonbyeonie' ? 4 : 3);
     _tabController = TabController(length: tabCount, vsync: this);
   }
 
@@ -149,13 +149,16 @@ class _ProfileScreenState extends State<ProfileScreen>
         ];
       }
 
-      // 특정 유저(imnotningning) 데이터 하드코딩 (요청: 4탭, NINGNING, aespa)
-      if (username == 'imnotningning') {
-        _name = 'NINGNING';
-        _bio = 'aespa';
+      // 특정 유저(dolyeonbyeonie) 데이터 하드코딩 (요청: 4탭, SEHEE, aespa)
+      if (username == 'dolyeonbyeonie') {
+        _name = 'SEHEE';
+        _bio = 'This is assignment is quite challenging!';
         _followerCount = '10.7M';
         _mutualFollowers = ['hellokitty', 'hangyo', 'sanrio_official'];
-        // 다른 사용자 게시물 수는 이미 9로 세팅되어 있음
+        _otherUserPosts = List.generate(
+          13,
+          (index) => 'assets/images/dolyeonbyeonie/profile${index + 1}.jpg',
+        );
       }
     });
   }
@@ -222,7 +225,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                           Tab(icon: Icon(Icons.grid_on)),
                           Tab(icon: Icon(Icons.person_pin_outlined)),
                         ]
-                      : (_currentUsername == 'imnotningning'
+                      : (_currentUsername == 'dolyeonbyeonie'
                             ? const [
                                 Tab(icon: Icon(Icons.grid_on)),
                                 Tab(icon: Icon(Icons.ondemand_video)),
@@ -252,7 +255,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                     ),
                   ),
                 ]
-              : (_currentUsername == 'imnotningning'
+              : (_currentUsername == 'dolyeonbyeonie'
                     ? [
                         _buildOtherPostGrid(),
                         const Center(
@@ -393,6 +396,87 @@ class _ProfileScreenState extends State<ProfileScreen>
         ],
       ),
     );
+  }
+  // [신규] '함께 아는 친구(Mutual Followers)' 위젯
+  Widget _buildMutualFollowers() {
+    if (_mutualFollowers.isEmpty) return const SizedBox.shrink();
+
+    // 최대 3명까지만 사진 표시
+    final displayUsers = _mutualFollowers.take(3).toList();
+    
+    return Padding(
+      padding: const EdgeInsets.only(top: 12.0),
+      child: Row(
+        children: [
+          // 1. 겹치는 프로필 사진들 (Stack)
+          SizedBox(
+            // 사진 개수에 따라 너비 동적 계산 (겹침 효과)
+            width: 26.0 + (14.0 * (displayUsers.length - 1)), 
+            height: 26, 
+            child: Stack(
+              children: List.generate(displayUsers.length, (index) {
+                // 뒤에 있는 사진이 아래로 깔리도록 역순 배치하거나, 
+                // 단순히 인덱스로 z-index 처리 (Stack은 나중에 그려진 게 위로 옴)
+                // 여기서는 리스트 순서대로 오른쪽으로 쌓이게 함
+                return Positioned(
+                  left: index * 14.0, // 14px씩 오른쪽으로 이동
+                  child: Container(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: 2), // 흰색 테두리
+                    ),
+                    child: CircleAvatar(
+                      radius: 11, 
+                      backgroundColor: Colors.grey[200],
+                      backgroundImage: _getAvatarImageProvider(_getAvatarPath(displayUsers[index])),
+                    ),
+                  ),
+                );
+              }),
+            ),
+          ),
+          
+          const SizedBox(width: 12), // 사진과 텍스트 사이 간격
+
+          // 2. 텍스트 (Bold 적용)
+          Expanded(
+            child: Text.rich(
+              TextSpan(
+                style: const TextStyle(fontSize: 13, color: Colors.black),
+                children: [
+                  const TextSpan(text: 'Followed by '),
+                  // 첫 번째 유저
+                  TextSpan(
+                    text: _mutualFollowers[0],
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  // 두 번째 유저 (있으면)
+                  if (_mutualFollowers.length > 1) ...[
+                    const TextSpan(text: ', '),
+                    TextSpan(
+                      text: _mutualFollowers[1],
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                  // 3명 이상이면 'and others' 표시
+                  if (_mutualFollowers.length > 2)
+                    const TextSpan(text: ' and others'),
+                ],
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // [신규] 유저 이름으로 이미지 경로 찾는 헬퍼 함수
+  String _getAvatarPath(String username) {
+    // 헬로키티 등의 프로필 이미지는 assets/images/profiles/ 폴더에 있다고 가정
+    // 실제 파일이 없으면 기본 이미지나 오류 처리가 필요할 수 있음
+    return 'assets/images/profiles/$username.jpg';
   }
 
   // --- Widgets ---
@@ -657,13 +741,7 @@ class _ProfileScreenState extends State<ProfileScreen>
           Text(_bio, style: const TextStyle(fontSize: 14)),
 
           if (!_isCurrentUser && _mutualFollowers.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(top: 8.0),
-              child: Text(
-                'Followed by ${_mutualFollowers[0]} and others',
-                style: const TextStyle(fontSize: 13),
-              ),
-            ),
+            _buildMutualFollowers(),
 
           const SizedBox(height: 16),
           _isCurrentUser ? _buildMyButtons() : _buildOtherButtons(),

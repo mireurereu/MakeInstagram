@@ -55,7 +55,7 @@ class UserState {
   static final Map<String, List<Map<String, String>>> _otherUsersFollowing = {
     'hellokitty': [
       {'username': 'npochamu', 'name': 'chamuu', 'img': 'npochamu'},
-      {'username': 'imnotningning', 'name': 'NINGNING', 'img': 'imnotningning'},
+      {'username': 'dolyeonbyeonie', 'name': 'SEHEE', 'img': 'dolyeonbyeonie'},
       {'username': 'hangyo', 'name': 'blue', 'img': 'hangyo'},
       {'username': 'sanrio_official', 'name': 'we are one', 'img': 'sanrio_official'},
     ],
@@ -71,7 +71,7 @@ class UserState {
 
   // 간단한 인증(verified) 시뮬레이션
   static final Set<String> _verified = {
-    'hellokitty', 'imnotningning', 'hangyo', 'sanrio_official', 'npochamu'
+    'hellokitty', 'dolyeonbyeonie', 'hangyo', 'sanrio_official', 'npochamu'
   };
 
   static bool isVerified(String username) => _verified.contains(username);
