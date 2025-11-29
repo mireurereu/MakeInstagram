@@ -312,10 +312,10 @@ class _PostCardWidgetState extends State<PostCardWidget> {
     }
 
     // 6개 초과 시: 인스타그램 스타일 (슬라이딩 윈도우 + 크기 애니메이션)
-    const int windowSize = 5; // 화면에 보일 점의 개수
+    const int windowSize = 6; // 화면에 보일 점의 개수
     
     // 윈도우 시작 위치 계산 (현재 인덱스가 가운데 오도록 설정)
-    int start = _currentCarouselIndex - (windowSize ~/ 2);
+    int start = _currentCarouselIndex - 3;
     
     // 범위가 리스트를 벗어나지 않도록 보정 (Clamp)
     if (start < 0) start = 0;
