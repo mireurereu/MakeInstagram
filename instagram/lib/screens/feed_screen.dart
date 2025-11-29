@@ -11,6 +11,7 @@ import 'package:instagram/data/user_state.dart';
 class FeedScreen extends StatelessWidget {
   const FeedScreen({super.key});
 
+  static final ScrollController feedScrollController = ScrollController();
   // Global feed notifier so other screens can prepend new posts
   static final ValueNotifier<List<Map<String, dynamic>>> feedNotifier = ValueNotifier<List<Map<String, dynamic>>>([
     {
@@ -292,6 +293,7 @@ class FeedScreen extends StatelessWidget {
           final displayFeed = feed.where((post) => !dummyPostIds.contains(post['id'])).toList();
           
           return ListView(
+            controller: feedScrollController,
             children: [
               _buildStoryBar(),
               // Posted banner (transient) — shows when a new post was just created

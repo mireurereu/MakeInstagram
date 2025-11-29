@@ -293,6 +293,14 @@ class _NewPostScreenState extends State<NewPostScreen> {
                 await Future.delayed(const Duration(milliseconds:1000));
                 await _addPostToFeed();
                 mainNavKey.currentState?.changeTab(0);
+
+                if (FeedScreen.feedScrollController.hasClients) {
+                  FeedScreen.feedScrollController.animateTo(
+                    0,
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeOut,
+                  );
+                }
               }, child: const Text('No thanks', style: TextStyle(color: Colors.blue))),
               const SizedBox(height: 8),
             ],
@@ -312,6 +320,14 @@ class _NewPostScreenState extends State<NewPostScreen> {
     if (!mounted) return;
     mainNavKey.currentState?.changeTab(0);
     Navigator.of(context).popUntil((route) => route.isFirst);
+
+    if (FeedScreen.feedScrollController.hasClients) {
+      FeedScreen.feedScrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    }
   }
 
   Future<void> _addPostToFeed() async {

@@ -34,7 +34,7 @@ class _ProfileScreenState extends State<ProfileScreen>
   bool _isCurrentUser = false;
   String _currentUsername = '';
   bool _isSuggestedVisible = false; // 추천 친구 창 열림 여부
-  bool _isFollowingPressed = false; // Following 버튼 눌림 상태
+  //bool _isFollowingPressed = false; // Following 버튼 눌림 상태
   bool _isSuggestionLoading = false;
 
   // 프로필 정보
@@ -677,23 +677,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                           const Spacer(flex: 2),
                           _buildStatItem(_followerCount, 'followers'),
                           const Spacer(flex: 2),
-                          // [수정] Following 클릭 시 리스트 화면으로 이동 + 눌렀을 때만 그라데이션 효과
                           GestureDetector(
-                            onTapDown: (_) {
-                              setState(() {
-                                _isFollowingPressed = true;
-                              });
-                            },
-                            onTapUp: (_) {
-                              setState(() {
-                                _isFollowingPressed = false;
-                              });
-                            },
-                            onTapCancel: () {
-                              setState(() {
-                                _isFollowingPressed = false;
-                              });
-                            },
                             onTap: () {
                               Navigator.push(
                                 context,
@@ -704,27 +688,9 @@ class _ProfileScreenState extends State<ProfileScreen>
                                 ),
                               ).then((_) => _refresh()); // 돌아왔을 때 숫자 갱신
                             },
-                            child: Container(
-                              decoration: _isFollowingPressed
-                                  ? BoxDecoration(
-                                      gradient: const LinearGradient(
-                                        begin: Alignment.centerLeft,
-                                        end: Alignment.centerRight,
-                                        colors: [
-                                          Color(0xFFE8E8E8), // 왼쪽 진한 회색
-                                          Color(0xFFF8F8F8), // 오른쪽 연한 회색
-                                        ],
-                                      ),
-                                      borderRadius: BorderRadius.circular(6),
-                                    )
-                                  : null,
-                              padding: _isFollowingPressed
-                                  ? const EdgeInsets.symmetric(horizontal: 12, vertical: 6)
-                                  : null,
-                              child: _buildStatItem(
-                                '$realFollowingCount',
-                                'following',
-                              ),
+                            child: _buildStatItem(
+                              '$realFollowingCount',
+                              'following',
                             ),
                           ),
                           const Spacer(flex: 1),
