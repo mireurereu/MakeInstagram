@@ -113,8 +113,8 @@ class FeedScreen extends StatelessWidget {
       'isSponsored': true,
       'sponsoredText': 'Install now',
       'comments': [
-        Comment(id: 'c2_1', username: 'hanseo', avatarUrl: 'assets/images/profile3', text: 'Wow i love haksanghwai!'),
-        Comment(id: 'c2_2', username: 'damin', avatarUrl: 'assets/images/profile4', text: 'seems good'),
+        Comment(id: 'c2_1', username: 'hanseo', avatarUrl: 'assets/images/profile3.jpg', text: 'Wow i love haksanghwai!'),
+        Comment(id: 'c2_2', username: 'damin', avatarUrl: 'assets/images/profile4.jpg', text: 'seems good'),
       ],
     },
     {

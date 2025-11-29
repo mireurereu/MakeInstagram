@@ -8,6 +8,7 @@ import 'package:instagram/screens/notifications_screen.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/gestures.dart'; // 제스처 인식을 위해 필요
 import 'package:video_player/video_player.dart';
+import 'dart:io';
 
 class PostCardWidget extends StatefulWidget {
   final String username;
@@ -53,6 +54,7 @@ class PostCardWidget extends StatefulWidget {
 
 class _PostCardWidgetState extends State<PostCardWidget> {
   int _currentCarouselIndex = 0;
+  double _imageAspectRatio = 1.0;
   bool _isLiked = false;
   bool _showHeartAnimation = false;
   late int _currentLikeCount;
@@ -83,6 +85,9 @@ class _PostCardWidgetState extends State<PostCardWidget> {
       _comments = []; // Initialize with an empty list instead of hardcoded comments
     }
     
+    if (widget.isVideo && widget.postImageUrls.isNotEmpty) {
+      _calculateImageAspectRatio();
+    }
     // 3. 비디오 초기화
     if (widget.isVideo && widget.postImageUrls.isNotEmpty) {
       _initializeVideo(widget.postImageUrls[0]);
@@ -92,6 +97,39 @@ class _PostCardWidgetState extends State<PostCardWidget> {
     _isLiked = widget.isLiked ?? false;
     // initialize following state for header (so Follow button can reflect current state)
     _isFollowing = UserState.amIFollowing(widget.username);
+  }
+
+  void _calculateImageAspectRatio() {
+    final String firstImageUrl = widget.postImageUrls[0];
+    ImageProvider imageProvider;
+    
+    if (firstImageUrl.startsWith('http')) {
+      imageProvider = NetworkImage(firstImageUrl);
+    } else if (firstImageUrl.startsWith('assets/')) {
+      imageProvider = AssetImage(firstImageUrl);
+    } else {
+      imageProvider = FileImage(File(firstImageUrl));
+    }
+
+    // 이미지 스트림을 통해 크기 확인
+    final ImageStream stream = imageProvider.resolve(const ImageConfiguration());
+    
+    stream.addListener(ImageStreamListener(
+      (ImageInfo info, bool _) {
+        if (mounted) {
+          setState(() {
+            // 너비 / 높이 = 비율 (예: 400/500 = 0.8)
+            double ratio = info.image.width.toDouble() / info.image.height.toDouble();
+            // 비율이 유효하지 않으면 1.0으로 설정
+            if (ratio <= 0 || ratio.isNaN) ratio = 1.0;
+            _imageAspectRatio = ratio;
+          });
+        }
+      },
+      onError: (dynamic exception, StackTrace? stackTrace) {
+        print('이미지 비율 계산 실패: $exception');
+      },
+    ));
   }
   
   void _initializeVideo(String videoUrl) async {
@@ -197,12 +235,7 @@ class _PostCardWidgetState extends State<PostCardWidget> {
           },
           onCommentLiked: (comment) {
             setState(() {
-              final wasLiked = comment.isLiked;
-              comment.isLiked = !comment.isLiked;
-              if (comment.isLiked) comment.likeCount++; else comment.likeCount--;
-              
-              // 내 댓글에 좋아요가 눌렸을 때 알림
-              if (!wasLiked && comment.isLiked && comment.username == UserState.myId) {
+              if (comment.isLiked && comment.username == UserState.myId) {
                 final currentNotifs = NotificationsScreen.notificationsNotifier.value;
                 final notifId = 'notif_comment_like_${DateTime.now().millisecondsSinceEpoch}';
                 NotificationsScreen.notificationsNotifier.value = [
@@ -491,28 +524,43 @@ class _PostCardWidgetState extends State<PostCardWidget> {
                       ),
                     )
                   : CarouselSlider(
+                      key: ValueKey(_imageAspectRatio),
                       items: widget.postImageUrls.map((url) {
                         return Builder(
                           builder: (BuildContext context) {
-                            // URL이 http로 시작하면 네트워크 이미지, 아니면 로컬 에셋 (새 게시물은 로컬 경로일 수 있음)
-                            return url.startsWith('http') || url.startsWith('https')
-                                ? Image.network(
-                                    url,
-                                    fit: BoxFit.cover,
-                                    width: double.infinity,
-                                    errorBuilder: (c, o, s) => Container(color: Colors.grey[300]),
-                                  )
-                                : Image.asset(
-                                    url, // 로컬 파일 경로 또는 에셋 경로
-                                    fit: BoxFit.fitWidth,
-                                    width: double.infinity,
-                                    errorBuilder: (c, o, s) => Container(color: Colors.grey[300], child: const Center(child: Icon(Icons.broken_image))),
-                                  );
+                            // 이미지 타입에 따라 적절한 위젯 반환 (로컬 파일 지원 추가)
+                            if (url.startsWith('http') || url.startsWith('https')) {
+                              return Image.network(
+                                url,
+                                fit: BoxFit.cover,
+                                width: double.infinity,
+                                height: double.infinity,
+                                errorBuilder: (c, o, s) => Container(color: Colors.grey[300]),
+                              );
+                            } else if (url.startsWith('assets/')) {
+                              return Image.asset(
+                                url,
+                                fit: BoxFit.cover,
+                                width: double.infinity,
+                                height: double.infinity,
+                                errorBuilder: (c, o, s) => Container(color: Colors.grey[300]),
+                              );
+                            } else {
+                              // 로컬 파일 처리
+                              return Image.file(
+                                File(url),
+                                fit: BoxFit.cover,
+                                width: double.infinity,
+                                height: double.infinity,
+                                errorBuilder: (c, o, s) => Container(color: Colors.grey[300]),
+                              );
+                            }
                           },
                         );
                       }).toList(),
                       options: CarouselOptions(
-                        aspectRatio: 1.0,
+                        // [핵심] 계산된 비율 적용 (사진 크기에 맞춰 게시물 틀이 늘어남)
+                        aspectRatio: _imageAspectRatio, 
                         viewportFraction: 1.0,
                         enableInfiniteScroll: false,
                         onPageChanged: (index, reason) => setState(() => _currentCarouselIndex = index),

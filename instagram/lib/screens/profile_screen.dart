@@ -153,6 +153,7 @@ class _ProfileScreenState extends State<ProfileScreen>
       if (username == 'dolyeonbyeonie') {
         _name = 'SEHEE';
         _bio = 'This is assignment is quite challenging!';
+        _avatarUrl = 'assets/images/profiles/dol.jpg';
         _followerCount = '10.7M';
         _mutualFollowers = ['hellokitty', 'hangyo', 'sanrio_official'];
         _otherUserPosts = List.generate(
@@ -971,7 +972,7 @@ class _ProfileScreenState extends State<ProfileScreen>
   Widget _buildSuggestedSection() {
     return Container(
       margin: const EdgeInsets.only(top: 4, bottom: 10),
-      height: 230,
+      height: 250,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

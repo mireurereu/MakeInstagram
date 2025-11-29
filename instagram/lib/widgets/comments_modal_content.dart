@@ -65,6 +65,14 @@ class _CommentsModalContentState extends State<CommentsModalContent> {
   // 좋아요 토글 로직 (기존과 동일)
   void _toggleCommentLike(Comment comment) {
     setState(() {
+      final wasLiked = comment.isLiked;
+      comment.isLiked = !wasLiked;
+      
+      if (comment.isLiked) {
+        comment.likeCount++;
+      } else {
+        comment.likeCount--;
+      }
       widget.onCommentLiked(comment);
       if (widget.comments.length == 1 && comment.isLiked) {
         _showLikeHint = true;
@@ -443,25 +451,29 @@ class _CommentsModalContentState extends State<CommentsModalContent> {
                   ),
                   
                   if (!comment.isPosting)
-                    // [수정] 하트 버튼 위치 조정: 위쪽(top)과 오른쪽(right)에 여백을 주어 이동
-                    Padding(
-                      padding: const EdgeInsets.only(top: 15.0, right: 8.0),
-                      child: Stack(
-                        alignment: Alignment.center,
-                        clipBehavior: Clip.none,
-                        children: [
-                          Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              GestureDetector(
-                                onTap: () => _toggleCommentLike(comment),
+                    Stack(
+                      alignment: Alignment.center,
+                      clipBehavior: Clip.none,
+                      children: [
+                        Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            GestureDetector(
+                              onTap: () => _toggleCommentLike(comment),
+                              // [수정] 아이콘 주변 빈 공간도 터치되도록 설정
+                              behavior: HitTestBehavior.translucent, 
+                              child: Padding(
+                                // [수정] 상하좌우 10px씩 패딩을 주어 터치 영역 확대 (총 38x38 크기 효과)
+                                padding: const EdgeInsets.all(10.0), 
                                 child: Icon(
                                   comment.isLiked ? Icons.favorite : Icons.favorite_border,
                                   size: 18.0,
                                   color: comment.isLiked ? Colors.red : Colors.grey,
                                 ),
                               ),
-                            const SizedBox(height: 4),
+                            ),
+                            // [수정] 패딩 때문에 늘어난 간격을 보정하기 위해 SizedBox 높이 조절 (4 -> 0 또는 삭제)
+                            // const SizedBox(height: 4), // 기존 간격 삭제 또는 줄임
                             if (comment.likeCount > 0)
                               Text('${comment.likeCount}', style: const TextStyle(fontSize: 12, color: Colors.grey)),
                           ],
@@ -470,7 +482,6 @@ class _CommentsModalContentState extends State<CommentsModalContent> {
                           Positioned(right: 24, top: -10, child: _buildLikeTooltip()),
                       ],
                     ),
-                  ),
                 ],
               ),
             ),
