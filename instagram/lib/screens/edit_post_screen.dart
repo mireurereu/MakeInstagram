@@ -26,21 +26,33 @@ class _EditPostScreenState extends State<EditPostScreen> {
     {'title': 'Nightfall', 'artist': 'Rin', 'art': 'assets/images/musics/music5.jpg'},
   ];
   int _selectedSongIndex = -1;
-  bool _showTooltip = false;
+  
+  // [수정] 툴팁 단계를 관리하는 변수 (0: 없음, 1: 오디오 툴팁, 2: 필터 툴팁)
+  int _tooltipStep = 0;
 
   @override
   void initState() {
     super.initState();
-    // 1초 후에 툴팁 표시, 3초 동안 보이기
+    // [수정] 툴팁 시퀀스 로직
+    // 1초 후 오디오 툴팁 표시
     Future.delayed(const Duration(seconds: 1), () {
       if (mounted) {
         setState(() {
-          _showTooltip = true;
+          _tooltipStep = 1;
         });
-        Future.delayed(const Duration(seconds: 3), () {
+        // 2초 후 오디오 툴팁 숨기고 필터 툴팁 표시
+        Future.delayed(const Duration(seconds: 2), () {
           if (mounted) {
             setState(() {
-              _showTooltip = false;
+              _tooltipStep = 2;
+            });
+            // 2초 후 필터 툴팁 숨김
+            Future.delayed(const Duration(seconds: 2), () {
+              if (mounted) {
+                setState(() {
+                  _tooltipStep = 0;
+                });
+              }
             });
           }
         });
@@ -50,16 +62,12 @@ class _EditPostScreenState extends State<EditPostScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Responsive sizing using the actual device dimensions.
-    // The user said the device is ~800 wide and 1260 tall — scale preview and thumbnails accordingly.
     final screenW = MediaQuery.of(context).size.width;
     final screenH = MediaQuery.of(context).size.height;
-    // Limit preview to a square that is at most the screen width and at most ~55% of screen height
     final previewHeight = math.min(screenW, screenH * 0.55);
-    // Thumbnail size scales with width; make larger to match requested design
     final thumbSize = (screenW * 0.20).clamp(80.0, 200.0);
-    // Scroller height sized to thumbnail + labels
     final scrollerHeight = thumbSize + 48.0;
+    
     final Widget imageWidget = widget.imageBytes != null
         ? Image.memory(
             widget.imageBytes!,
@@ -92,136 +100,170 @@ class _EditPostScreenState extends State<EditPostScreen> {
         title: const Text('', style: TextStyle(color: Colors.black)),
         actions: [
           IconButton(onPressed: () {}, icon: const Icon(Icons.auto_awesome, color: Colors.black)),
-          IconButton(onPressed: () {}, icon: const Icon(Icons.brush, color: Colors.black)),
+          IconButton(onPressed: () {}, icon: const Icon(Icons.brush, color: Colors.black)), // 2번째 아이콘
           IconButton(onPressed: () {}, icon: const Icon(Icons.emoji_emotions_outlined, color: Colors.black)),
           IconButton(onPressed: () {}, icon: const Icon(Icons.title, color: Colors.black)),
         ],
       ),
-      body: Column(
+      // [수정] Stack으로 감싸서 앱바 아래 툴팁 표시 가능하게 함
+      body: Stack(
         children: [
-          // Top image area with bottom-left icon (square preview)
-          SizedBox(
-            height: previewHeight,
-            width: double.infinity,
-            child: AspectRatio(
-              aspectRatio: 1,
-              child: Stack(
-                children: [
-                  Positioned.fill(child: imageWidget),
-
-                  // bottom-left icon on selected image
-                  Positioned(
-                    left: 16,
-                    bottom: 16,
-                    child: Container(
-                      decoration: BoxDecoration(color: Colors.black45, borderRadius: BorderRadius.circular(24)),
-                      padding: const EdgeInsets.all(8),
-                      child: const Icon(Icons.crop, color: Colors.white, size: 20),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          // Horizontal music asset scroller with titles/artists
-          Container(
-            color: Colors.white,
-            padding: const EdgeInsets.only(top: 12, bottom: 8),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 8),
-                Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    SizedBox(
-                      height: scrollerHeight,
-                      child: ListView.separated(
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        scrollDirection: Axis.horizontal,
-                        itemCount: _songs.length,
-                        separatorBuilder: (_, __) => const SizedBox(width: 12),
-                        itemBuilder: (context, index) {
-                          final item = _songs[index];
-                          final selected = _selectedSongIndex == index;
-                          return GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                _selectedSongIndex = index;
-                              });
-                            },
-                            child: SizedBox(
-                              width: thumbSize,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  ClipRRect(
-                                    borderRadius: BorderRadius.circular(8),
-                                    child: Stack(
-                                      children: [
-                                        SizedBox(width: thumbSize, height: thumbSize, child: _loadAlbumArt(item['art']!)),
-                                        if (selected)
-                                          Positioned.fill(
-                                            child: Container(color: Colors.black26),
-                                          ),
-                                      ],
-                                    ),
-                                  ),
-                                  const SizedBox(height: 6),
-                                  Text(item['title'] ?? '', maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-                                  Text(item['artist'] ?? '', maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center, style: const TextStyle(fontSize: 12, color: Colors.grey)),
-                                ],
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                    // 툴팁을 ListView 밖에서 표시 (z-index 최상위)
-                    if (_showTooltip)
+          Column(
+            children: [
+              SizedBox(
+                height: previewHeight,
+                width: double.infinity,
+                child: AspectRatio(
+                  aspectRatio: 1,
+                  child: Stack(
+                    children: [
+                      Positioned.fill(child: imageWidget),
                       Positioned(
-                        top: -42,
-                        left: 12 + (thumbSize + 12) * 1 + thumbSize / 2 - 80,
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(8),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.25),
-                                    blurRadius: 12,
-                                    offset: const Offset(0, 4),
-                                    spreadRadius: 2,
-                                  ),
-                                ],
-                              ),
-                              child: const Text(
-                                'Add audio to your post',
-                                style: TextStyle(
-                                  color: Colors.black,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                                maxLines: 1,
-                              ),
-                            ),
-                            CustomPaint(
-                              size: const Size(16, 6),
-                              painter: _TooltipTrianglePainter(),
-                            ),
-                          ],
+                        left: 16,
+                        bottom: 16,
+                        child: Container(
+                          decoration: BoxDecoration(color: Colors.black45, borderRadius: BorderRadius.circular(24)),
+                          padding: const EdgeInsets.all(8),
+                          child: const Icon(Icons.crop, color: Colors.white, size: 20),
                         ),
                       ),
+                    ],
+                  ),
+                ),
+              ),
+              Container(
+                color: Colors.white,
+                padding: const EdgeInsets.only(top: 12, bottom: 8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 8),
+                    Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        SizedBox(
+                          height: scrollerHeight,
+                          child: ListView.separated(
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            scrollDirection: Axis.horizontal,
+                            itemCount: _songs.length,
+                            separatorBuilder: (_, __) => const SizedBox(width: 12),
+                            itemBuilder: (context, index) {
+                              final item = _songs[index];
+                              final selected = _selectedSongIndex == index;
+                              return GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    _selectedSongIndex = index;
+                                  });
+                                },
+                                child: SizedBox(
+                                  width: thumbSize,
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.center,
+                                    children: [
+                                      ClipRRect(
+                                        borderRadius: BorderRadius.circular(8),
+                                        child: Stack(
+                                          children: [
+                                            SizedBox(width: thumbSize, height: thumbSize, child: _loadAlbumArt(item['art']!)),
+                                            if (selected)
+                                              Positioned.fill(
+                                                child: Container(color: Colors.black26),
+                                              ),
+                                          ],
+                                        ),
+                                      ),
+                                      const SizedBox(height: 6),
+                                      Text(item['title'] ?? '', maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                                      Text(item['artist'] ?? '', maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                        // [수정] 오디오 툴팁 (Step 1일 때만 표시)
+                        if (_tooltipStep == 1)
+                          Positioned(
+                            top: -42,
+                            left: 12 + (thumbSize + 12) * 1 + thumbSize / 2 - 80,
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(8),
+                                    boxShadow: [
+                                      BoxShadow(color: Colors.black.withOpacity(0.25), blurRadius: 12, offset: const Offset(0, 4), spreadRadius: 2),
+                                    ],
+                                  ),
+                                  child: const Text(
+                                    'Add audio to your post',
+                                    style: TextStyle(color: Colors.black, fontSize: 12, fontWeight: FontWeight.w500),
+                                    maxLines: 1,
+                                  ),
+                                ),
+                                CustomPaint(
+                                  size: const Size(16, 6),
+                                  painter: _TooltipTrianglePainter(),
+                                ),
+                              ],
+                            ),
+                          ),
+                      ],
+                    ),
                   ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
+          
+          // [추가] 필터 툴팁 (Step 2일 때 표시, 앱바 2번째 아이콘 아래)
+          if (_tooltipStep == 2) ...[
+             // 1. 위쪽을 가리키는 삼각형 (브러쉬 아이콘 중앙에 맞춤)
+             // 오른쪽에서 128px 위치가 브러쉬 아이콘의 중앙과 대략 일치합니다.
+            Positioned(
+              top: 0,
+              right: 128, 
+              child: CustomPaint(
+                size: const Size(16, 6),
+                painter: _TooltipTrianglePainterUp(),
+              ),
+            ),
+            // 2. 텍스트 컨테이너 (삼각형 아래에 위치하며, 아이콘을 기준으로 중앙 정렬)
+            Positioned(
+              top: 6, // 삼각형 높이(6)만큼 아래로 내림
+              left: 0,
+              right: 0,
+              child: Align(
+                alignment: Alignment.topCenter, // 우선 화면 중앙에 배치
+                child: Transform.translate(
+                  // 화면 중앙에서 브러쉬 아이콘 위치(오른쪽에서 약 136px 지점)로 이동
+                  // 수식: (화면너비 / 2) - 136
+                  offset: Offset(screenW / 2 - 136, 0),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(8),
+                      boxShadow: [
+                        BoxShadow(color: Colors.black.withOpacity(0.25), blurRadius: 12, offset: const Offset(0, 4), spreadRadius: 2),
+                      ],
+                    ),
+                    child: const Text(
+                      'Add a filter to your post',
+                      style: TextStyle(color: Colors.black, fontSize: 12, fontWeight: FontWeight.w500),
+                      maxLines: 1,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
       bottomNavigationBar: Container(
@@ -230,7 +272,6 @@ class _EditPostScreenState extends State<EditPostScreen> {
         color: Colors.white,
         child: Row(
           children: [
-            // Dark gray oval Edit button -> opens CreatePostScreen
             ElevatedButton(
               onPressed: () {
                 Navigator.push(
@@ -248,7 +289,6 @@ class _EditPostScreenState extends State<EditPostScreen> {
             const Spacer(),
             ElevatedButton(
               onPressed: () {
-                // Next -> open NewPostScreen with current image
                 final imagePath = widget.assetPath ?? widget.imageFile?.path;
                 Navigator.push(
                   context,
@@ -290,6 +330,7 @@ class _EditPostScreenState extends State<EditPostScreen> {
   }
 }
 
+// 기존 삼각형 (아래쪽을 가리킴)
 class _TooltipTrianglePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
@@ -298,9 +339,31 @@ class _TooltipTrianglePainter extends CustomPainter {
       ..style = PaintingStyle.fill;
 
     final path = Path();
-    path.moveTo(size.width / 2, size.height); // 아래 끝점 (뾰족한 부분)
-    path.lineTo(0, 0); // 왼쪽 위
-    path.lineTo(size.width, 0); // 오른쪽 위
+    path.moveTo(size.width / 2, size.height); 
+    path.lineTo(0, 0); 
+    path.lineTo(size.width, 0); 
+    path.close();
+
+    canvas.drawShadow(path, Colors.black.withOpacity(0.25), 4, true);
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+// [추가] 위쪽을 가리키는 삼각형 Painter
+class _TooltipTrianglePainterUp extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.fill;
+
+    final path = Path();
+    path.moveTo(size.width / 2, 0); // 뾰족한 부분이 위쪽
+    path.lineTo(0, size.height); 
+    path.lineTo(size.width, size.height); 
     path.close();
 
     canvas.drawShadow(path, Colors.black.withOpacity(0.25), 4, true);

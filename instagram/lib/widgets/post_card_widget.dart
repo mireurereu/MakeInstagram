@@ -349,7 +349,7 @@ class _PostCardWidgetState extends State<PostCardWidget> {
                 ),
               ),
               // If special case (seed3 and not following) show Follow button then menu icon
-              if (widget.username == 'beom_jun__k' && !_isFollowing)
+              if ((widget.username == 'beom_jun__k' || widget.username == 'akmu_suhyun') && !_isFollowing)
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [

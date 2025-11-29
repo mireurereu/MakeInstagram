@@ -443,21 +443,24 @@ class _CommentsModalContentState extends State<CommentsModalContent> {
                   ),
                   
                   if (!comment.isPosting)
-                    Stack(
-                      alignment: Alignment.center,
-                      clipBehavior: Clip.none,
-                      children: [
-                        Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            GestureDetector(
-                              onTap: () => _toggleCommentLike(comment),
-                              child: Icon(
-                                comment.isLiked ? Icons.favorite : Icons.favorite_border,
-                                size: 18.0,
-                                color: comment.isLiked ? Colors.red : Colors.grey,
+                    // [수정] 하트 버튼 위치 조정: 위쪽(top)과 오른쪽(right)에 여백을 주어 이동
+                    Padding(
+                      padding: const EdgeInsets.only(top: 15.0, right: 8.0),
+                      child: Stack(
+                        alignment: Alignment.center,
+                        clipBehavior: Clip.none,
+                        children: [
+                          Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              GestureDetector(
+                                onTap: () => _toggleCommentLike(comment),
+                                child: Icon(
+                                  comment.isLiked ? Icons.favorite : Icons.favorite_border,
+                                  size: 18.0,
+                                  color: comment.isLiked ? Colors.red : Colors.grey,
+                                ),
                               ),
-                            ),
                             const SizedBox(height: 4),
                             if (comment.likeCount > 0)
                               Text('${comment.likeCount}', style: const TextStyle(fontSize: 12, color: Colors.grey)),
@@ -467,6 +470,7 @@ class _CommentsModalContentState extends State<CommentsModalContent> {
                           Positioned(right: 24, top: -10, child: _buildLikeTooltip()),
                       ],
                     ),
+                  ),
                 ],
               ),
             ),
