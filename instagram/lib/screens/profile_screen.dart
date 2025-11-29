@@ -1289,8 +1289,9 @@ class _ZoomableGridImageState extends State<ZoomableGridImage> {
                           ),
 
                         // [B] 이미지
-                        Image.network(
-                          widget.imageUrl,
+                        Image(
+                          // [수정] _getImageProvider를 사용하여 로컬/네트워크 이미지 모두 처리
+                          image: _getImageProvider(widget.imageUrl),
                           width: imageWidth,
                           fit: BoxFit.cover,
                           errorBuilder: (c, e, s) => Container(

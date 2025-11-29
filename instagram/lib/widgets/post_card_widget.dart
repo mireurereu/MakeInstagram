@@ -416,7 +416,7 @@ class _PostCardWidgetState extends State<PostCardWidget> {
                     ),
                     // If this is seed3 user and current user isn't following them,
                     // show "Suggested for you" under the username.
-                    if ((widget.username == 'beom_jun__k' || widget.username == 'akmu_suhyun') && !_isFollowing)
+                    if ((widget.username == 'iamai') && !_isFollowing)
                       const Text('Suggested for you', style: TextStyle(fontSize: 12, color: Colors.grey)),
                     if (widget.isSponsored)
                       const Text('Sponsored', style: TextStyle(fontSize: 11, color: Colors.black)),
@@ -424,7 +424,7 @@ class _PostCardWidgetState extends State<PostCardWidget> {
                 ),
               ),
               // If special case (seed3 and not following) show Follow button then menu icon
-              if ((widget.username == 'beom_jun__k' || widget.username == 'akmu_suhyun') && !_isFollowing)
+              if ((widget.username == 'iamai') && !_isFollowing)
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [

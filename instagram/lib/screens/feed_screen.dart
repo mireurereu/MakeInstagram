@@ -162,7 +162,7 @@ class FeedScreen extends StatelessWidget {
       'isSponsored': true,
       'sponsoredText': 'Book now',
       'comments': [
-        Comment(id: 'c6_1', username: 'traveler_123', avatarUrl: 'assets/images/sample2.jpg', text: '할인 코드 있나요?'),
+        Comment(id: 'c6_1', username: 'traveler_123', avatarUrl: 'assets/images/sample2.jpg', text: 'Can i buy mang-go?'),
       ],
     },
     {
