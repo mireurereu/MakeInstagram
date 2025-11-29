@@ -287,6 +287,79 @@ class _PostCardWidgetState extends State<PostCardWidget> {
     );
   }
 
+
+  // [추가] 인스타그램 스타일 페이지 인디케이터 빌더
+  Widget _buildPageIndicator() {
+    final int count = widget.postImageUrls.length;
+    if (count <= 1) return const SizedBox.shrink();
+
+    // 6개 이하는 기존 방식 (모두 같은 크기 고정)
+    if (count <= 6) {
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: List.generate(count, (index) {
+          return Container(
+            width: 6.0,
+            height: 6.0,
+            margin: const EdgeInsets.symmetric(horizontal: 3.0),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: _currentCarouselIndex == index ? _instaBlue : Colors.grey[300],
+            ),
+          );
+        }),
+      );
+    }
+
+    // 6개 초과 시: 인스타그램 스타일 (슬라이딩 윈도우 + 크기 애니메이션)
+    const int windowSize = 5; // 화면에 보일 점의 개수
+    
+    // 윈도우 시작 위치 계산 (현재 인덱스가 가운데 오도록 설정)
+    int start = _currentCarouselIndex - (windowSize ~/ 2);
+    
+    // 범위가 리스트를 벗어나지 않도록 보정 (Clamp)
+    if (start < 0) start = 0;
+    if (start > count - windowSize) start = count - windowSize;
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: List.generate(count, (index) {
+        double size = 0.0;
+        
+        // 현재 윈도우(보이는 범위) 안에 있는 점들만 크기 부여
+        if (index >= start && index < start + windowSize) {
+          size = 6.0; // 기본 크기 (중간)
+          
+          if (index == _currentCarouselIndex) {
+            size = 8.0; // 현재 선택된 점 (가장 큼)
+          } 
+          // 윈도우의 양 끝 점이면서, 실제 리스트의 끝이 아닐 경우 작게 표시 (작아지는 효과)
+          else if (index == start && start > 0) {
+            size = 4.0;
+          } 
+          else if (index == start + windowSize - 1 && start + windowSize < count) {
+            size = 4.0;
+          }
+        }
+
+        // AnimatedContainer를 사용하여 크기가 부드럽게 변하도록 함
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeInOut,
+          width: size,
+          height: size,
+          // size가 0이면(숨겨진 점) margin도 0으로 설정하여 공간 차지 안 하게 함
+          margin: EdgeInsets.symmetric(horizontal: size > 0 ? 3.0 : 0.0),
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: _currentCarouselIndex == index ? _instaBlue : Colors.grey[300],
+          ),
+        );
+      }),
+    );
+  }
+
+
   @override
   Widget build(BuildContext context) {
     final formattedLikes = NumberFormat.decimalPattern('en_US').format(_currentLikeCount);
@@ -514,15 +587,7 @@ class _PostCardWidgetState extends State<PostCardWidget> {
               ),
               if (widget.postImageUrls.length > 1)
                 IgnorePointer(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: widget.postImageUrls.asMap().entries.map((entry) {
-                      return Container(
-                        width: 6.0, height: 6.0, margin: const EdgeInsets.symmetric(horizontal: 3.0),
-                        decoration: BoxDecoration(shape: BoxShape.circle, color: _currentCarouselIndex == entry.key ? _instaBlue : Colors.grey[300]),
-                      );
-                    }).toList(),
-                  ),
+                  child: _buildPageIndicator(),
                 ),
             ],
           ),
