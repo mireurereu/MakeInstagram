@@ -50,7 +50,7 @@ class FeedScreen extends StatelessWidget {
       'timestamp': '3 days ago',
       'isVideo': false,
       'comments': [
-        Comment(id: 'my_c3_1', username: 'yonghyeon5670', avatarUrl: 'https://picsum.photos/seed/yong/100/100', text: '나도 가고싶다'),
+        Comment(id: 'my_c3_1', username: 'keroppi', avatarUrl: 'assets/images/profiles/keroppi.jpg', text: '나도 가고싶다'),
         Comment(id: 'my_c3_2', username: 'pochacco', avatarUrl: 'assets/images/profiles/pochacco.jpg', text: '같이 가자!'),
         Comment(id: 'my_c3_3', username: 'kkuma', avatarUrl: 'assets/images/profiles/kkuma.jpg', text: 'ㄱㄱ', replyToUsername: 'pochacco'),
       ],
@@ -97,47 +97,49 @@ class FeedScreen extends StatelessWidget {
       'comments': [
         Comment(id: 'c1_1', username: 'hellokitty', avatarUrl: 'assets/images/profiles/hellokitty.jpg', text: '😍😍😍'),
         Comment(id: 'c1_2', username: 'hangyo', avatarUrl: 'assets/images/profiles/hangyo.jpg', text: 'Amazing!!'),
-        Comment(id: 'c1_3', username: 'newjeans_official', avatarUrl: 'https://picsum.photos/seed/newjeans/100/100', text: 'Love this 💕'),
+        Comment(id: 'c1_3', username: 'sanrio_official', avatarUrl: 'assets/images/profiles/sanrio.jpg', text: 'Love this 💕'),
       ],
     },
     {
       'id': 'seed2',
-      'username': 'kingshot_mobile',
-      'userAvatarUrl': 'https://picsum.photos/seed/kingshot/100/100',
-      'postImageUrls': ['https://picsum.photos/seed/post1/600/600','https://picsum.photos/seed/post2/600/600'],
-      'likeCount': '3,120',
-      'caption': '적을 물리치고 1%가 되어라!',
+      'username': 'attention',
+      'userAvatarUrl': 'assets/images/profiles/attention.jpg',
+      'postImageUrls': 'assets/images/post/post1.jpg',
+      'likeCount': '999,999,999',
+      'caption': 'Attention is all wou need',
       'timestamp': '5 days ago',
       'isVideo': false,
       'isSponsored': true,
       'sponsoredText': 'Install now',
       'comments': [
-        Comment(id: 'c2_1', username: 'gamer_pro', avatarUrl: 'https://picsum.photos/seed/gamer/100/100', text: '이 게임 완전 재밌어요!'),
-        Comment(id: 'c2_2', username: 'mobile_master', avatarUrl: 'https://picsum.photos/seed/mobile/100/100', text: 'ㄹㅇ 꿀잼'),
+        Comment(id: 'c2_1', username: 'hanseo', avatarUrl: 'assets/images/profile3', text: 'Wow i love haksanghwai!'),
+        Comment(id: 'c2_2', username: 'damin', avatarUrl: 'assets/images/profile4', text: 'seems good'),
       ],
     },
     {
       'id': 'seed3',
       'username': 'hangyo',
       'userAvatarUrl': 'assets/images/profiles/hangyo.jpg',
-      'postImageUrls': ['https://picsum.photos/seed/post1/600/600','https://picsum.photos/seed/post2/600/600','https://picsum.photos/seed/post2/600/600','https://picsum.photos/seed/post2/600/600','https://picsum.photos/seed/post2/600/600','https://picsum.photos/seed/post2/600/600','https://picsum.photos/seed/post2/600/600','https://picsum.photos/seed/post2/600/600','https://picsum.photos/seed/post2/600/600','https://picsum.photos/seed/post2/600/600','https://picsum.photos/seed/post2/600/600','https://picsum.photos/seed/post2/600/600'],
+      'postImageUrls': ['assets/images/post/hg1.jpg','assets/images/post/hg2.jpg','assets/images/post/hg3.jpg','assets/images/post/hg4.jpg',
+      'assets/images/post/hg5.jpg','assets/images/post/hg6.jpg','assets/images/post/hg7.jpg','assets/images/post/hg8.jpg',
+      'assets/images/post/hg9.jpg','assets/images/post/hg10.jpg','assets/images/post/hg11.jpg','assets/images/post/hg12.jpg'],
       'likeCount': '1,367,684',
-      'caption': ' ',
+      'caption': '🎵✨',
       'timestamp': '5 days ago',
       'isVideo': false,
       'comments': [
         Comment(id: 'c3_1', username: 'hellokitty', avatarUrl: 'assets/images/profiles/hellokitty.jpg', text: 'Gorgeous! 😻'),
-        Comment(id: 'c3_2', username: 'aespa_official', avatarUrl: 'https://picsum.photos/seed/aespa/100/100', text: 'Beautiful 💖'),
-        Comment(id: 'c3_3', username: 'fashion_lover', avatarUrl: 'https://picsum.photos/seed/fashion/100/100', text: 'Where did you get that outfit?'),
-        Comment(id: 'c3_4', username: 'katarinabluu', avatarUrl: 'https://picsum.photos/seed/karina/100/100', text: 'Thank you all! 🥰', replyToUsername: 'fashion_lover'),
+        Comment(id: 'c3_2', username: 'sanrio_official', avatarUrl: 'assets/images/profiles/sanrio.jpg', text: 'Beautiful 💖'),
+        Comment(id: 'c3_3', username: 'fashion_lover', avatarUrl: 'assets/images/profiles/profile5.jpg', text: 'Where did you get that outfit?'),
+        Comment(id: 'c3_4', username: 'kuromi', avatarUrl: 'assets/images/profiles/kuromi.jpg', text: 'Thank you all! 🥰', replyToUsername: 'fashion_lover'),
       ],
     },
     {
       'id': 'seed4',
-      'username': 'beom_jun__k',
-      'userAvatarUrl': 'https://picsum.photos/seed/beom/100/100',
-      'postImageUrls': ['https://picsum.photos/seed/post1/600/600','https://picsum.photos/seed/post2/600/600'],
-      'likeCount': '58,918',
+      'username': 'akmu_suhyun',
+      'userAvatarUrl': 'https://picsum.photos/seed/akmu/100/100',
+      'postImageUrls': ['https://picsum.photos/seed/akmu1/600/600','https://picsum.photos/seed/akmu2/600/600'],
+      'likeCount': '245,821',
       'caption': '두번재 순례길\n햇빛도 그늘도 바람도 오르막도 내리막도 친구들도 \n전부 다 사랑해 정말로!!',
       'timestamp': '17 hours ago',
       'isVideo': false,
@@ -148,26 +150,9 @@ class FeedScreen extends StatelessWidget {
       ],
     },
     {
-      'id': 'seed_akmu',
-      'username': 'akmu_suhyun',
-      'userAvatarUrl': 'https://picsum.photos/seed/akmu/100/100',
-      'postImageUrls': ['https://picsum.photos/seed/akmu1/600/600'],
-      'likeCount': '245,821',
-      'caption': '🎵✨',
-      'timestamp': '2 days ago',
-      'isVideo': false,
-      'isVerified': true,
-      'comments': [
-        Comment(id: 'c5_1', username: 'music_fan', avatarUrl: 'https://picsum.photos/seed/musicfan/100/100', text: '노래 너무 좋아요 💙'),
-        Comment(id: 'c5_2', username: 'kpop_lover', avatarUrl: 'https://picsum.photos/seed/kpop/100/100', text: '목소리 천사예요'),
-        Comment(id: 'c5_3', username: 'akmu_fan', avatarUrl: 'https://picsum.photos/seed/akmufan/100/100', text: '수현님 최고!! 👏'),
-      ],
-    },
-    
-    {
       'id': 'seed5',
-      'username': 'hotelsdotcom',
-      'userAvatarUrl': 'https://picsum.photos/seed/hotels/100/100',
+      'username': 'attention',
+      'userAvatarUrl': 'assets/images/post/ai.jpg',
       'postImageUrls': ['https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4'],
       'likeCount': '548',
       'caption': 'ad',
@@ -176,7 +161,7 @@ class FeedScreen extends StatelessWidget {
       'isSponsored': true,
       'sponsoredText': 'Book now',
       'comments': [
-        Comment(id: 'c6_1', username: 'traveler_123', avatarUrl: 'https://picsum.photos/seed/traveler/100/100', text: '할인 코드 있나요?'),
+        Comment(id: 'c6_1', username: 'traveler_123', avatarUrl: 'assets/images/sample2.jpg', text: '할인 코드 있나요?'),
       ],
     },
     {
@@ -191,8 +176,8 @@ class FeedScreen extends StatelessWidget {
       'comments': [
         Comment(id: 'c7_1', username: 'sanrio_official', avatarUrl: 'assets/images/profiles/sanrio.jpg', text: '우리 윈터 💕'),
         Comment(id: 'c7_2', username: 'hangyo', avatarUrl: 'assets/images/profiles/hangyo.jpg', text: 'So cute 😊'),
-        Comment(id: 'c7_3', username: 'winter_fan', avatarUrl: 'https://picsum.photos/seed/winterfan/100/100', text: '완전 사랑스러워요 ㅠㅠ'),
-        Comment(id: 'c7_4', username: 'my_love', avatarUrl: 'https://picsum.photos/seed/mylove/100/100', text: '여신이다...'),
+        Comment(id: 'c7_3', username: 'winter_fan', avatarUrl: 'assets/images/sample1.jpg', text: '완전 사랑스러워요 ㅠㅠ'),
+        Comment(id: 'c7_4', username: 'my_love', avatarUrl: 'assets/images/sample4.jpg', text: '여신이다...'),
       ],
     }
   ]);
@@ -328,7 +313,9 @@ class FeedScreen extends StatelessWidget {
                 key: ValueKey(post['id']),
                 username: post['username'],
                 userAvatarUrl: post['userAvatarUrl'],
-                postImageUrls: List<String>.from(post['postImageUrls']),
+                postImageUrls: (post['postImageUrls'] is List)
+                    ? List<String>.from(post['postImageUrls'])
+                    : [post['postImageUrls']?.toString() ?? ''],
                 likeCount: post['likeCount'],
                 caption: post['caption'],
                 timestamp: post['timestamp'],
@@ -337,7 +324,10 @@ class FeedScreen extends StatelessWidget {
                 sponsoredText: post['sponsoredText'],
                 isVerified: post['isVerified'] ?? false,
                 isLiked: post['isLiked'] ?? false,
-                initialComments: post['comments'] != null ? List<Comment>.from(post['comments']) : null,
+                initialComments: (post['comments'] is List) 
+                    ? List<Comment>.from(post['comments']) 
+                    : [],
+                
                 onLikeChanged: (postId, likeCount, isLiked) {
                   final current = feedNotifier.value;
                   final idx = current.indexWhere((p) => p['id'] == postId);

@@ -24,6 +24,35 @@ class _NewPostScreenState extends State<NewPostScreen> {
   final TextEditingController _captionController = TextEditingController();
   final Color _instaBlue = const Color(0xFF3797EF);
 
+  final FocusNode _focusNode = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+    
+    // [수정 2] 포커스 상태(키보드 ON/OFF)가 변경될 때마다 화면을 다시 그려서 OK 버튼을 표시/숨김
+    _focusNode.addListener(() {
+      if (mounted) setState(() {});
+    });
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (widget.autoShowShareSheet && !_didAutoShow) {
+        _didAutoShow = true;
+        Future.delayed(const Duration(milliseconds: 500), () {
+          _showSharingInfoSheet();
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    // [수정 3] 메모리 누수 방지를 위해 해제
+    _captionController.dispose();
+    _focusNode.dispose();
+    super.dispose();
+  }
+
   void _showSharingInfoSheet() {
     showModalBottomSheet(
       context: context,
@@ -334,6 +363,23 @@ class _NewPostScreenState extends State<NewPostScreen> {
         ),
         title: const Text('New post', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black)),
         centerTitle: false,
+        actions: [
+          // 포커스가 있을 때만(키보드가 올라왔을 때만) OK 버튼 표시
+          if (_focusNode.hasFocus)
+            TextButton(
+              onPressed: () {
+                _focusNode.unfocus(); // OK 누르면 키보드 내림 -> 포커스 사라짐 -> 버튼 사라짐
+              },
+              child: Text(
+                'OK',
+                style: TextStyle(
+                  color: _instaBlue, // 인스타그램 블루 컬러 사용
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+            ),
+        ],
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -363,6 +409,7 @@ class _NewPostScreenState extends State<NewPostScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: TextField(
                   controller: _captionController,
+                  focusNode: _focusNode,
                   decoration: const InputDecoration(
                     hintText: 'Add a caption...',
                     hintStyle: TextStyle(color: Colors.grey),
@@ -542,18 +589,5 @@ class _NewPostScreenState extends State<NewPostScreen> {
         ),
       ),
     );
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (widget.autoShowShareSheet && !_didAutoShow) {
-        _didAutoShow = true;
-        Future.delayed(const Duration(milliseconds: 500), () {
-          _showSharingInfoSheet();
-        });
-      }
-    });
   }
 }

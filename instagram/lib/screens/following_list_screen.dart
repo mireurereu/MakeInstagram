@@ -281,6 +281,37 @@ class _FollowingListScreenState extends State<FollowingListScreen>
     );
   }
 
+  ImageProvider _getAvatarProvider(String username, String? imgPath) {
+    String assetPath;
+    
+    // 특정 유저에 대한 하드코딩 매핑 (기존 로직 유지)
+    switch (username) {
+      case 'hangyo': assetPath = 'assets/images/profiles/hangyo.jpg'; break;
+      case 'sanrio_official': assetPath = 'assets/images/profiles/sanrio.jpg'; break;
+      case 'mymelody': assetPath = 'assets/images/profiles/mymelody.jpg'; break;
+      case 'pochacco': assetPath = 'assets/images/profiles/pochacco.jpg'; break;
+      case 'pompom': assetPath = 'assets/images/profiles/pompom.jpg'; break;
+      case 'keroppi': assetPath = 'assets/images/profiles/keroppi.jpg'; break;
+      case 'cinnamo': assetPath = 'assets/images/profiles/cinnamo.jpg'; break;
+      case 'hellokitty': assetPath = 'assets/images/profiles/hellokitty.jpg'; break;
+      case 'npochamu': assetPath = 'assets/images/profiles/npochamu.jpg'; break;
+      case 'kuromi': assetPath = 'assets/images/profiles/kuromi.jpg'; break;
+      case 'dolyeonbyeonie': assetPath = 'assets/images/profiles/dol.jpg'; break;
+      default:
+        // 일반적인 경우
+        if (imgPath != null && imgPath.startsWith('assets/')) {
+          assetPath = imgPath;
+        } else {
+          // 네트워크 이미지
+          return NetworkImage('https://picsum.photos/seed/$username/100/100');
+        }
+    }
+
+    // [핵심] 로컬 이미지는 반드시 리사이징하여 메모리 폭발 방지
+    // width 150이면 프로필 사진(약 50~60px) 표시에 충분하고 메모리는 매우 적게 듭니다.
+    return ResizeImage(AssetImage(assetPath), width: 150);
+  }
+
   Widget _buildUserTile(Map<String, String> user) {
     // hellokitty의 following 화면인지 확인
     final bool isImwinterFollowing = (widget.username ?? UserState.myId) == 'hellokitty';

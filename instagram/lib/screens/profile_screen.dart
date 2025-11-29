@@ -1368,6 +1368,38 @@ class _ZoomableGridImageState extends State<ZoomableGridImage> {
     _overlayEntry = null;
   }
 
+  // [신규] 이미지 타입에 따라 적절한 위젯을 반환하는 함수
+  Widget _buildImage(String path, {double? width}) {
+    if (path.startsWith('http')) {
+      return Image.network(
+        path,
+        width: width,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) =>
+            Container(color: Colors.grey[200]),
+      );
+    } else if (path.startsWith('assets/')) {
+      return Image.asset(
+        path,
+        width: width,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) => Container(
+          color: Colors.grey[200],
+          child: const Center(
+              child: Icon(Icons.broken_image, color: Colors.grey)),
+        ),
+      );
+    } else {
+      return Image.file(
+        File(path),
+        width: width,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) =>
+            Container(color: Colors.grey[200]),
+      );
+    }
+  }
+
   ImageProvider _getImageProvider(String path) {
     if (path.startsWith('http')) {
       return NetworkImage(path);
@@ -1395,13 +1427,7 @@ class _ZoomableGridImageState extends State<ZoomableGridImage> {
         onLongPressStart: (_) => _showOverlay(context),
         // Listener가 처리하므로 여기선 생략해도 되지만 안전장치로 둡니다.
         onLongPressEnd: (_) => _removeOverlay(),
-        child: Image.network(
-          widget.imageUrl,
-          fit: BoxFit.cover,
-          loadingBuilder: (c, child, l) =>
-              l == null ? child : Container(color: Colors.grey[200]),
-          errorBuilder: (c, e, s) => Container(color: Colors.grey[200]),
-        ),
+        child: _buildImage(widget.imageUrl),
       ),
     );
   }

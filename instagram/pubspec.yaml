@@ -71,7 +71,10 @@ flutter:
     - assets/images/profiles/
     - assets/images/kitty/
     - assets/images/rilakkuma/
+    - assets/images/dolyeonbyeonie/
     - assets/svg/
+    - assets/images/musics/
+    - assets/images/post/
 
   # To add assets to your application, add an assets section, like this:
   # assets:

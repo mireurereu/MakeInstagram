@@ -11,6 +11,7 @@ class PostViewerScreen extends StatefulWidget {
   final int initialIndex;
   final bool autoOpenComments; // 자동으로 댓글 열기
   final String? highlightedCommentId; // 하이라이트할 댓글 ID
+  final bool fromNotification;
 
   const PostViewerScreen({
     super.key,
@@ -18,6 +19,7 @@ class PostViewerScreen extends StatefulWidget {
     this.initialIndex = 0,
     this.autoOpenComments = false,
     this.highlightedCommentId,
+    this.fromNotification = false,
   });
 
   @override
@@ -62,6 +64,7 @@ class _PostViewerScreenState extends State<PostViewerScreen> {
           comments: comments,
           postOwnerName: post['username'] as String? ?? '',
           highlightedCommentId: widget.highlightedCommentId,
+          fromNotification: widget.fromNotification,
           onCommentPosted: (text, replyToUsername) {
             // 댓글 추가 로직은 PostCardWidget에서 처리됨
           },

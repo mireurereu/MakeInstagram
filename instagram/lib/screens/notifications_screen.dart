@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:instagram/screens/feed_screen.dart';
 import 'package:instagram/screens/post_viewer_screen.dart';
+import 'dart:io';
 
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
@@ -24,6 +25,16 @@ class NotificationsScreen extends StatefulWidget {
 class _NotificationsScreenState extends State<NotificationsScreen> {
 
   final Color _instaBlue = const Color(0xFF3797EF);
+
+  ImageProvider _getImageProvider(String path) {
+    if (path.startsWith('http')) {
+      return NetworkImage(path);
+    } else if (path.startsWith('assets/')) {
+      return AssetImage(path);
+    } else {
+      return FileImage(File(path));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -67,7 +78,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 content: 'commented: so cute!!',
                 time: '6s',
                 avatarUrl: 'assets/images/profiles/pompom.jpg',
-                postUrl: 'https://picsum.photos/seed/dragon/100/100',
+                postUrl: 'assets/images/rilakkuma/r7.jpg',
                 showReplyButton: true,
                 notificationId: 'notif_pompom_comment',
                 postId: 'post_dragon',
@@ -83,7 +94,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 content: 'liked your photo.',
                 time: '2w',
                 avatarUrl: 'assets/images/profiles/pompom.jpg',
-                postUrl: 'https://picsum.photos/seed/code/100/100',
+                postUrl: 'assets/images/rilakkuma/r1.jpg',
               ),
 
               // 팔로우 알림 (pompom - 이미 팔로잉 중)
@@ -92,17 +103,17 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 username: 'pompom',
                 content: 'started following you.',
                 time: '2w',
-                avatarUrl: 'https://picsum.photos/seed/haetbaaan/100/100',
+                avatarUrl: 'assets/images/profiles/pompom.jpg',
                 isFollowing: true, // Following 버튼 (회색)
               ),
 
               // 팔로우 알림 (yonghyeon5670 - 이미 팔로잉 중)
               _buildNotificationItem(
                 type: NotificationType.follow,
-                username: 'yonghyeon5670',
+                username: 'keroppi',
                 content: 'started following you.',
                 time: '2w',
-                avatarUrl: 'https://picsum.photos/seed/yonghyeon/100/100',
+                avatarUrl: 'assets/images/profiles/keroppi.jpg',
                 isFollowing: true,
               ),
 
@@ -191,6 +202,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                     initialIndex: postIndex,
                     autoOpenComments: true,
                     highlightedCommentId: commentId,
+                    fromNotification: true,
                   ),
                 ),
               );
@@ -210,7 +222,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                   children: [
                     CircleAvatar(
                       radius: 22,
-                      backgroundImage: NetworkImage(avatarUrl),
+                      backgroundImage: _getImageProvider(avatarUrl),
                     ),
                     // 좋아요 알림일 때만 하트 아이콘 배지 표시 (디테일)
                     if (type == NotificationType.like)
@@ -306,7 +318,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                       border: Border.all(color: Colors.grey[300]!, width: 0.5),
                       borderRadius: BorderRadius.circular(4),
                       image: DecorationImage(
-                        image: NetworkImage(postUrl),
+                        image: _getImageProvider(postUrl),
                         fit: BoxFit.cover,
                       ),
                     ),
