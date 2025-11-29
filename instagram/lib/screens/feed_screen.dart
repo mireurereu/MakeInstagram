@@ -103,7 +103,7 @@ class FeedScreen extends StatelessWidget {
     {
       'id': 'seed2',
       'username': 'attention',
-      'userAvatarUrl': 'assets/images/profiles/attention.jpg',
+      'userAvatarUrl': 'assets/images/profiles/ai.jpg',
       'postImageUrls': 'assets/images/post/post1.jpg',
       'likeCount': '999,999,999',
       'caption': 'Attention is all wou need',
