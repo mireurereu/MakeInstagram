@@ -107,14 +107,16 @@ class _PostCardWidgetState extends State<PostCardWidget> {
       
       await _videoController!.initialize();
       _videoController!.setLooping(true);
+      _videoController!.play();
+
       if (mounted) {
         setState(() {
           _isVideoInitialized = true;
         });
       }
     } catch (e) {
-      print('비디오 초기화 실패: $e');
-      print('비디오 URL: $videoUrl');
+      print('video reset fail: $e');
+      print('video URL: $videoUrl');
     }
   }
   
@@ -294,7 +296,7 @@ class _PostCardWidgetState extends State<PostCardWidget> {
     if (count <= 1) return const SizedBox.shrink();
 
     // 6개 이하는 기존 방식 (모두 같은 크기 고정)
-    if (count <= 6) {
+    if (count <= 7) {
       return Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: List.generate(count, (index) {
@@ -312,10 +314,10 @@ class _PostCardWidgetState extends State<PostCardWidget> {
     }
 
     // 6개 초과 시: 인스타그램 스타일 (슬라이딩 윈도우 + 크기 애니메이션)
-    const int windowSize = 6; // 화면에 보일 점의 개수
+    const int windowSize = 7; // 화면에 보일 점의 개수
     
     // 윈도우 시작 위치 계산 (현재 인덱스가 가운데 오도록 설정)
-    int start = _currentCarouselIndex - 3;
+    int start = _currentCarouselIndex - 5;
     
     // 범위가 리스트를 벗어나지 않도록 보정 (Clamp)
     if (start < 0) start = 0;
