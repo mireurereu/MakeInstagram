@@ -164,8 +164,12 @@ class _PostCardWidgetState extends State<PostCardWidget> {
     super.dispose();
   }
 
-  void _showCommentsModal() {
-    showModalBottomSheet(
+  void _showCommentsModal() async {
+    // 1. 모달이 떠있는 동안 발생한 알림을 모아둘 리스트 생성
+    final List<Map<String, dynamic>> pendingNotifications = [];
+
+    // 2. 모달 표시 (await로 닫힐 때까지 대기)
+    await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -173,87 +177,67 @@ class _PostCardWidgetState extends State<PostCardWidget> {
         return CommentsModalContent(
           comments: _comments,
           postOwnerName: widget.username,
-          isMyPost: widget.username == UserState.myId, // 내 게시물 여부 전달
+          isMyPost: widget.username == UserState.myId,
+          // [댓글 작성 콜백]
           onCommentPosted: (text, replyToUsername) {
             setState(() {
               final commentId = 'comment_${DateTime.now().millisecondsSinceEpoch}';
               _comments.add(Comment(
                 id: commentId,
-                username: 'kkuma', // 내 아이디
-                avatarUrl: UserState.getMyAvatarUrl(), // UserState에서 프로필 사진 가져오기
+                username: 'kkuma',
+                avatarUrl: UserState.getMyAvatarUrl(),
                 text: text,
                 replyToUsername: replyToUsername,
-                timestamp: DateTime.now().subtract(const Duration(seconds: 1)), // 1초 전으로 설정하여 바로 1s 표시
+                timestamp: DateTime.now().subtract(const Duration(seconds: 1)),
               ));
-              // propagate comment changes upstream if handler provided
+              
               final keyId = widget.key is ValueKey ? (widget.key as ValueKey).value : null;
               if (keyId is String) widget.onCommentsChanged?.call(keyId, _comments);
 
-              // 알림 조건:
-              // 1. 내 게시물에 댓글이 달린 경우 (게시물 주인이 나)
-              // 2. 누군가 내 댓글에 대댓글을 남긴 경우 (replyToUsername이 나)
+              // 알림 조건 체크
               final isMyPost = widget.username == UserState.myId;
               final isReplyToMe = replyToUsername == UserState.myId;
               
               if (isMyPost || isReplyToMe) {
-                final currentNotifs = NotificationsScreen.notificationsNotifier.value;
                 final notifId = 'notif_${DateTime.now().millisecondsSinceEpoch}';
+                String notifContent = isReplyToMe ? 'replied: $text' : 'commented: $text';
                 
-                String notifContent;
-                if (isReplyToMe) {
-                  notifContent = 'replied: $text';
-                } else {
-                  notifContent = 'commented: $text';
-                }
-                
-                NotificationsScreen.notificationsNotifier.value = [
-                  {
-                    'type': NotificationType.comment,
-                    'username': UserState.myId,
-                    'content': notifContent,
-                    'time': 'Just now',
-                    'avatarUrl': UserState.getMyAvatarUrl(),
-                    'postUrl': widget.postImageUrls.isNotEmpty ? widget.postImageUrls.first : null,
-                    'showReplyButton': false,
-                    'notificationId': notifId,
-                    'postId': widget.key is ValueKey ? (widget.key as ValueKey).value : null,
-                    'commentId': commentId,
-                  },
-                  ...currentNotifs,
-                ];
-                
-                // Set unread badge to true
-                NotificationsScreen.hasUnreadNotifications.value = true;
-                
-                // 댓글 알림 시 말풍선 표시 (3초 후 사라짐)
-                NotificationsScreen.showCommentBubble.value = true;
-                Future.delayed(const Duration(seconds: 3), () {
-                  NotificationsScreen.showCommentBubble.value = false;
+                // [수정] 즉시 실행하지 않고 리스트에 '추가'만 함
+                pendingNotifications.add({
+                  'type': NotificationType.comment,
+                  'username': UserState.myId,
+                  'content': notifContent,
+                  'time': 'Just now',
+                  'avatarUrl': UserState.getMyAvatarUrl(),
+                  'postUrl': widget.postImageUrls.isNotEmpty ? widget.postImageUrls.first : null,
+                  'showReplyButton': false,
+                  'notificationId': notifId,
+                  'postId': widget.key is ValueKey ? (widget.key as ValueKey).value : null,
+                  'commentId': commentId,
                 });
               }
             });
           },
+          // [댓글 좋아요 콜백]
           onCommentLiked: (comment) {
             setState(() {
+              // 댓글 창에서 이미 상태가 변경되어 넘어오므로, 여기서는 조건만 확인
               if (comment.isLiked && comment.username == UserState.myId) {
-                final currentNotifs = NotificationsScreen.notificationsNotifier.value;
                 final notifId = 'notif_comment_like_${DateTime.now().millisecondsSinceEpoch}';
-                NotificationsScreen.notificationsNotifier.value = [
-                  {
-                    'type': NotificationType.like,
-                    'username': UserState.myId,
-                    'content': 'liked your comment.',
-                    'time': 'Just now',
-                    'avatarUrl': UserState.getMyAvatarUrl(),
-                    'postUrl': widget.postImageUrls.isNotEmpty ? widget.postImageUrls.first : null,
-                    'showReplyButton': false,
-                    'notificationId': notifId,
-                    'postId': widget.key is ValueKey ? (widget.key as ValueKey).value : null,
-                    'commentId': comment.id,
-                  },
-                  ...currentNotifs,
-                ];
-                NotificationsScreen.hasUnreadNotifications.value = true;
+                
+                // [수정] 즉시 실행하지 않고 리스트에 '추가'만 함
+                pendingNotifications.add({
+                  'type': NotificationType.like,
+                  'username': UserState.myId,
+                  'content': 'liked your comment.',
+                  'time': 'Just now',
+                  'avatarUrl': UserState.getMyAvatarUrl(),
+                  'postUrl': widget.postImageUrls.isNotEmpty ? widget.postImageUrls.first : null,
+                  'showReplyButton': false,
+                  'notificationId': notifId,
+                  'postId': widget.key is ValueKey ? (widget.key as ValueKey).value : null,
+                  'commentId': comment.id,
+                });
               }
               
               final keyId = widget.key is ValueKey ? (widget.key as ValueKey).value : null;
@@ -263,6 +247,26 @@ class _PostCardWidgetState extends State<PostCardWidget> {
         );
       },
     );
+
+    // 3. 모달이 닫힌 후(await 이후), 모아둔 알림이 있다면 한꺼번에 실행
+    if (pendingNotifications.isNotEmpty) {
+      final currentNotifs = NotificationsScreen.notificationsNotifier.value;
+      
+      // 최신 알림이 위로 오도록 역순으로 합치기
+      NotificationsScreen.notificationsNotifier.value = [
+        ...pendingNotifications.reversed,
+        ...currentNotifs,
+      ];
+      
+      // 배지 및 말풍선 표시
+      NotificationsScreen.hasUnreadNotifications.value = true;
+      NotificationsScreen.showCommentBubble.value = true;
+      
+      // 3초 뒤 말풍선 숨김
+      Future.delayed(const Duration(seconds: 3), () {
+        NotificationsScreen.showCommentBubble.value = false;
+      });
+    }
   }
 
   void _handleDoubleTap() {
@@ -318,6 +322,103 @@ class _PostCardWidgetState extends State<PostCardWidget> {
       context,
       MaterialPageRoute(
         builder: (context) => ProfileScreen(username: widget.username),
+      ),
+    );
+  }
+
+
+  // [추가] 헤더(프로필, 이름, 더보기)를 만드는 재사용 메서드
+  Widget _buildHeader({bool isOverlay = false}) {
+    // 오버레이(영상 위)일 때는 글자/아이콘을 흰색으로, 아닐 때는 검은색으로 설정
+    final Color contentColor = isOverlay ? Colors.white : Colors.black;
+    final Color subTextColor = isOverlay ? Colors.white70 : Colors.grey;
+
+    return Container(
+      // 오버레이일 경우 가독성을 위해 상단에 살짝 어두운 그라데이션 추가 (선택 사항)
+      decoration: isOverlay
+          ? const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Colors.black45, Colors.transparent],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
+            )
+          : null,
+      padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 8.0),
+      child: Row(
+        children: [
+          GestureDetector(
+            onTap: _navigateToProfile,
+            child: CircleAvatar(
+              radius: 16,
+              backgroundImage: widget.userAvatarUrl.startsWith('http')
+                  ? NetworkImage(widget.userAvatarUrl)
+                  : AssetImage(widget.userAvatarUrl) as ImageProvider,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                GestureDetector(
+                  onTap: _navigateToProfile,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        widget.username,
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                          color: contentColor, // [수정] 색상 동적 적용
+                        ),
+                      ),
+                      if (widget.isVerified) ...const [
+                        SizedBox(width: 4),
+                        Icon(
+                          Icons.verified,
+                          color: Color(0xFF3897F0),
+                          size: 14,
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                if ((widget.username == 'iamai') && !_isFollowing)
+                  Text('Suggested for you', style: TextStyle(fontSize: 12, color: subTextColor)),
+                if (widget.isSponsored)
+                  Text('Sponsored', style: TextStyle(fontSize: 11, color: contentColor)),
+              ],
+            ),
+          ),
+          if ((widget.username == 'iamai') && !_isFollowing)
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      UserState.toggleFollow(widget.username);
+                      _isFollowing = UserState.amIFollowing(widget.username);
+                    });
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: isOverlay ? Colors.white24 : Colors.grey[200], // [수정] 배경색 동적 적용
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                    child: Text('Follow', style: TextStyle(color: contentColor, fontWeight: FontWeight.w600)),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Icon(Icons.more_vert, color: contentColor),
+              ],
+            )
+          else
+            Icon(Icons.more_vert, color: contentColor), // [수정] 아이콘 색상 동적 적용
+        ],
       ),
     );
   }
@@ -404,85 +505,8 @@ class _PostCardWidgetState extends State<PostCardWidget> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // 1. 헤더
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 8.0),
-          child: Row(
-            children: [
-              GestureDetector(
-                onTap: _navigateToProfile,
-                child: CircleAvatar(
-                  radius: 16,
-                  backgroundImage: widget.userAvatarUrl.startsWith('http') 
-                      ? NetworkImage(widget.userAvatarUrl) 
-                      : AssetImage(widget.userAvatarUrl) as ImageProvider, 
-                      // 로컬/네트워크 이미지 모두 처리하도록 수정
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    GestureDetector(
-                      onTap: _navigateToProfile,
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            widget.username,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
-                              color: Colors.black,
-                            ),
-                          ),
-                          if (widget.isVerified) ...const [
-                            SizedBox(width: 4),
-                            Icon(
-                              Icons.verified,
-                              color: Color(0xFF3897F0),
-                              size: 14,
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
-                    // If this is seed3 user and current user isn't following them,
-                    // show "Suggested for you" under the username.
-                    if ((widget.username == 'iamai') && !_isFollowing)
-                      const Text('Suggested for you', style: TextStyle(fontSize: 12, color: Colors.grey)),
-                    if (widget.isSponsored)
-                      const Text('Sponsored', style: TextStyle(fontSize: 11, color: Colors.black)),
-                  ],
-                ),
-              ),
-              // If special case (seed3 and not following) show Follow button then menu icon
-              if ((widget.username == 'iamai') && !_isFollowing)
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          UserState.toggleFollow(widget.username);
-                          _isFollowing = UserState.amIFollowing(widget.username);
-                        });
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                        decoration: BoxDecoration(color: Colors.grey[200], borderRadius: BorderRadius.circular(18)),
-                        child: const Text('Follow', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w600)),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    const Icon(Icons.more_vert, color: Colors.black),
-                  ],
-                )
-              else
-                const Icon(Icons.more_vert, color: Colors.black),
-            ],
-          ),
-        ),
+        if (!widget.isVideo) 
+          _buildHeader(isOverlay: false),
 
         // 2. 미디어 (이미지 슬라이더)
         GestureDetector(
@@ -566,6 +590,14 @@ class _PostCardWidgetState extends State<PostCardWidget> {
                         onPageChanged: (index, reason) => setState(() => _currentCarouselIndex = index),
                       ),
                     ),
+
+              if (widget.isVideo)
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  child: _buildHeader(isOverlay: true),
+                ),
               // 비디오가 아직 초기화 중일 때 또는 일시정지 상태일 때 플레이 아이콘 표시
               if (widget.isVideo && (!_isVideoInitialized || !_videoController!.value.isPlaying))
                 const Icon(Icons.play_circle_fill, color: Colors.white, size: 60),
@@ -573,10 +605,8 @@ class _PostCardWidgetState extends State<PostCardWidget> {
               if (widget.postImageUrls.length > 1)
                 Positioned(
                   top: 12, right: 12,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(color: Colors.black.withOpacity(0.7), borderRadius: BorderRadius.circular(12)),
-                    child: Text('${_currentCarouselIndex + 1}/${widget.postImageUrls.length}', style: const TextStyle(color: Colors.white, fontSize: 12)),
+                  child: IgnorePointer(
+                    child: _buildPageIndicator(),
                   ),
                 ),
             ],
@@ -686,23 +716,25 @@ class _PostCardWidgetState extends State<PostCardWidget> {
                           ),
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            c.isLiked = !c.isLiked;
-                            if (c.isLiked) c.likeCount++; else c.likeCount--;
-                            final keyId = widget.key is ValueKey ? (widget.key as ValueKey).value : null;
-                            if (keyId is String) widget.onCommentsChanged?.call(keyId, _comments);
-                          });
-                        },
+                      if (c.isLiked)
+                        GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              c.isLiked = !c.isLiked; // 누르면 좋아요 취소 -> 하트 사라짐
+                              if (c.isLiked) c.likeCount++; else c.likeCount--;
+                              final keyId = widget.key is ValueKey ? (widget.key as ValueKey).value : null;
+                              if (keyId is String) widget.onCommentsChanged?.call(keyId, _comments);
+                            });
+                          },
                         child: Column(
-                          children: [
-                            Icon(c.isLiked ? Icons.favorite : Icons.favorite_border, color: c.isLiked ? Colors.red : Colors.grey, size: 18),
-                            if (c.likeCount > 0) Text('${c.likeCount}', style: const TextStyle(color: Colors.grey, fontSize: 11)),
-                          ],
+                            children: [
+                              // [수정] "색이 채워지지 않은 상태"가 눌린 상태이므로 favorite_border 사용
+                              const Icon(Icons.favorite_border, color: Colors.grey, size: 14),
+                              if (c.likeCount > 0) 
+                                Text('${c.likeCount}', style: const TextStyle(color: Colors.grey, fontSize: 11)),
+                            ],
+                          ),
                         ),
-                      ),
                     ],
                   ),
                 ),

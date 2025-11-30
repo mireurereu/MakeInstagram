@@ -373,10 +373,17 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
         mainAxisAlignment: isSender ? MainAxisAlignment.end : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.7),
-            child: Column(crossAxisAlignment: isSender ? CrossAxisAlignment.end : CrossAxisAlignment.start, children: [
-              // If message contains image, show image first
+          if (!isSender) ...[
+            CircleAvatar(
+              radius: 16, 
+              backgroundImage: NetworkImage(opponentAvatarUrl),
+            ),
+            const SizedBox(width: 8.0),
+          ],
+          Flexible( // [수정] ConstrainedBox 대신 Flexible 사용 (자연스러운 크기 조절)
+            child: Column(
+              crossAxisAlignment: isSender ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+              children: [
               if (message.imageAsset != null)
                 Row(
                   mainAxisSize: MainAxisSize.min,
@@ -413,10 +420,13 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
           ),
           if (showSendIconForThisMessage) ...[
             const SizedBox(width: 8),
-            Container(
-              padding: const EdgeInsets.all(6.0),
-              decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-              child: Icon(Icons.send, color: Colors.grey[600], size: 16.0),
+            Padding(
+              padding: const EdgeInsets.only(top: 8.0), // 말풍선과 높이 맞춤
+              child: Container(
+                padding: const EdgeInsets.all(6.0),
+                decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                child: Icon(Icons.send, color: Colors.grey[600], size: 16.0),
+              ),
             ),
           ],
         ],
@@ -430,7 +440,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
       child: Row(children: [
         Expanded(
           child: Container(
-            height: 44,
+            height: 48,
             padding: const EdgeInsets.symmetric(horizontal: 8.0),
             decoration: BoxDecoration(color: const Color(0xFFEFEFEF), borderRadius: BorderRadius.circular(22.0)),
             child: Row(children: [
@@ -443,7 +453,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                   size: 20.0,
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 8.0),
               Expanded(
                 child: TextField(
                   controller: _textController,
