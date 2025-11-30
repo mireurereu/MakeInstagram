@@ -97,7 +97,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
     final now = DateTime.now();
     _messages.addAll([
       Message(text: 'Hi!', isSender: true, timestamp: now.subtract(const Duration(hours: 2))),
-      Message(text: 'Nice to meet you!', isSender: true, timestamp: now.subtract(const Duration(hours: 2))),
+      Message(text: 'Nice to meet you!', isSender: true, timestamp: now.subtract(const Duration(hours: 2)),seen: true),
     ]);
 
     _textController.addListener(() => setState(() => _hasText = _textController.text.isNotEmpty));

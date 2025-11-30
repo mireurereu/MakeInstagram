@@ -41,7 +41,7 @@ class _DmListScreenState extends State<DmListScreen> {
   ];
 
   // [수정] 인스타 블루 색상 정의
-  final Color _instaBlue = const Color(0xFF3797EF);
+  final Color _instaBlue = const Color.fromARGB(255, 40, 59, 204);
 
   // 채팅방에서 돌아올 때 마지막 메시지 업데이트
   void _updateChatPreview(String username, String lastMessage) {
@@ -181,6 +181,7 @@ class _DmListScreenState extends State<DmListScreen> {
           padding: const EdgeInsets.only(right: 16.0), // 아이템 간격
           child: Column(
             children: [
+              const SizedBox(height: 4.0),
               Stack(
                 clipBehavior: Clip.none,
                 children: [
@@ -198,7 +199,7 @@ class _DmListScreenState extends State<DmListScreen> {
                     clipBehavior: Clip.none,
                     children: [
                       Container(
-                        width: 150,
+                        width: 170,
                         padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
                         decoration: BoxDecoration(
                           color: Colors.white,
@@ -212,7 +213,8 @@ class _DmListScreenState extends State<DmListScreen> {
                             ),
                           ],
                         ),
-                        child: Text(
+                        child: 
+                        Text(
                           "What's on your playlist?",
                           style: TextStyle(color: Colors.grey[600], fontSize: 9.5, height: 1.2),
                           textAlign: TextAlign.center,
@@ -248,31 +250,42 @@ class _DmListScreenState extends State<DmListScreen> {
   }
 
   Widget _buildMessageRequestsRow() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: const [
-          Text(
-            'Messages',
-            style: TextStyle(
-              color: Colors.black,
-              fontWeight: FontWeight.bold,
-              fontSize: 16.0,
+  return Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Row(
+          children: const [
+            Text(
+              'Messages',
+              style: TextStyle(
+                color: Colors.black,
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
             ),
-          ),
-          Text(
-            'Requests (1)',
-            style: TextStyle(
-              color: Color(0xFF3797EF), // 인스타 블루
-              fontSize: 16.0,
-              fontWeight: FontWeight.bold,
+            SizedBox(width: 8),
+            Icon(
+              Icons.notifications_off_outlined,
+              color: Colors.grey,
+              size: 16,
             ),
+          ],
+        ),
+        const Text(
+          'Requests (1)',
+          style: TextStyle(
+            color: Color.fromARGB(255, 40, 59, 204), // 인스타 블루
+            fontSize: 16.0,
+            fontWeight: FontWeight.bold,
           ),
-        ],
-      ),
-    );
-  }
+        ),
+      ],
+    ),
+  );
+}
+
 
   Widget _buildChatItem({
     required BuildContext context,

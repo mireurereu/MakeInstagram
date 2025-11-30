@@ -45,7 +45,7 @@ class _ProfileScreenState extends State<ProfileScreen>
   // _followingCount는 UserState에서 실시간으로 가져옵니다.
 
   List<String> _mutualFollowers = [];
-  List<String> _otherUserPosts = []; // 타인 게시물
+  List<Map<String, dynamic>> _otherUserPosts = []; // 타인 게시물
 
   final Color _instaBlue = const Color(0xFF3797EF);
 
@@ -123,7 +123,11 @@ class _ProfileScreenState extends State<ProfileScreen>
       _mutualFollowers = [];
       _otherUserPosts = List.generate(
         9,
-        (i) => 'https://picsum.photos/seed/${username}_$i/300/300',
+        (i) => {
+          'imageUrl': 'https://picsum.photos/seed/${username}_$i/300/300',
+          'likeCount': '1,234',
+          'timestamp': '5 days ago',
+        },
       );
 
       // 특정 유저(hellokitty) 데이터 하드코딩
@@ -133,7 +137,7 @@ class _ProfileScreenState extends State<ProfileScreen>
         _avatarUrl = 'assets/images/profiles/hellokitty.jpg';
         _followerCount = '13M';
         _mutualFollowers = ['mymelody', 'hangyo'];
-        _otherUserPosts = [
+        final List<String> kittyImages = [
           'assets/images/kitty/k1.jpg',
           'assets/images/kitty/k2.jpg',
           'assets/images/kitty/k3.jpg',
@@ -147,7 +151,15 @@ class _ProfileScreenState extends State<ProfileScreen>
           'assets/images/kitty/k11.jpg',
           'assets/images/kitty/k12.jpg',
         ];
-      }
+
+        _otherUserPosts = kittyImages.map((img) {
+            return {
+              'imageUrl': img,
+              'likeCount': '886,981', // 하드코딩된 좋아요 수
+              'timestamp': '3 days ago', // 하드코딩된 타임스탬프
+            };
+          }).toList();
+        }
 
       // 특정 유저(dolyeonbyeonie) 데이터 하드코딩 (요청: 4탭, SEHEE, aespa)
       if (username == 'dolyeonbyeonie') {
@@ -158,7 +170,11 @@ class _ProfileScreenState extends State<ProfileScreen>
         _mutualFollowers = ['hellokitty', 'hangyo', 'sanrio_official'];
         _otherUserPosts = List.generate(
           13,
-          (index) => 'assets/images/dolyeonbyeonie/profile${index + 1}.jpg',
+          (index) => {
+            'imageUrl': 'assets/images/dolyeonbyeonie/profile${index + 1}.jpg',
+            'likeCount': '2.5M',
+            'timestamp': '1 week ago',
+          },
         );
       }
     });
@@ -788,24 +804,25 @@ class _ProfileScreenState extends State<ProfileScreen>
       ),
       itemCount: _otherUserPosts.length,
       itemBuilder: (context, index) {
-        final url = _otherUserPosts[index];
-        final bool isLiked = index % 2 == 0;
+        final post = _otherUserPosts[index];
+        final url = post['imageUrl'] as String;
+        final likeCount = post['likeCount'] as String;
+        final timestamp = post['timestamp'] as String;
+        final bool isLiked = false;
         return GestureDetector(
           onTap: () {
-            final built = _otherUserPosts
-                .map(
-                  (p) => {
-                    'username': _currentUsername,
-                    'userAvatarUrl': _avatarUrl,
-                    'postImageUrls': [p],
-                    'likeCount': '0',
-                    'caption': '',
-                    'timestamp': '',
-                    'isVideo': false,
-                    'isLiked': isLiked,
-                  },
-                )
-                .toList();
+            final built = _otherUserPosts.map((p) {
+              return {
+                'username': _currentUsername,
+                'userAvatarUrl': _avatarUrl,
+                'postImageUrls': [p['imageUrl']], // 이미지 경로
+                'likeCount': p['likeCount'],       // 좋아요 수 전달
+                'caption': '',
+                'timestamp': p['timestamp'],       // 타임스탬프 전달
+                'isVideo': false,
+                'isLiked': isLiked,
+              };
+            }).toList();
             Navigator.push(
               context,
               MaterialPageRoute(
