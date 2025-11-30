@@ -41,6 +41,8 @@ class _NameEditScreenState extends State<NameEditScreen> {
       context: context,
       builder: (BuildContext dialogContext) {
         return AlertDialog(
+          constraints: const BoxConstraints(maxWidth: 400),
+          backgroundColor: Colors.white,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16.0), // 둥근 모서리
           ),
@@ -57,7 +59,7 @@ class _NameEditScreenState extends State<NameEditScreen> {
           // 다이얼로그 내용
           content: Text(
             "You can only change your name twice within 14 days.",
-            style: TextStyle(color: Colors.grey[600], fontSize: 13.0),
+            style: TextStyle(color: Colors.grey[800], fontSize: 15.0),
             textAlign: TextAlign.center,
           ),
           contentPadding: const EdgeInsets.fromLTRB(24, 12, 24, 16), // 패딩 조절
@@ -159,7 +161,7 @@ class _NameEditScreenState extends State<NameEditScreen> {
                 floatingLabelStyle: const TextStyle(color: Colors.grey),
                 labelStyle: const TextStyle(color: Colors.grey),
                 focusedBorder: const UnderlineInputBorder(
-                  borderSide: BorderSide(color: Colors.black),
+                  borderSide: BorderSide(color: Colors.grey),
                 ),
                 enabledBorder: UnderlineInputBorder(
                   borderSide: BorderSide(color: Colors.grey[300]!),

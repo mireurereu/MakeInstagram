@@ -35,19 +35,19 @@ class _EditPostScreenState extends State<EditPostScreen> {
     super.initState();
     // [수정] 툴팁 시퀀스 로직
     // 1초 후 오디오 툴팁 표시
-    Future.delayed(const Duration(seconds: 1), () {
+    Future.delayed(const Duration(milliseconds: 500), () {
       if (mounted) {
         setState(() {
           _tooltipStep = 1;
         });
         // 2초 후 오디오 툴팁 숨기고 필터 툴팁 표시
-        Future.delayed(const Duration(seconds: 2), () {
+        Future.delayed(const Duration(milliseconds: 1000), () {
           if (mounted) {
             setState(() {
               _tooltipStep = 2;
             });
             // 2초 후 필터 툴팁 숨김
-            Future.delayed(const Duration(seconds: 2), () {
+            Future.delayed(const Duration(milliseconds: 1000), () {
               if (mounted) {
                 setState(() {
                   _tooltipStep = 0;

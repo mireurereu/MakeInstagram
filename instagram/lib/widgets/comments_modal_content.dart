@@ -172,7 +172,7 @@ class _CommentsModalContentState extends State<CommentsModalContent> {
         _replyingToCommentId = null;
       });
       
-      FocusManager.instance.primaryFocus?.unfocus();
+      _commentFocusNode.requestFocus();
     }
   }
   
@@ -183,7 +183,7 @@ class _CommentsModalContentState extends State<CommentsModalContent> {
       _replyingToCommentId = targetComment.id; // ID 저장
       _commentController.text = '@${targetComment.username} ';
     });
-    FocusScope.of(context).requestFocus(FocusNode());
+    _commentFocusNode.requestFocus();
   }
   
   void _cancelReply() {

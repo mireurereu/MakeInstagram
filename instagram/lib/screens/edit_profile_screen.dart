@@ -22,7 +22,8 @@ class EditProfileScreen extends StatefulWidget {
   State<EditProfileScreen> createState() => _EditProfileScreenState();
 }
 
-class _EditProfileScreenState extends State<EditProfileScreen> {
+// [수정] with SingleTickerProviderStateMixin 추가
+class _EditProfileScreenState extends State<EditProfileScreen> with SingleTickerProviderStateMixin {
   final ImagePicker _picker = ImagePicker();
 
   // 2. 상태 변수들을 부모로부터 받은 'widget' 값으로 초기화
@@ -34,6 +35,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   bool _hasChangedProfilePicture = false; // 프로필 사진 변경 여부 추적
   int _selectedAvatarIndex = 0; // 0: 프로필 사진, 1: 아바타
 
+  late AnimationController _bounceController;
+
   @override
   void initState() {
     super.initState();
@@ -44,10 +47,23 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     // UserState에서 프로필 사진 변경 여부 가져오기
     _hasChangedProfilePicture = UserState.hasChangedProfilePicture();
 
+    _bounceController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 100), // 빠르게 반응
+      lowerBound: 0.87, 
+      upperBound: 1.0,
+      value: 1.0, // 시작은 원래 크기
+    );
+
     // 3. (핵심) 화면이 그려진 직후 '아바타 만들기' 팝업을 띄웁니다.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _showAvatarDialog(context);
     });
+  }
+
+  void dispose() {
+    _bounceController.dispose();
+    super.dispose();
   }
 
   // 4. (신규) '아바타 만들기' 팝업 함수
@@ -476,10 +492,18 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       GestureDetector(
-                        onTap: () => _showPictureModal(context),
-                        child: CircleAvatar(
-                          radius: 36,
-                          backgroundImage: _getImageProvider(),
+                        onTapDown: (_) => _bounceController.reverse(), // 누르면 작아짐
+                        onTapUp: (_) {
+                          _bounceController.forward(); // 떼면 복구
+                          _showPictureModal(context); // 팝업 실행
+                        },
+                        onTapCancel: () => _bounceController.forward(), // 취소 시 복구
+                        child: ScaleTransition(
+                          scale: _bounceController,
+                          child: CircleAvatar(
+                            radius: 36, // 크기 40 -> 36 (기존 코드 맞춤)
+                            backgroundImage: _getImageProvider(),
+                          ),
                         ),
                       ),
                       const SizedBox(width: 12.0),
@@ -506,7 +530,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   // (수정된 필드 호출)
                   _buildTextRow('Name', _name, onTap: _navigateToNameEdit),
                   _buildTextRow('Username', 'kkuma'),
-                  _buildTextRow('Pronouns', ''),
+                  _buildField('Pronouns', '', () {}),
                   _buildTextRow('Bio', _bio, onTap: _navigateToBioEdit),
                   
                   _buildSimpleRow('Add link', showDivider: false),
@@ -535,6 +559,36 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             
             const SizedBox(height: 16.0),
           ],
+        ),
+      ),
+    );
+  }
+
+
+  Widget _buildField(String label, String value, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        // 기존 Row들과 높이/간격을 맞추기 위한 패딩
+        padding: const EdgeInsets.symmetric(horizontal: 0), 
+        decoration: const BoxDecoration(
+          border: Border(bottom: BorderSide(color: Color(0xFFE0E0E0), width: 1.0)), // 기존 Divider와 유사한 색상
+        ),
+        child: IgnorePointer(
+          child: TextField(
+            controller: TextEditingController(text: value),
+            readOnly: true,
+            style: const TextStyle(fontSize: 16, color: Colors.black),
+            decoration: InputDecoration(
+              labelText: label,
+              floatingLabelBehavior: FloatingLabelBehavior.auto, // 값이 없으면 가운데 크게
+              labelStyle: const TextStyle(color: Colors.grey, fontSize: 16), // 평소 스타일
+              floatingLabelStyle: const TextStyle(color: Colors.grey, fontSize: 12), // 위로 올라갔을 때 스타일
+              border: InputBorder.none,
+              contentPadding: const EdgeInsets.symmetric(vertical: 10),
+              isDense: true,
+            ),
+          ),
         ),
       ),
     );

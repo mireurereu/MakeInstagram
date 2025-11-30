@@ -730,8 +730,6 @@ class _PostCardWidgetState extends State<PostCardWidget> {
                             children: [
                               // [수정] "색이 채워지지 않은 상태"가 눌린 상태이므로 favorite_border 사용
                               const Icon(Icons.favorite_border, color: Colors.grey, size: 14),
-                              if (c.likeCount > 0) 
-                                Text('${c.likeCount}', style: const TextStyle(color: Colors.grey, fontSize: 11)),
                             ],
                           ),
                         ),

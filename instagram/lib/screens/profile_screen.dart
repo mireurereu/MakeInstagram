@@ -969,10 +969,11 @@ class _ProfileScreenState extends State<ProfileScreen>
   );
 
   // [신규] 추천 친구 섹션 위젯
+  // [수정] 추천 친구 섹션 위젯
   Widget _buildSuggestedSection() {
     return Container(
       margin: const EdgeInsets.only(top: 4, bottom: 10),
-      height: 250,
+      height: 280, // 높이 여유 있게 유지
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1008,41 +1009,88 @@ class _ProfileScreenState extends State<ProfileScreen>
                     border: Border.all(color: Colors.grey[300]!),
                     borderRadius: BorderRadius.circular(4),
                   ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                  // [핵심 수정] Stack을 사용하여 X 버튼을 절대 위치로 배치
+                  child: Stack(
                     children: [
-                      const Icon(
-                        Icons.close,
-                        size: 16,
-                        color: Colors.grey,
-                      ), // 닫기 버튼 흉내
-                      const SizedBox(height: 4),
-                      CircleAvatar(
-                        radius: 34,
-                        backgroundImage: NetworkImage(
-                          'https://picsum.photos/seed/suggest$index/100/100',
+                      // 1. 메인 콘텐츠 (중앙 정렬)
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(8, 20, 8, 8), // 상단 여백 확보
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            CircleAvatar(
+                              radius: 34,
+                              backgroundImage: NetworkImage(
+                                'https://picsum.photos/seed/suggest$index/100/100',
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            
+                            // [수정] 이름 (Bold)
+                            Text(
+                              'User $index',
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            
+                            // [추가] 유저 아이디 (user1, user2...)
+                            const SizedBox(height: 2),
+                            Text(
+                              'user_id_$index',
+                              style: const TextStyle(color: Colors.grey, fontSize: 12),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            
+                            const SizedBox(height: 2),
+                            const Text(
+                              'Suggested for you',
+                              style: TextStyle(color: Colors.grey, fontSize: 11),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            
+                            const SizedBox(height: 16),
+                            
+                            // [수정] Follow 버튼: 둥근 사각형으로 변경
+                            SizedBox(
+                              width: double.infinity, // 가로 꽉 차게
+                              height: 32, // 버튼 높이 고정
+                              child: ElevatedButton(
+                                onPressed: () {},
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: _instaBlue,
+                                  elevation: 0,
+                                  // [핵심] 타원형 -> 둥근 사각형 (반경 8)
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  padding: EdgeInsets.zero, // 패딩 제거하여 텍스트 중앙 정렬
+                                ),
+                                child: const Text(
+                                  'Follow',
+                                  style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      const SizedBox(height: 10),
-                      Text(
-                        'User $index',
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      const Text(
-                        'Suggested for you',
-                        style: TextStyle(color: Colors.grey, fontSize: 11),
-                      ),
-                      const SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: () {},
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: _instaBlue,
-                          minimumSize: const Size(120, 30),
-                          elevation: 0,
-                        ),
-                        child: const Text(
-                          'Follow',
-                          style: TextStyle(color: Colors.white),
+
+                      // 2. 닫기(X) 버튼: 우측 상단 고정
+                      Positioned(
+                        top: 8,
+                        right: 8,
+                        child: GestureDetector(
+                          onTap: () {
+                            // 닫기 로직 (필요 시 구현)
+                          },
+                          child: const Icon(
+                            Icons.close,
+                            size: 18, // 아이콘 크기 적절히 조절
+                            color: Colors.grey,
+                          ),
                         ),
                       ),
                     ],

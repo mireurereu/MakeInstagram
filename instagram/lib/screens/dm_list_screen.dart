@@ -27,14 +27,14 @@ class _DmListScreenState extends State<DmListScreen> {
   // 대화 목록 저장
   final List<ChatPreview> _chats = [
     ChatPreview(
-      username: '최준혁',
-      avatarUrl: 'https://picsum.photos/seed/junhyuk/100/100',
+      username: 'chunsic',
+      avatarUrl: 'assets/images/sample3.jpg',
       lastMessage: 'Sent 3m ago',
       lastMessageTime: DateTime.now().subtract(const Duration(minutes: 3)),
     ),
     ChatPreview(
-      username: '신해빈',
-      avatarUrl: 'https://picsum.photos/seed/haebin/100/100',
+      username: 'atom',
+      avatarUrl: 'assets/images/sample2.jpg',
       lastMessage: 'Seen',
       lastMessageTime: DateTime.now().subtract(const Duration(hours: 1)),
     ),

@@ -73,7 +73,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
   @override
   void initState() {
     super.initState();
-    _messageHistory.add(ApiMessage(role: 'system', content: 'You are a helpful assistant.'));
+    _messageHistory.add(ApiMessage(role: 'system', content: 'You are a helpful assistant. Please answer concisely in 1 line or less.'));
 
     final now = DateTime.now();
     _messages.addAll([
@@ -140,31 +140,31 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
     _activeTimers.add(t2);
 
     // fallback after 5s
-    _fallbackTimer = Timer(const Duration(seconds: 5), () {
-      if (!mounted) return;
-      // Cancel any outstanding timers and clear loading state before inserting fallback reply
-      for (final t in _activeTimers) {
-        try {
-          t.cancel();
-        } catch (_) {}
-      }
-      _activeTimers.clear();
-      setState(() {
-        _isLoading = false;
-        _messages.add(Message(text: 'Hi', isSender: false, timestamp: DateTime.now(), footer: 'Tap and hold to react'));
-      });
-      _scrollToBottom();
+    // _fallbackTimer = Timer(const Duration(seconds: 5), () {
+    //   if (!mounted) return;
+    //   // Cancel any outstanding timers and clear loading state before inserting fallback reply
+    //   for (final t in _activeTimers) {
+    //     try {
+    //       t.cancel();
+    //     } catch (_) {}
+    //   }
+    //   _activeTimers.clear();
+    //   setState(() {
+    //     _isLoading = false;
+    //     _messages.add(Message(text: 'Hi', isSender: false, timestamp: DateTime.now(), footer: 'Tap and hold to react'));
+    //   });
+    //   _scrollToBottom();
       
-      // Hide footer after 5 seconds
-      final messageIndex = _messages.length - 1;
-      Timer(const Duration(seconds: 5), () {
-        if (!mounted || messageIndex >= _messages.length) return;
-        setState(() {
-          _messages[messageIndex].footer = null;
-        });
-      });
-    });
-    if (_fallbackTimer != null) _activeTimers.add(_fallbackTimer!);
+    //   // Hide footer after 5 seconds
+    //   final messageIndex = _messages.length - 1;
+    //   Timer(const Duration(seconds: 5), () {
+    //     if (!mounted || messageIndex >= _messages.length) return;
+    //     setState(() {
+    //       _messages[messageIndex].footer = null;
+    //     });
+    //   });
+    // });
+    // if (_fallbackTimer != null) _activeTimers.add(_fallbackTimer!);
 
     // network request
     final String apiContent = text.isNotEmpty ? text : (_selectedImage != null ? '[image]' : '');
