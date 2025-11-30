@@ -79,7 +79,8 @@ class _NewPostScreenState extends State<NewPostScreen> {
                   decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(4)),
                 ),
               ),
-              const Text('Sharing posts', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, letterSpacing: 0.3)),
+              const SizedBox(height: 20),
+              const Text('Sharing posts', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, letterSpacing: 0.3)),
               const SizedBox(height: 16),
 
               // Info rows with icons
@@ -130,8 +131,9 @@ class _NewPostScreenState extends State<NewPostScreen> {
                   ),
                 ],
               ),
-              const SizedBox(height: 20),
-
+              const SizedBox(height: 40),
+              const Divider(height: 1, thickness: 1, color: Color(0xFFDBDBDB)),
+              const SizedBox(height: 16),
               // OK button
               SizedBox(
                 width: double.infinity,
@@ -140,7 +142,7 @@ class _NewPostScreenState extends State<NewPostScreen> {
                     Navigator.pop(c);
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF0095F6),
+                    backgroundColor: const Color.fromARGB(255, 40, 59, 204),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                   ),
                   child: const Padding(
@@ -196,16 +198,44 @@ class _NewPostScreenState extends State<NewPostScreen> {
                 margin: const EdgeInsets.only(bottom: 12),
                 decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(4)),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 40),
               const Text('Always share posts to Facebook?', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 12),
+              const SizedBox(height: 40),
 
               // three descriptive rows
               Row(crossAxisAlignment: CrossAxisAlignment.start, children: const [Icon(Icons.facebook, size: 22), SizedBox(width: 12), Expanded(child: Text('Let your friends see your posts, no matter which app they\'re on.'))]),
-              const SizedBox(height: 10),
-              Row(crossAxisAlignment: CrossAxisAlignment.start, children: const [Icon(Icons.lock_outline, size: 22), SizedBox(width: 12), Expanded(child: Text('You will share as 최준혁. Your audience for posts on Facebook is Only me.'))]),
-              const SizedBox(height: 10),
+              const SizedBox(height: 18),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(Icons.lock_outline, size: 22),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: RichText(
+                      text: const TextSpan(
+                        style: TextStyle(color: Colors.black, fontSize: 14),
+                        children: [
+                          TextSpan(text: 'You will share as '),
+                          TextSpan(
+                            text: 'puang', 
+                            style: TextStyle(fontWeight: FontWeight.bold), // [수정] 볼드체
+                          ),
+                          TextSpan(text: '. Your audience for posts on Facebook is '),
+                          TextSpan(
+                            text: 'Only me',
+                            style: TextStyle(fontWeight: FontWeight.bold), // [수정] 볼드체
+                          ),
+                          TextSpan(text: '.'),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 18),
               Row(crossAxisAlignment: CrossAxisAlignment.start, children: const [Icon(Icons.settings_outlined, size: 22), SizedBox(width: 12), Expanded(child: Text('You can change your sharing settings in Accounts Center and each time you share.'))]),
+              const SizedBox(height: 18),
+              const Divider(height: 1, thickness: 1, color: Color(0xFFDBDBDB)),
               const SizedBox(height: 18),
 
               SizedBox(
@@ -216,7 +246,8 @@ class _NewPostScreenState extends State<NewPostScreen> {
                     // proceed to actual share
                     _startShareProcess();
                   },
-                  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF2D5BFF)),
+                  style: ElevatedButton.styleFrom(backgroundColor: const Color.fromARGB(255, 40, 59, 204),shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12),),
+                  ),
                   child: const Padding(
                     padding: EdgeInsets.symmetric(vertical: 14),
                     child: Text('Share posts', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
@@ -402,11 +433,11 @@ class _NewPostScreenState extends State<NewPostScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 20),
+              const SizedBox(height: 16),
               // 이미지 미리보기
               Center(
                 child: Container(
-                  width: 200,
+                  //width: 200,
                   height: 200,
                   decoration: BoxDecoration(
                     color: Colors.grey[100],
@@ -473,12 +504,13 @@ class _NewPostScreenState extends State<NewPostScreen> {
                 ),
               ),
 
-              const SizedBox(height: 20),
+              const SizedBox(height: 10),
               const Divider(height: 1, thickness: 1, color: Color(0xFFDBDBDB)),
               
               // Tag people
               ListTile(
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                dense: true, // 높이 줄임
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                 leading: const Icon(Icons.person_outline, color: Colors.black),
                 title: const Text('Tag people', style: TextStyle(fontSize: 15)),
                 trailing: const Icon(Icons.chevron_right, color: Colors.grey),
@@ -487,7 +519,8 @@ class _NewPostScreenState extends State<NewPostScreen> {
               
               // Add location (선 없이 바로 이어짐)
               ListTile(
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                dense: true, // 높이 줄임
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                 leading: const Icon(Icons.location_on_outlined, color: Colors.black),
                 title: const Text('Add location', style: TextStyle(fontSize: 15)),
                 trailing: const Icon(Icons.chevron_right, color: Colors.grey),
@@ -513,7 +546,8 @@ class _NewPostScreenState extends State<NewPostScreen> {
 
               // Audience
               ListTile(
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                dense: true, // 높이 줄임
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                 leading: const Icon(Icons.visibility_outlined, color: Colors.black),
                 title: const Text('Audience', style: TextStyle(fontSize: 15)),
                 trailing: Row(
@@ -529,7 +563,8 @@ class _NewPostScreenState extends State<NewPostScreen> {
               
               // Also share on...
               ListTile(
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                dense: true, // 높이 줄임
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                 leading: const Icon(Icons.share_outlined, color: Colors.black),
                 title: const Text('Also share on...', style: TextStyle(fontSize: 15)),
                 trailing: Row(
@@ -555,7 +590,8 @@ class _NewPostScreenState extends State<NewPostScreen> {
               
               // More options
               ListTile(
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                dense: true,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                 leading: const Icon(Icons.more_horiz, color: Colors.black),
                 title: const Text('More options', style: TextStyle(fontSize: 15)),
                 trailing: const Icon(Icons.chevron_right, color: Colors.grey),
@@ -587,7 +623,7 @@ class _NewPostScreenState extends State<NewPostScreen> {
               child: ElevatedButton(
                 onPressed: _isSharing ? null : _onSharePressed,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: _isSharing ? Colors.grey : const Color(0xFF3797EF),
+                  backgroundColor: _isSharing ? Colors.grey : const Color.fromARGB(255, 40, 59, 204),
                   disabledBackgroundColor: Colors.grey[300],
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                   elevation: 0,

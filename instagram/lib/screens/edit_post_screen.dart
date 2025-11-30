@@ -302,7 +302,7 @@ class _EditPostScreenState extends State<EditPostScreen> {
                   ),
                 );
               },
-              style: ElevatedButton.styleFrom(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)), padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12), backgroundColor: const Color(0xFF1677FF)),
+              style: ElevatedButton.styleFrom(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)), padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12), backgroundColor: const Color.fromARGB(255, 40, 59, 204)),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: const [

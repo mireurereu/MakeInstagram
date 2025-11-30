@@ -73,7 +73,7 @@ class PostedBanner extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF0095F6),
+                  color: const Color.fromARGB(255, 40, 59, 204),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Text(
