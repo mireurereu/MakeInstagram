@@ -284,7 +284,7 @@ class _DmListScreenState extends State<DmListScreen> {
       contentPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
       leading: CircleAvatar(
         radius: 28,
-        backgroundImage: NetworkImage(avatarUrl),
+        backgroundImage: _getImageProvider(avatarUrl),
       ),
       title: Text(
         username,
@@ -299,7 +299,7 @@ class _DmListScreenState extends State<DmListScreen> {
         final result = await Navigator.of(context).push(
           PageRouteBuilder(
             pageBuilder: (context, animation, secondaryAnimation) {
-              return ChatRoomScreen(username: username);
+              return ChatRoomScreen(username: username, avatarUrl: avatarUrl,);
             },
             transitionsBuilder: (context, animation, secondaryAnimation, child) {
               const begin = Offset(1.0, 0.0);

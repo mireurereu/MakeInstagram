@@ -52,26 +52,45 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       body: ValueListenableBuilder<List<Map<String, dynamic>>>(
         valueListenable: NotificationsScreen.notificationsNotifier,
         builder: (context, notifications, _) {
+          
+          // [추가 1] 가장 최신 댓글 알림 찾기 (리스트의 앞쪽이 최신이라고 가정)
+          String? latestCommentId;
+          try {
+            final latestComment = notifications.firstWhere(
+              (n) => n['type'] == NotificationType.comment,
+            );
+            latestCommentId = latestComment['notificationId'];
+          } catch (_) {
+            // 댓글 알림이 없으면 pass
+          }
+
           return ListView(
             children: [
               // 1. Today 섹션
               _buildSectionHeader('Today'),
               
               // Dynamic notifications from notifier (most recent first)
-              ...notifications.map((notif) => _buildNotificationItem(
-                type: notif['type'] as NotificationType,
-                username: notif['username'] as String,
-                content: notif['content'] as String,
-                time: notif['time'] as String,
-                avatarUrl: notif['avatarUrl'] as String,
-                postUrl: notif['postUrl'] as String?,
-                showReplyButton: notif['showReplyButton'] as bool? ?? false,
-                notificationId: notif['notificationId'] as String?,
-                postId: notif['postId'] as String?,
-                commentId: notif['commentId'] as String?,
-              )),
+              ...notifications.map((notif) {
+                // [추가 2] 현재 아이템이 가장 최신 댓글인지 확인
+                final bool isLatest = notif['notificationId'] == latestCommentId;
 
-              // 댓글 알림 (pompom)
+                return _buildNotificationItem(
+                  type: notif['type'] as NotificationType,
+                  username: notif['username'] as String,
+                  content: notif['content'] as String,
+                  time: notif['time'] as String,
+                  avatarUrl: notif['avatarUrl'] as String,
+                  postUrl: notif['postUrl'] as String?,
+                  showReplyButton: notif['showReplyButton'] as bool? ?? false,
+                  notificationId: notif['notificationId'] as String?,
+                  postId: notif['postId'] as String?,
+                  commentId: notif['commentId'] as String?,
+                  // [추가 3] 플래그 전달
+                  isLatest: isLatest,
+                );
+              }),
+
+              // 댓글 알림 (pompom) - 하드코딩 예시
               _buildNotificationItem(
                 type: NotificationType.comment,
                 username: 'pompom',
@@ -82,6 +101,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 showReplyButton: true,
                 notificationId: 'notif_pompom_comment',
                 postId: 'post_dragon',
+                // 하드코딩된 아이템은 강조하지 않음 (필요하면 true로 변경)
+                isLatest: false, 
               ),
 
               // 2. Last 30 days 섹션
@@ -161,11 +182,14 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     String? notificationId,
     String? postId,
     String? commentId,
+    // [추가 4] 최신 알림 여부 파라미터
+    bool isLatest = false,
   }) {
     return ValueListenableBuilder<String?>(
       valueListenable: NotificationsScreen.highlightedNotificationId,
       builder: (ctx, highlightedId, _) {
-        final bool isHighlighted = notificationId != null && highlightedId == notificationId;
+        // [수정] 클릭해서 하이라이트된 상태 OR 최신 알림인 상태면 파란색
+        final bool isHighlighted = (notificationId != null && highlightedId == notificationId) || isLatest;
         
         return GestureDetector(
           onTap: () async {
@@ -212,6 +236,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             }
           },
           child: Container(
+            // [결과] 조건에 따라 배경색 변경
             color: isHighlighted ? const Color(0xFFE3F2FD) : Colors.white,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             child: Row(
@@ -344,7 +369,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               shape: BoxShape.circle,
               border: Border.all(color: Colors.grey[300]!),
             ),
-            child: const Icon(Icons.facebook, size: 28),
+            child: const Icon(Icons.facebook, size: 28), // 여기서는 facebook 아이콘을 placeholder로 사용중이네요
           ),
           const SizedBox(width: 14),
           Expanded(

@@ -35,7 +35,7 @@ class _EditPostScreenState extends State<EditPostScreen> {
     super.initState();
     // [수정] 툴팁 시퀀스 로직
     // 1초 후 오디오 툴팁 표시
-    Future.delayed(const Duration(milliseconds: 500), () {
+    Future.delayed(const Duration(milliseconds: 1000), () {
       if (mounted) {
         setState(() {
           _tooltipStep = 1;

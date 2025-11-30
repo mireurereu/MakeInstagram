@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:instagram/constants.dart';
+import 'dart:io';
 
 class Message {
   String text;
@@ -34,7 +35,8 @@ class ApiMessage {
 
 class ChatRoomScreen extends StatefulWidget {
   final String username;
-  const ChatRoomScreen({super.key, required this.username});
+  final String? avatarUrl;
+  const ChatRoomScreen({super.key, required this.username, this.avatarUrl});
 
   @override
   State<ChatRoomScreen> createState() => _ChatRoomScreenState();
@@ -54,7 +56,6 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
   Timer? _fallbackTimer;
   Timer? _tooltipTimer;
 
-  final String opponentAvatarUrl = 'https://picsum.photos/seed/junhyuk/100/100';
   final Color _instaBlue = const Color(0xFF3797EF);
   final Color _senderPurple = const Color(0xFF7C3AED);
   // assets list for picker
@@ -63,12 +64,30 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
     'assets/images/post2.jpg',
     'assets/images/post3.jpg',
     'assets/images/post4.jpg',
+    'assets/images/post5.jpg',
+    'assets/images/post6.jpg',
+    'assets/images/post7.jpg',
+    'assets/images/post8.jpg',
   ];
   String? _selectedImage;
   // (single image selection for DM)
   // ensure typing/loading is shown for at least this duration
   final Duration _minTypingDuration = const Duration(milliseconds: 1500);
   DateTime? _loadingStartTime;
+
+
+  ImageProvider _getAvatarProvider() {
+    final url = widget.avatarUrl;
+    if (url == null || url.isEmpty) {
+      // 기본 이미지
+      return const NetworkImage('https://picsum.photos/seed/junhyuk/100/100');
+    }
+    if (url.startsWith('http')) {
+      return NetworkImage(url);
+    } else {
+      return AssetImage(url);
+    }
+  }
 
   @override
   void initState() {
@@ -284,7 +303,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
-          CircleAvatar(radius: 14, backgroundImage: NetworkImage(opponentAvatarUrl)),
+          CircleAvatar(radius: 14, backgroundImage: _getAvatarProvider()),
           const SizedBox(width: 8.0),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 12.0),
@@ -326,7 +345,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
         titleSpacing: 0,
         title: Row(
           children: [
-            CircleAvatar(radius: 16, backgroundImage: NetworkImage(opponentAvatarUrl)),
+            CircleAvatar(radius: 16, backgroundImage: _getAvatarProvider()),
             const SizedBox(width: 10.0),
             Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.center, children: [
               Text(widget.username, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16.0)),
@@ -376,7 +395,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
           if (!isSender) ...[
             CircleAvatar(
               radius: 16, 
-              backgroundImage: NetworkImage(opponentAvatarUrl),
+              backgroundImage: _getAvatarProvider(),
             ),
             const SizedBox(width: 8.0),
           ],

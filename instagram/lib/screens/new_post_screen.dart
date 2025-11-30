@@ -375,7 +375,8 @@ class _NewPostScreenState extends State<NewPostScreen> {
       'postImageUrls': [addedPath],
       'likeCount': '0',
       'caption': _captionController.text,
-      'timestamp': 'Just now',
+      'timestamp': 'Today',
+      'timestampDate': DateTime.now(),
       'isVideo': false,
     };
     final currentFeed = FeedScreen.feedNotifier.value;

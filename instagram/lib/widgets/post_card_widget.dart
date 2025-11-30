@@ -9,6 +9,7 @@ import 'package:intl/intl.dart';
 import 'package:flutter/gestures.dart'; // 제스처 인식을 위해 필요
 import 'package:video_player/video_player.dart';
 import 'dart:io';
+import 'dart:async';
 
 class PostCardWidget extends StatefulWidget {
   final String username;
@@ -17,6 +18,7 @@ class PostCardWidget extends StatefulWidget {
   final String likeCount;
   final String caption;
   final String timestamp;
+  final DateTime? timestampDate;
   final bool isVideo;
   final bool isSponsored;
   final String? sponsoredText; // 광고 문구
@@ -37,6 +39,7 @@ class PostCardWidget extends StatefulWidget {
     required this.likeCount,
     required this.caption,
     required this.timestamp,
+    this.timestampDate,
     this.isVideo = false,
     this.isSponsored = false,
     this.sponsoredText,
@@ -68,6 +71,9 @@ class _PostCardWidgetState extends State<PostCardWidget> {
   VideoPlayerController? _videoController;
   bool _isVideoInitialized = false;
 
+  Timer? _timer;
+  String _timeAgoDisplay = '';
+
   @override
   void initState() {
     super.initState();
@@ -97,6 +103,18 @@ class _PostCardWidgetState extends State<PostCardWidget> {
     _isLiked = widget.isLiked ?? false;
     // initialize following state for header (so Follow button can reflect current state)
     _isFollowing = UserState.amIFollowing(widget.username);
+    if (widget.timestampDate != null) {
+      _updateTimeAgo(); // 초기값 설정
+      final difference = DateTime.now().difference(widget.timestampDate!);
+      if (difference.inMinutes < 1) {
+        // 1초마다 갱신 (1분이 넘어가면 멈춤)
+        _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+          if (mounted) {
+            _updateTimeAgo();
+          }
+        });
+      }
+    }
   }
 
   void _calculateImageAspectRatio() {
@@ -162,6 +180,23 @@ class _PostCardWidgetState extends State<PostCardWidget> {
   void dispose() {
     _videoController?.dispose();
     super.dispose();
+  }
+
+  void _updateTimeAgo() {
+    if (widget.timestampDate == null) return;
+
+    final difference = DateTime.now().difference(widget.timestampDate!);
+    
+    setState(() {
+      if (difference.inSeconds < 60) {
+        // 1분 미만일 때는 "초" 단위 표시 (예: 5s)
+        _timeAgoDisplay = '${difference.inSeconds}s';
+      } else {
+        // 1분이 넘어가면 타이머 정지하고 기존 timestamp 사용하거나 분 단위 표시
+        _timer?.cancel();
+        _timeAgoDisplay = widget.timestamp; 
+      }
+    });
   }
 
   void _showCommentsModal() async {
@@ -602,11 +637,25 @@ class _PostCardWidgetState extends State<PostCardWidget> {
               if (widget.isVideo && (!_isVideoInitialized || !_videoController!.value.isPlaying))
                 const Icon(Icons.play_circle_fill, color: Colors.white, size: 60),
               if (_showHeartAnimation) const Icon(Icons.favorite, color: Colors.white, size: 100),
+              // 우측 상단 페이지 번호 (예: 1/3)
               if (widget.postImageUrls.length > 1)
                 Positioned(
-                  top: 12, right: 12,
-                  child: IgnorePointer(
-                    child: _buildPageIndicator(),
+                  top: 12, 
+                  right: 12,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.7), // 반투명 검은 배경
+                      borderRadius: BorderRadius.circular(14), // 둥근 모서리
+                    ),
+                    child: Text(
+                      '${_currentCarouselIndex + 1}/${widget.postImageUrls.length}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                 ),
             ],
@@ -746,7 +795,13 @@ class _PostCardWidgetState extends State<PostCardWidget> {
                 ),
 
               const SizedBox(height: 4),
-              Text(hasAuthorComment ? 'Just now' : widget.timestamp, style: const TextStyle(color: Colors.grey, fontSize: 12)),
+              // 조건문을 없애고 무조건 widget.timestamp를 사용
+              Text(
+                // 1. 타이머가 돌고 있는(1분 미만) 상태면 초 단위(_timeAgoDisplay) 표시
+                // 2. 아니면 기존 방식(widget.timestamp) 표시
+                (_timer != null && _timer!.isActive) ? _timeAgoDisplay : widget.timestamp,
+                style: const TextStyle(color: Colors.grey, fontSize: 12),
+              ),
               const SizedBox(height: 20),
             ],
           ),

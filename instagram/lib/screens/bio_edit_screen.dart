@@ -12,7 +12,7 @@ class BioEditScreen extends StatefulWidget {
 
 class _BioEditScreenState extends State<BioEditScreen> {
   late TextEditingController _controller;
-  int _remaining = 150;
+  int _remaining = 150; // [복구] 남은 글자 수 저장 변수
   static const int _maxChars = 150;
 
   // 인스타그램 공식 블루 색상 상수 정의
@@ -22,11 +22,14 @@ class _BioEditScreenState extends State<BioEditScreen> {
   void initState() {
     super.initState();
     _controller = TextEditingController(text: widget.initialBio);
+    
+    // [복구] 초기 남은 글자 수 계산
     _remaining = _maxChars - _controller.text.length;
+    
+    // [복구] 입력할 때마다 남은 글자 수 갱신 (카운트 다운)
     _controller.addListener(() {
-      final len = _controller.text.characters.length;
       setState(() {
-        _remaining = (_maxChars - len).clamp(0, _maxChars);
+        _remaining = (_maxChars - _controller.text.length).clamp(0, _maxChars);
       });
     });
   }
@@ -38,19 +41,18 @@ class _BioEditScreenState extends State<BioEditScreen> {
   }
 
   void _onDone() {
-    // 변경된 값을 가지고 이전 화면으로 돌아감
     Navigator.pop(context, _controller.text);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white, // 배경 완전 흰색
+      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
-        elevation: 0, // 그림자 제거
+        elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.close, color: Colors.black), // 닫기 버튼 검은색
+          icon: const Icon(Icons.close, color: Colors.black),
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
@@ -58,24 +60,26 @@ class _BioEditScreenState extends State<BioEditScreen> {
           style: TextStyle(
             color: Colors.black,
             fontWeight: FontWeight.bold,
-            fontSize: 18.0, // 영상 비율에 맞춘 폰트 사이즈
+            fontSize: 18.0,
           ),
         ),
-        centerTitle: false, // 안드로이드에서도 왼쪽 정렬 방지 (인스타는 중앙 or 왼쪽 상황에 따라 다름, 여기선 왼쪽)
+        centerTitle: false,
         actions: [
           IconButton(
-            // [수정 1] 인스타그램 고유 블루 색상 적용
-            icon: Icon(Icons.check, color: _instaBlue, size: 28.0), 
+            icon: Icon(Icons.check, color: _instaBlue, size: 28.0),
             onPressed: _onDone,
           ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
+      // 키보드가 올라오면 화면을 밀어올려 하단 요소가 키보드 위에 붙도록 함
+      resizeToAvoidBottomInset: true,
+      body: Column(
+        children: [
+          const SizedBox(height: 8),
+          // 1. 텍스트 입력 필드 (화면의 남은 공간을 차지)
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: TextField(
                 controller: _controller,
                 autofocus: true,
@@ -85,7 +89,7 @@ class _BioEditScreenState extends State<BioEditScreen> {
                   fontSize: 16.0,
                   height: 1.2,
                 ),
-                maxLines: null,
+                maxLines: null, // 여러 줄 입력 허용
                 keyboardType: TextInputType.multiline,
                 inputFormatters: [
                   LengthLimitingTextInputFormatter(_maxChars),
@@ -94,61 +98,66 @@ class _BioEditScreenState extends State<BioEditScreen> {
                   labelText: 'Bio',
                   floatingLabelStyle: const TextStyle(color: Colors.grey),
                   labelStyle: const TextStyle(color: Colors.grey),
+                  // [복구] 텍스트 필드 밑줄 (UnderlineInputBorder) 다시 추가
                   focusedBorder: const UnderlineInputBorder(
-                    borderSide: BorderSide(color: Colors.black),
+                    borderSide: BorderSide(color: Colors.grey),
                   ),
                   enabledBorder: UnderlineInputBorder(
                     borderSide: BorderSide(color: Colors.grey[300]!),
                   ),
-                  contentPadding: const EdgeInsets.only(bottom: 8.0),
+                  contentPadding: const EdgeInsets.only(bottom: 8.0, top: 12.0),
+                  // 기본 카운터 숨김 (아래에 커스텀으로 배치)
+                  counterText: "", 
                 ),
               ),
             ),
-            const SizedBox(height: 8.0),
-            // Bottom info + counter that stays above keyboard
-            AnimatedPadding(
-              duration: const Duration(milliseconds: 150),
-              padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom + 8),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Divider(height: 1, thickness: 1, color: Color(0xFFE0E0E0)),
-                  const SizedBox(height: 6),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.end,
+          ),
+
+          // 2. 하단 고정 영역 (키보드 바로 위)
+          // 순서: 글자 수 -> 구분선 -> 안내 문구
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // 2-1. 남은 글자 수 표시 (오른쪽 정렬)
+              Padding(
+                padding: const EdgeInsets.only(right: 16.0, bottom: 8.0),
+                child: Text(
+                  '$_remaining', // [복구] 남은 글자 수 표시
+                  textAlign: TextAlign.right,
+                  style: TextStyle(
+                    color: Colors.grey[600], 
+                    fontSize: 12.0,
+                    fontWeight: FontWeight.w400,
+                  ),
+                ),
+              ),
+              
+              // 2-2. 구분선
+              const Divider(height: 1, thickness: 1, color: Color(0xFFE0E0E0)),
+              
+              // 2-3. 안내 문구 (RichText 복구)
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: RichText(
+                  textAlign: TextAlign.center,
+                  text: TextSpan(
+                    style: TextStyle(color: Colors.grey[600], fontSize: 13.0),
                     children: [
-                      Expanded(
-                        child: RichText(
-                          text: TextSpan(
-                            style: TextStyle(color: Colors.grey[600], fontSize: 13.0),
-                            children: [
-                              const TextSpan(
-                                text: 'Your bio is visible to everyone on and off Instagram. '
-                              ),
-                              TextSpan(
-                                text: 'Learn more',
-                                style: TextStyle(color: _instaBlue),
-                              ),
-                            ],
-                          ),
-                        ),
+                      const TextSpan(
+                        text: 'Your bio is visible to everyone on and off Instagram. '
                       ),
-                      const SizedBox(width: 8),
-                      // Remaining counter
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 2.0, right: 4.0),
-                        child: Text(
-                          '$_remaining',
-                          style: TextStyle(color: Colors.grey[600], fontSize: 12.0),
-                        ),
+                      TextSpan(
+                        text: 'Learn more',
+                        style: TextStyle(color: _instaBlue), // 파란색 링크 스타일 복구
                       ),
                     ],
                   ),
-                ],
+                ),
               ),
-            ),
-          ],
-        ),
+            ],
+          ),
+        ],
       ),
     );
   }
